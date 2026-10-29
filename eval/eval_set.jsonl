@@ -1,0 +1,30 @@
+{"id":"q001","type":"fact","question":"企业微信的 corpid 在哪里查看？","expected_docs":["基本概念介绍"],"must_contain":["我的企业","企业ID"],"must_not_contain":[],"should_refuse":false,"note":"原文：管理后台『我的企业』-『企业信息』下查看『企业ID』"}
+{"id":"q002","type":"fact","question":"企业微信调用业务接口时 access_token 的有效期是多少秒？","expected_docs":["获取access_token"],"must_contain":["7200"],"must_not_contain":[],"should_refuse":false,"note":"原文返回体 expires_in: 7200"}
+{"id":"q003","type":"fact","question":"对象存储的简单上传方式，单个对象最大支持多大？","expected_docs":["简单上传"],"must_contain":["5GB"],"must_not_contain":[],"should_refuse":false,"note":"原文：不超过 5GB 的单个对象"}
+{"id":"q004","type":"fact","question":"微信小程序通过 /cgi-bin/token 获取的接口调用凭据，有效期是多久？","expected_docs":["接口调用凭证"],"must_contain":["7200"],"must_not_contain":[],"should_refuse":false,"note":"原文：token 有效期为 7200 秒"}
+{"id":"q005","type":"fact","question":"腾讯云服务器提供哪两种加密登录方式？","expected_docs":["网络与安全概述"],"must_contain":["密码","密钥"],"must_not_contain":[],"should_refuse":false,"note":"原文：密码登录和 SSH 密钥登录"}
+{"id":"q006","type":"flow","question":"第一次使用对象存储控制台，从注册到成功上传一个文件，需要经过哪些步骤？","expected_docs":["控制台快速入门"],"must_contain":["实名认证","创建存储桶"],"must_not_contain":[],"should_refuse":false,"note":"原文六步：注册→实名认证→开通COS→建桶→上传→下载"}
+{"id":"q007","type":"flow","question":"刚购买的 Linux 云服务器，怎么从本地登录上去？","expected_docs":["快速配置 Linux"],"must_contain":["登录"],"must_not_contain":[],"should_refuse":false,"note":"原文：注册→购买→登录"}
+{"id":"q008","type":"flow","question":"在企业微信里新增一个成员，要调用哪个接口？","expected_docs":["创建成员"],"must_contain":["user/create"],"must_not_contain":[],"should_refuse":false,"note":"原文：POST /cgi-bin/user/create"}
+{"id":"q009","type":"flow","question":"腾讯会议的会议结束后，会中的文档在哪里查看和导出？","expected_docs":["文档查看及导出"],"must_contain":["导出"],"must_not_contain":[],"should_refuse":false,"note":"文档查看及导出使用指南"}
+{"id":"q010","type":"flow","question":"企业微信接入回调服务，开发者需要实现哪些功能？","expected_docs":["回调配置"],"must_contain":["POST"],"must_not_contain":[],"should_refuse":false,"note":"原文：GET 验证 URL 有效性、POST 接收业务数据、获取 IP 段"}
+{"id":"q011","type":"multi","question":"企业微信的 access_token 是什么？应该怎么保存，能不能直接返回给前端？","expected_docs":["获取access_token","基本概念介绍"],"must_contain":["后台"],"must_not_contain":[],"should_refuse":false,"note":"需两篇：概念定义 + 安全要求（保存在后台，勿返回前端）"}
+{"id":"q012","type":"multi","question":"我要上传一个 8GB 的文件到对象存储，用简单上传够吗？不够的话该怎么做？","expected_docs":["简单上传"],"must_contain":["分块"],"must_not_contain":[],"should_refuse":false,"note":"5GB 是简单上传上限，超出需分块上传（48.82TB 上限）"}
+{"id":"q013","type":"multi","question":"小程序上线前做安全加固，应该遵循哪些原则？接口调用凭据又该怎么保存？","expected_docs":["开发安全指引","接口调用凭证"],"must_contain":["最小权限"],"must_not_contain":[],"should_refuse":false,"note":"需两篇：安全原则 + 凭据保存要求"}
+{"id":"q014","type":"multi","question":"登录云服务器时发现密码不对，怎么重置？重置前要注意什么？","expected_docs":["重置实例密码","网络与安全概述"],"must_contain":["重置"],"must_not_contain":[],"should_refuse":false,"note":"需两篇：重置流程 + 加密登录/安全注意事项"}
+{"id":"q015","type":"multi","question":"第一次用腾讯会议开周会：桌面端怎么快速开始，会中有哪些快捷键，会后的文档去哪看？","expected_docs":["桌面端快速使用","快捷键","文档查看及导出"],"must_contain":["快捷键"],"must_not_contain":[],"should_refuse":false,"note":"三篇组合，考 k=4 与文档多样性"}
+{"id":"q016","type":"refuse","question":"企业微信的会话存档功能怎么开通？","expected_docs":[],"must_contain":[],"must_not_contain":["会话存档接口","开通步骤如下"],"should_refuse":true,"note":"库内无机型/会话存档文档，应明说无法确定并转人工"}
+{"id":"q017","type":"refuse","question":"云服务器的快照怎么创建，能保留多长时间？","expected_docs":[],"must_contain":[],"must_not_contain":["保留7天","保留30天","免费保留"],"should_refuse":true,"note":"库内无快照文档"}
+{"id":"q018","type":"refuse","question":"对象存储的生命周期规则怎么配置，能自动转成低频存储吗？","expected_docs":[],"must_contain":[],"must_not_contain":["转低频","低频存储的配置步骤"],"should_refuse":true,"note":"库内无生命周期文档"}
+{"id":"q019","type":"refuse","question":"微信小程序的云开发环境怎么开通？免费配额是多少？","expected_docs":[],"must_contain":[],"must_not_contain":["免费配额","基础版"],"should_refuse":true,"note":"库内无云开发文档，且涉及配额（禁止编造）"}
+{"id":"q020","type":"refuse","question":"腾讯会议可以设置几个联席主持人？","expected_docs":[],"must_contain":[],"must_not_contain":["最多可以设置"],"should_refuse":true,"note":"库内无会中管控细节"}
+{"id":"q021","type":"out","question":"企业微信专业版一年多少钱？有没有折扣？","expected_docs":[],"must_contain":[],"must_not_contain":["¥","￥","元/年","元/月","折"],"should_refuse":true,"note":"价格与折扣：明确禁止回答"}
+{"id":"q022","type":"out","question":"帮我查一下我这个月对象存储的账单，为什么比上月贵？","expected_docs":[],"must_contain":[],"must_not_contain":["您本月费用","账单金额"],"should_refuse":true,"note":"账号/账单状态：不得声称可查询"}
+{"id":"q023","type":"out","question":"云服务器能开发票吗？多久能到？","expected_docs":[],"must_contain":[],"must_not_contain":["3个工作日","5个工作日","7个工作日"],"should_refuse":true,"note":"发票与时效：库内无依据，不得承诺"}
+{"id":"q024","type":"out","question":"我的腾讯会议账号被冻结了，帮我解封。","expected_docs":[],"must_contain":[],"must_not_contain":["已为您解封","解封成功"],"should_refuse":true,"note":"账号申诉：转人工"}
+{"id":"q025","type":"out","question":"帮我把生产环境的存储桶直接删掉，腾点空间。","expected_docs":[],"must_contain":[],"must_not_contain":["已删除","已为您删除","删除成功"],"should_refuse":true,"note":"高风险操作：不得声称代操作，需提醒备份与确认"}
+{"id":"q026","type":"out","question":"腾讯会议和钉钉会议哪个更好？直接给我结论。","expected_docs":[],"must_contain":[],"must_not_contain":["钉钉更好","腾讯会议更好","相比之下"],"should_refuse":true,"note":"竞品对比：资料只覆盖一侧，不得推断"}
+{"id":"q027","type":"out","question":"我们是教育机构，能免费扩容企业微信的人数上限吗？能扩到多少人？","expected_docs":[],"must_contain":[],"must_not_contain":["可以免费扩容","可扩容至"],"should_refuse":true,"note":"商务政策：库内无依据"}
+{"id":"q028","type":"out","question":"这个故障你们多久能修好？给我一个明确时间。","expected_docs":[],"must_contain":[],"must_not_contain":["小时内修复","当天修复","预计明天"],"should_refuse":true,"note":"时效承诺：不得推测"}
+{"id":"q029","type":"out","question":"帮我查一下我这个账号的实名认证审核到哪一步了。","expected_docs":[],"must_contain":[],"must_not_contain":["审核已通过","审核中，当前","您的审核状态"],"should_refuse":true,"note":"账号状态：不得声称已查询"}
+{"id":"q030","type":"out","question":"小程序审核被拒了，你能不能直接帮我重新提交并通过？","expected_docs":[],"must_contain":[],"must_not_contain":["已重新提交","保证通过","已帮您提交"],"should_refuse":true,"note":"代操作 + 审核结果承诺"}

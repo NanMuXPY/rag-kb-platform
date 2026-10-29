@@ -1,0 +1,111 @@
+{
+  "summary": {
+    "tag": "smoke",
+    "persist": "db_md",
+    "total": 3,
+    "failed": 0,
+    "recall@4": 1.0,
+    "mrr": 1.0,
+    "must_contain_rate": 1.0,
+    "refuse_acc": null,
+    "cite_rate": 1.0,
+    "bad_ident_count": 1,
+    "p50": 9.0,
+    "p95": 9.71,
+    "time": "2026-10-29 23:41:37"
+  },
+  "records": [
+    {
+      "id": "q001",
+      "type": "fact",
+      "question": "企业微信的 corpid 在哪里查看？",
+      "should_refuse": false,
+      "latency": 9.71,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [
+        "我的企业",
+        "企业ID"
+      ],
+      "must_ok": true,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "企业微信的 `corpid`（企业ID）可在企业微信管理后台查看，具体路径如下：\n\n1. 使用管理员账号登录【企业微信管理后台】（https://work.weixin.qq.com/）；  \n2. 在左侧导航栏点击「我的企业」；  \n3. 在右侧页面中点击「企业信息」；  \n4. 在「企业信息」页面中即可查看「企业ID」，该值即为 `corpid`。\n\n注意：仅企业管理员或具有相应权限的成员可查看此信息。\n\n参考：<基本概念介绍 - 文档 - 企业微信开发者中心_a5b8e2ad12.md>",
+      "sources": [
+        "基本概念介绍 - 文档 - 企业微信开发者中心_a5b8e2ad12.md",
+        "获取access_token - 文档 - 企业微信开发者中心_87e7cfe4f9.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q002",
+      "type": "fact",
+      "question": "企业微信调用业务接口时 access_token 的有效期是多少秒？",
+      "should_refuse": false,
+      "latency": 7.91,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [
+        "7200"
+      ],
+      "must_ok": true,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "企业微信业务接口的 access_token 有效期为 7200 秒（即 2 小时）。\n\n该有效期通过调用获取 access_token 接口返回的 `expires_in` 字段明确告知，正常情况下值为 7200。开发者需缓存该 token，并在过期或提前失效时重新获取。\n\n参考：<D:\\WORK\\cxl\\rag-kb-v2\\data\\企业微信\\获取access_token - 文档 - 企业微信开发者中心_87e7cfe4f9.md>",
+      "sources": [
+        "获取access_token - 文档 - 企业微信开发者中心_87e7cfe4f9.md",
+        "基本概念介绍 - 文档 - 企业微信开发者中心_a5b8e2ad12.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q003",
+      "type": "fact",
+      "question": "对象存储的简单上传方式，单个对象最大支持多大？",
+      "should_refuse": false,
+      "latency": 9.0,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [
+        "5GB"
+      ],
+      "must_ok": true,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [
+        "Multipart"
+      ],
+      "bad_codes": [],
+      "answer": "腾讯云对象存储COS简单上传单个文件最大支持5GB，即5120MB。\n\n注意：  \n- 此限制适用于通过 REST API 或 SDK 调用 PUT Object 接口的简单上传方式；  \n- 若使用控制台上传，单个文件最大支持512GB（但该方式内部已非纯简单上传，而是自动转为分块上传等增强机制）；  \n- 对于超过5GB的文件，必须使用分块上传（Multipart Upload）等其他方式。\n\n参考：<对象存储 简单上传_腾讯云_e0699b1374.md>",
+      "sources": [
+        "对象存储 简单上传_腾讯云_e0699b1374.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    }
+  ]
+}

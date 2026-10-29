@@ -1,0 +1,39 @@
+# v2 部署：backend + nginx 双容器
+# 与 v1 的差异：容器名/卷名全部加 v2 前缀，端口仍用 8080（部署时先下线 v1 容器即可回滚）
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: rag-kb-v2-backend
+    container_name: rag-kb-v2-backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # 容器内路径固定：persist 挂在 db/ 下以便旁路重建可原子改名
+      PERSISTANT_STORAGE_DIR: /app/backend/db/db_md
+      UPLOAD_DIR: /app/backend/data/uploads
+      KB_FILES_DIR: /app/backend/db/kb_files
+      API_HOST: 0.0.0.0
+      API_PORT: "14052"
+    volumes:
+      - ./data:/app/backend/data            # 内置语料 + users.db（用户/知识库/审计，必须持久化）
+      - ./kbdata:/app/backend/db            # 向量库 + 文件存储（父目录挂载，db_md 可原子改名）
+      - ./uploads:/app/backend/data/uploads  # 自传文档（唯一事实源）
+    expose:
+      - "14052"
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  nginx:
+    image: docker.m.daocloud.io/library/nginx:alpine
+    container_name: rag-kb-v2-nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+      - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend

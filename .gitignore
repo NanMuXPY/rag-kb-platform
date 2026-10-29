@@ -1,0 +1,23 @@
+# 运行产物与密钥不入库
+.venv/
+.env
+__pycache__/
+*.pyc
+*.log
+
+# 向量库（可由 data/ 重建）
+db_md/
+db_md_rebuild/
+db_md_old/
+db_e2_*/
+
+# 运行时数据（用户库、自传文件、回收站、版本备份）
+data/users.db
+data/users.db-shm
+data/users.db-wal
+data/uploads/
+kb_files/
+uploads/
+
+# 工具临时目录
+.playwright-cli/

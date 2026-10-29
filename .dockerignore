@@ -1,0 +1,12 @@
+db_md*/
+db/
+data/uploads/
+.env
+.git
+.venv
+__pycache__
+*.pyc
+server.log
+docs/
+eval/results/
+frontend/*.md
