@@ -159,12 +159,34 @@ class RAGEngine:
     def _node_retrieve(self, state: GraphState):
         t0 = time.perf_counter()
         kb_ids = [str(k) for k in (state.get("kb_ids") or ["default"])]
-        documents = self.db.similarity_search(
-            state["question"], k=settings.retriever_k,
-            filter={"kb_id": {"$in": kb_ids}},  # 权限边界：只检索可见知识库
-        )
+        where = {"kb_id": {"$in": kb_ids}}  # 权限边界：只检索可见知识库
+        k = settings.retriever_k
+        mode = settings.retriever_mode
+
+        if mode == "mmr":
+            # 最大边际相关：先取 fetch_k 候选，再兼顾相关性与多样性选出 k 条
+            documents = self.db.max_marginal_relevance_search(
+                state["question"], k=k, fetch_k=settings.retriever_fetch_k,
+                lambda_mult=settings.mmr_lambda, filter=where,
+            )
+        elif mode == "dedup":
+            # 同文档去重：多取候选，每篇文档只留 rank 最高的 1 条，再补足 k 条
+            candidates = self.db.similarity_search(
+                state["question"], k=max(settings.retriever_fetch_k, k), filter=where)
+            documents, seen = [], set()
+            for d in candidates:
+                src = str((d.metadata or {}).get("source", ""))
+                if src in seen:
+                    continue
+                seen.add(src)
+                documents.append(d)
+                if len(documents) >= k:
+                    break
+        else:
+            documents = self.db.similarity_search(state["question"], k=k, filter=where)
+
         out = {"documents": documents}
-        out.update(_trace(state, "retrieve", t0, f"{len(documents)} docs@kb{kb_ids}"))
+        out.update(_trace(state, "retrieve", t0, f"{len(documents)} docs@kb{kb_ids}/{mode}"))
         return out
 
     def _node_grade_documents(self, state: GraphState):
