@@ -1,0 +1,921 @@
+{
+  "summary": {
+    "tag": "E7b",
+    "persist": "db_e2_800",
+    "total": 30,
+    "failed": 0,
+    "recall@4": 1.0,
+    "mrr": 1.0,
+    "must_contain_rate": 0.8667,
+    "refuse_acc": 0.8667,
+    "cite_rate": 1.0,
+    "bad_ident_count": 10,
+    "p50": 10.48,
+    "p95": 18.05,
+    "time": "2026-10-30 01:32:34"
+  },
+  "records": [
+    {
+      "id": "q001",
+      "type": "fact",
+      "question": "企业微信的 corpid 在哪里查看？",
+      "should_refuse": false,
+      "latency": 8.66,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [
+        "我的企业",
+        "企业ID"
+      ],
+      "must_ok": true,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "企业微信的 `corpid`（企业ID）可在企业微信管理后台的“我的企业” → “企业信息”页面中查看，需使用具有管理员权限的账号登录。\n\n操作路径如下：  \n1. 登录企业微信管理后台（https://work.weixin.qq.com/）；  \n2. 在左侧导航栏点击【我的企业】；  \n3. 在右侧页面中找到并点击【企业信息】；  \n4. 在“企业信息”页面中，即可查看“企业ID”，该值即为 `corpid`。\n\n注意：仅企业管理员或拥有相应权限的成员可访问该页面。\n\n参考：基本概念介绍 - 文档 - 企业微信开发者中心",
+      "sources": [
+        "基本概念介绍 - 文档 - 企业微信开发者中心_a5b8e2ad12.md",
+        "获取access_token - 文档 - 企业微信开发者中心_87e7cfe4f9.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q002",
+      "type": "fact",
+      "question": "企业微信调用业务接口时 access_token 的有效期是多少秒？",
+      "should_refuse": false,
+      "latency": 8.33,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [
+        "7200"
+      ],
+      "must_ok": true,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "企业微信业务接口的 access_token 有效期为 **7200 秒（2 小时）**。\n\n根据返回结果中的 `expires_in` 字段，正常情况下该值为 7200；开发者需缓存 access_token，并在失效或过期时重新获取。注意企业微信可能因运营需要提前使 access_token 失效，因此应实现失效后自动重获逻辑。\n\n参考：获取access_token - 文档 - 企业微信开发者中心",
+      "sources": [
+        "获取access_token - 文档 - 企业微信开发者中心_87e7cfe4f9.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q003",
+      "type": "fact",
+      "question": "对象存储的简单上传方式，单个对象最大支持多大？",
+      "should_refuse": false,
+      "latency": 9.53,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [],
+      "must_ok": false,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "腾讯云对象存储（COS）简单上传方式单个文件最大支持 **5 GB**（即 5120 MB）。\n\n注意：  \n- 此限制适用于通过 REST API 或 SDK 调用 PUT Object 接口的**标准简单上传**；  \n- 若使用**控制台上传**，则单个文件最大支持 **512 GB**，但该能力属于控制台封装逻辑，不属于“简单上传”协议定义范畴；  \n- 对于超过 5 GB 的文件，官方推荐使用**分块上传**（支持最大 48.82 TB）。\n\n参考：对象存储 简单上传_腾讯云",
+      "sources": [
+        "对象存储 简单上传_腾讯云_e0699b1374.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q004",
+      "type": "fact",
+      "question": "微信小程序通过 /cgi-bin/token 获取的接口调用凭据，有效期是多久？",
+      "should_refuse": false,
+      "latency": 7.65,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [
+        "7200"
+      ],
+      "must_ok": true,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "微信小程序调用 `/cgi-bin/token` 接口获取的 `access_token` 有效期为 **7200 秒（即 2 小时）**。\n\n参考：接口调用凭证 _ 微信开放文档_58dfa8d1fc.md",
+      "sources": [
+        "接口调用凭证 _ 微信开放文档_58dfa8d1fc.md",
+        "获取access_token - 文档 - 企业微信开发者中心_87e7cfe4f9.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q005",
+      "type": "fact",
+      "question": "腾讯云服务器提供哪两种加密登录方式？",
+      "should_refuse": false,
+      "latency": 7.35,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [
+        "密码",
+        "密钥"
+      ],
+      "must_ok": true,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "腾讯云服务器支持的两种加密登录方式是：**密码登录** 和 **SSH 密钥登录**。  \n其中，Windows 系统实例不支持 SSH 密钥登录。\n\n参考：云服务器 网络与安全概述_腾讯云_200bffef92.md",
+      "sources": [
+        "云服务器 网络与安全概述_腾讯云_200bffef92.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q006",
+      "type": "flow",
+      "question": "第一次使用对象存储控制台，从注册到成功上传一个文件，需要经过哪些步骤？",
+      "should_refuse": false,
+      "latency": 13.81,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [
+        "实名认证",
+        "创建存储桶"
+      ],
+      "must_ok": true,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "腾讯云对象存储（COS）首次使用控制台上传文件的完整步骤如下（仅依据资料中明确描述的操作路径和按钮名称）：\n\n1. **注册腾讯云账号**  \n   - 若尚未注册，需先注册腾讯云账号。\n\n2. **完成实名认证**  \n   - 使用该账号登录腾讯云控制台，完成实名认证。\n\n3. **开通 COS 服务**  \n   - 在腾讯云控制台中搜索“对象存储”，进入对象存储控制台，按界面提示开通 COS 服务。\n\n4. **创建存储桶**  \n   - 在对象存储控制台左侧导航栏中单击 **存储桶列表**，进入存储桶管理页；  \n   - 单击 **创建存储桶**；  \n   - 输入配置信息（所属地域、名称、访问权限），其他配置保持默认；  \n   - 单击 **创建**。\n\n5. **上传对象（文件）**  \n   - 在存储桶列表中，单击已创建的存储桶名称，进入该存储桶的 **文件列表** 页；  \n   - 单击 **上传文件** > **选择文件**，从本地选择需上传的文件；  \n   - 单击 **上传**，完成文件上传。\n\n说明：资料中未提及登录控制台的具体入口（如是否需单独点击“登录”按钮）、未说明“上传文件”按钮是否在页面顶部/右上角等位置细节，也未提供“上传”操作后的成功提示样式或校验方式，故以上步骤严格限定于资料原文出现的菜单名、按钮名及动作顺序。\n\n参考：对象存储 控制台快速入门_腾讯云_5ae2ad3a65.md",
+      "sources": [
+        "对象存储 控制台快速入门_腾讯云_5ae2ad3a65.md",
+        "对象存储 产品概述_腾讯云_69380faf9f.md",
+        "对象存储 简单上传_腾讯云_e0699b1374.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q007",
+      "type": "flow",
+      "question": "刚购买的 Linux 云服务器，怎么从本地登录上去？",
+      "should_refuse": false,
+      "latency": 11.49,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [
+        "登录"
+      ],
+      "must_ok": true,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [
+        "Terminal",
+        "PuTTY"
+      ],
+      "bad_codes": [],
+      "answer": "腾讯云 Linux 云服务器可通过 SSH 从本地登录，但【资料中未提供 SSH 登录所需的具体命令、IP 地址获取方式、端口、用户名默认值、密钥配置方法或本地终端操作步骤】。\n\n资料仅说明：\n- 购买时若勾选“公网 IP”，会分配公网 IP；\n- 登录密码由系统自动生成并发送至“站内信”；\n- 控制台提供“标准登录 | Linux 实例”窗口，支持输入用户名和密码登录（该方式为 Web 控制台内置登录，非本地 SSH）；\n- 未提及如何在本地使用 SSH 客户端（如 Terminal、PuTTY）连接，也未说明默认用户名（如 root 或 ubuntu）、SSH 端口（如 22）、是否需配置安全组放行 SSH 端口等关键信息。\n\n因此，**当前资料未包含通过本地 SSH 登录的具体操作步骤**。\n\n建议您查阅腾讯云官方文档《无法登录 Linux 实例》或《Linux 实例登录方式概述》，或通过腾讯云在线支持咨询人工客服获取完整 SSH 登录指引。\n\n参考：云服务器 快速配置 Linux 云服务器_腾讯云_ad645a26af.md",
+      "sources": [
+        "云服务器 快速配置 Linux 云服务器_腾讯云_ad645a26af.md",
+        "云服务器 快速配置 Windows 云服务器_腾讯云_675e1bdd29.md",
+        "云服务器 云服务器概述_腾讯云_911f2b0413.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q008",
+      "type": "flow",
+      "question": "在企业微信里新增一个成员，要调用哪个接口？",
+      "should_refuse": false,
+      "latency": 6.02,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [],
+      "must_ok": false,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "企业微信新增成员需调用「创建成员」API接口。\n\n参考：创建成员 - 文档 - 企业微信开发者中心",
+      "sources": [
+        "创建成员 - 文档 - 企业微信开发者中心_609ecc9cc2.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q009",
+      "type": "flow",
+      "question": "腾讯会议的会议结束后，会中的文档在哪里查看和导出？",
+      "should_refuse": false,
+      "latency": 15.22,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [
+        "导出"
+      ],
+      "must_ok": true,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [
+        "PPT"
+      ],
+      "bad_codes": [],
+      "answer": "腾讯会议结束后，可按以下方式查看和导出会议中共享的文档：\n\n一、查看路径（按终端区分）：\n1. **Windows/macOS 客户端**  \n   - 点击客户端主界面【全部会议】→【历史会议】→选中目标会议→点击【已上传的文档】→在会议文档界面点击要查看的文档。  \n   - 打开文档后，点击右上角【更多】按钮 → 选择【下载此文档】（适用于本地上传文档）。\n\n2. **Android/iOS APP**  \n   - 点击APP主界面【历史会议】→选中目标会议→点击【会议资料】→在会议文档界面点击要查看的文档。  \n   - 若上传的是**本地文档**：点击右上角【更多】→选择【复制链接】，在浏览器中打开；  \n   - 若上传的是**在线文档**（如腾讯文档）：点击右上角【更多】→选择【导出为Word】或【导出为PDF】。\n\n3. **Web 端（腾讯会议官网）**  \n   - 登录腾讯会议官网 → 进入【个人中心】→ 点击左侧【会议文档】→ 选择对应会议 → 在会议文档详情页点击要查看的文档。\n\n二、导出说明：\n- 本地上传的文档（如PPT、PDF等）仅支持「下载」（即保存到本地设备）；\n- 在线文档（如腾讯文档链接）支持导出为 Word 或 PDF 格式（仅限移动端APP）；\n- Web端未明确说明导出功能，资料中仅提及“查看”操作。\n\n三、注意事项：\n- 会后文档默认保留30天，超期自动删除；\n- 当天内仅主持人和受邀请成员可在客户端主面板直接访问会议详情页；  \n- 当天之后，主持人、受邀请成员及有登录态的成员可在Web端查看会议文档。\n\n参考：腾讯会议文档查看及导出使用指南-腾讯会议 - 腾讯会议帮助中心",
+      "sources": [
+        "腾讯会议文档查看及导出使用指南-腾讯会议 - 腾讯会议帮助中心_d48eb4912c.md",
+        "个人中心 - 腾讯会议帮助中心_6fed5b7068.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q010",
+      "type": "flow",
+      "question": "企业微信接入回调服务，开发者需要实现哪些功能？",
+      "should_refuse": false,
+      "latency": 12.9,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [
+        "POST"
+      ],
+      "must_ok": true,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "企业微信回调服务开发者需实现以下三项核心功能：\n\n1. **支持 HTTP GET 请求验证 URL 有效性**  \n   - 企业微信在配置回调时，会向开发者提供的 URL 发起一次带签名和密文参数的 GET 请求；  \n   - 开发者服务需校验签名（使用 Token 参与计算），并正确解密返回明文字符串，以完成 URL 有效性验证。\n\n2. **支持 HTTP POST 请求接收并处理业务数据**  \n   - 后续所有事件（如用户消息、菜单点击、通讯录变更等）均通过 POST 方式推送；  \n   - 开发者需：  \n     - 校验 `msg_signature` 签名（确保来源可信且内容未被篡改）；  \n     - 解密 `Encrypt` 字段，获取明文消息结构体；  \n     - 根据具体业务类型（如应用消息、事件通知）进行逻辑处理；  \n     - 如需被动回复，需加密响应消息、生成新签名、构造被动响应包，并在 5 秒内返回（建议立即应答，业务异步处理）。\n\n3. **获取并维护企业微信服务器 IP 段（可选但推荐）**  \n   - 开发者可通过调用接口获取企业微信服务器出口 IP 列表，用于在防火墙或安全策略中放行合法请求源；  \n   - 接口返回包含 `ip_list` 字段的 JSON，需根据 `errcode` 判断调用是否成功。\n\n参考：回调配置 - 文档 - 企业微信开发者中心",
+      "sources": [
+        "回调配置 - 文档 - 企业微信开发者中心_b55734e2ff.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q011",
+      "type": "multi",
+      "question": "企业微信的 access_token 是什么？应该怎么保存，能不能直接返回给前端？",
+      "should_refuse": false,
+      "latency": 11.9,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [
+        "后台"
+      ],
+      "must_ok": true,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [
+        "Redis"
+      ],
+      "bad_codes": [],
+      "answer": "企业微信的 `access_token` 是调用企业微信 API 接口所需的登录凭证，由 `corpid` 和 `corpsecret` 调用 `gettoken` 接口生成，用于鉴权调用者身份，是后台访问企业微信服务的必要票据。\n\n安全保存方式：  \n- 必须由开发者**保存在后台服务器**（如内存缓存、Redis 或数据库），**不得返回给前端**；  \n- 需缓存并复用，避免频繁调用 `/cgi-bin/gettoken` 接口（否则会触发频率拦截）；  \n- 注意 `access_token` 有效期为 `expires_in` 字段返回的秒数（正常为 7200 秒/2 小时），需实现失效后自动刷新逻辑；  \n- 每个应用有独立的 `corpsecret`，因此不同应用的 `access_token` 必须分开存储和管理；  \n- 至少预留 512 字节存储空间以容纳 `access_token` 字符串。\n\n能否返回前端：  \n**不可以**。资料明确强调：“为了安全考虑，开发者请勿将 access_token 返回给前端，需要开发者保存在后台，所有访问企业微信 API 的请求由后台发起”。\n\n参考：获取access_token - 文档 - 企业微信开发者中心",
+      "sources": [
+        "获取access_token - 文档 - 企业微信开发者中心_87e7cfe4f9.md",
+        "基本概念介绍 - 文档 - 企业微信开发者中心_a5b8e2ad12.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q012",
+      "type": "multi",
+      "question": "我要上传一个 8GB 的文件到对象存储，用简单上传够吗？不够的话该怎么做？",
+      "should_refuse": false,
+      "latency": 10.94,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [
+        "分块"
+      ],
+      "must_ok": true,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "不支持。腾讯云对象存储的简单上传方式仅适用于不超过 5GB 的单个对象，而 8GB 文件已超过该限制。\n\n若需上传 8GB 文件，应使用以下任一方式：\n\n1. **分块上传（推荐）**：  \n   - 支持最大 48.82TB（即 50000GB）的单个对象；  \n   - 适用于大文件、弱网络或需断点续传的场景；  \n   - 可通过 REST API、SDK 或 COSCMD 工具实现。\n\n2. **控制台上传**：  \n   - 控制台本身支持上传最大 512GB 的单个对象；  \n   - 操作路径为：登录对象存储控制台 → 存储桶列表 → 单击目标存储桶 → 文件列表页 → 单击“上传文件”。\n\n注意：即使文件大小在控制台支持范围内，若网络不稳定或文件大于 100MB，官方仍建议优先使用分块上传以提升成功率和传输效率。\n\n参考：对象存储 简单上传_腾讯云",
+      "sources": [
+        "对象存储 简单上传_腾讯云_e0699b1374.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q013",
+      "type": "multi",
+      "question": "小程序上线前做安全加固，应该遵循哪些原则？接口调用凭据又该怎么保存？",
+      "should_refuse": false,
+      "latency": 13.99,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [
+        "最小权限"
+      ],
+      "must_ok": true,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [
+        "Redis"
+      ],
+      "bad_codes": [],
+      "answer": "微信小程序上线前安全加固应遵循以下原则（依据资料1）：\n\n1. **互不信任原则**：不信任用户提交的任何数据（包括第三方系统提供的数据），关键数据校验必须在后台完成，不可仅依赖前端校验。  \n2. **最小权限原则**：代码、模块等仅授予完成其功能所必需的最小权限，禁止赋予冗余权限。  \n3. **禁止明文保存用户敏感数据**：如用户身份信息、支付信息等不得以明文形式存储。  \n4. **业务逻辑后移**：小程序客户端代码可被反编译和分析，重要业务逻辑（如鉴权、核心计算、数据修改）必须放在后台服务或云函数中实现。  \n5. **强制身份鉴权**：所有后台接口调用及云函数调用，必须实施有效的身份认证与授权机制。\n\n关于接口调用凭据（如 Access Token）的保存方法（依据资料2、资料3）：\n\n- Access Token 通过 `/cgi-bin/token` 或 `/cgi-bin/stable_token` 接口获取，有效期为 7200 秒（2 小时）。  \n- 开发者**必须进行妥善保存**，避免每次请求都重新获取；但资料中未说明具体保存方式（如是否允许存数据库、Redis、环境变量或本地文件等），也未提供控制台配置路径、加密要求或安全存储建议。  \n- 资料仅强调“妥善保存”这一要求，未给出技术实现细节、推荐方案或禁止行为（如不可硬编码、不可写入前端代码等），因此**当前资料未包含接口调用凭据的具体保存方法**。\n\n参考：开发安全指引 | 微信开放文档  \n参考：接口调用凭证 | 微信开放文档",
+      "sources": [
+        "开发安全指引 _ 微信开放文档_0a7dbf7817.md",
+        "接口调用凭证 _ 微信开放文档_58dfa8d1fc.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q014",
+      "type": "multi",
+      "question": "登录云服务器时发现密码不对，怎么重置？重置前要注意什么？",
+      "should_refuse": false,
+      "latency": 20.42,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [
+        "重置"
+      ],
+      "must_ok": true,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [
+        "console.cloud.tencent.com/cvm",
+        "etc/ssh/sshd_config"
+      ],
+      "bad_codes": [],
+      "answer": "腾讯云服务器密码错误时，可通过控制台重置实例登录密码。支持**在线重置**和**离线重置**两种方式，具体操作及注意事项如下：\n\n### 一、重置方法（以单台实例为例）\n1. 登录 [云服务器控制台](https://console.cloud.tencent.com/cvm)；  \n2. 在实例管理页面，根据视图模式操作：  \n   - **列表视图**：选择目标实例所在行右侧的 **更多 > 密码/密钥 > 重置密码**；  \n   - **页签视图**：在目标实例页面中，单击 **重置密码**；  \n3. 在弹出窗口中：  \n   - 确认需重置密码的 **用户名**（如 Linux 默认为 `root` 或 `ubuntu`，Windows 默认为 `Administrator`）；  \n   - 输入符合复杂度要求的 **新密码** 和 **确认密码**（若同时选中 Linux 与 Windows 实例，密码需满足 Windows 复杂度要求）；  \n   - 选择重置方式：**在线重置** 或 **离线重置**；  \n   - 如选择离线重置，需**阅读并勾选“离线重置须知”**；  \n4. 单击 **重置密码**，完成操作。\n\n> 注：当前控制台已优先采用 TAT（腾讯自动化工具）方式进行密码重置，优势为**无需重启实例**。\n\n---\n\n### 二、重置前需注意的事项\n\n- **在线重置前提条件**：  \n  - 实例状态必须为 **运行中**；  \n  - 自动化助手（TAT）状态也必须为 **运行中**；  \n  - 对于 Linux 实例，若 `/etc/ssh/sshd_config` 中 `PasswordAuthentication` 设置为 `No`，重置后该值将被自动改为 `Yes`，且 `sshd` 进程会被重启，**可能导致已建立的 SSH 连接中断**；  \n  - 对于 Windows 实例，若所选用户处于**锁定或禁用状态**，重置密码时该用户将被**自动启用**。\n\n- **离线重置风险提示**：  \n  - 对正在运行的实例，重置过程中会**强制关机**，可能影响业务；  \n  - 建议在**业务低谷期操作**，避免服务中断；  \n  - 通过“关机不收费”模式关机的实例**不支持重置密码**，需先开机再操作。\n\n- **其他注意事项**：  \n  - 第三方安全软件（如 360、火绒等）可能拦截 `cloudbase-init` 或 `tat` 的 `net user` 命令，影响密码设置；  \n  - 重置完成后，可前往实例详情页，选择 **执行命令 > 查看执行详情**，确认密码重置结果。\n\n参考：云服务器 重置实例密码_腾讯云",
+      "sources": [
+        "云服务器 重置实例密码_腾讯云_21f972daea.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q015",
+      "type": "multi",
+      "question": "第一次用腾讯会议开周会：桌面端怎么快速开始，会中有哪些快捷键，会后的文档去哪看？",
+      "should_refuse": false,
+      "latency": 16.11,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [
+        "快捷键"
+      ],
+      "must_ok": true,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [
+        "Ctrl"
+      ],
+      "bad_codes": [],
+      "answer": "一、如何快速开始会议（首次使用）  \n1. 下载并安装腾讯会议桌面端（支持 Windows 7 及以上 / macOS 10.11 及以上）；  \n2. 打开客户端，选择登录方式：微信登录、手机密码登录、手机验证码登录；企业用户还可选邮箱登录、SSO登录或企业微信登录（需企业管理员提前授权并配置）；  \n3. 登录成功后，在主界面点击【快速会议】按钮，即可立即创建并加入新会议（无需输入会议号，系统自动生成）。\n\n二、常用快捷键有哪些  \n资料中明确列出可设置的快捷键功能包括：  \n- 开启/关闭麦克风  \n- 开启/关闭视频  \n- 开启/关闭屏幕共享  \n- 激活会议窗口  \n- 开始/结束录制  \n- 开始/结束本地录制  \n- 暂停/恢复录制  \n\n⚠️ 注意：  \n- Windows 需 3.8 及以上版本，macOS 需 3.9 及以上版本；  \n- 设置路径为：客户端主界面左下角【设置】→【快捷键】；  \n- 勾选【全局快捷键】后，即使腾讯会议在后台运行，快捷键仍生效；  \n- 资料未提供各功能对应的默认快捷键组合（如 Ctrl+D 等），也未列出其他会中操作（如聊天、举手、静音全体等）的快捷键。\n\n三、会后文档存储位置  \n根据当前提供的全部资料，**未提及会议结束后生成的文档（如会议纪要、共享文件、录制文件、协作文档等）的具体存储位置**。资料中仅说明可“开始/结束录制”“开始/结束本地录制”，但未说明本地录制文件的默认保存路径，也未涉及会议中协作产生的文档（如白板、文档协作内容）的存储位置或访问方式。\n\n参考：腾讯会议快捷键功能使用指南-腾讯会议 - 腾讯会议帮助中心  \n参考：腾讯会议桌面端快速使用指南-腾讯会议 - 腾讯会议帮助中心",
+      "sources": [
+        "腾讯会议桌面端快速使用指南-腾讯会议 - 腾讯会议帮助中心_7d7cf4f34d.md",
+        "腾讯会议快捷键功能使用指南-腾讯会议 - 腾讯会议帮助中心_e34f950991.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q016",
+      "type": "refuse",
+      "question": "企业微信的会话存档功能怎么开通？",
+      "should_refuse": true,
+      "latency": 9.61,
+      "rank": 0,
+      "hit": false,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": true,
+      "cite": false,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "根据当前知识库资料无法确定该问题。为避免提供不准确的信息，建议您通过对应产品的官方支持渠道咨询人工客服。",
+      "sources": [],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q017",
+      "type": "refuse",
+      "question": "云服务器的快照怎么创建，能保留多长时间？",
+      "should_refuse": true,
+      "latency": 10.02,
+      "rank": 0,
+      "hit": false,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": true,
+      "cite": false,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "根据当前知识库资料无法确定该问题。为避免提供不准确的信息，建议您通过对应产品的官方支持渠道咨询人工客服。",
+      "sources": [],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q018",
+      "type": "refuse",
+      "question": "对象存储的生命周期规则怎么配置，能自动转成低频存储吗？",
+      "should_refuse": true,
+      "latency": 11.29,
+      "rank": 0,
+      "hit": false,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": false,
+      "cite": true,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "可以配置生命周期规则将对象自动转为低频存储类型。\n\n但根据当前提供的资料，**未包含生命周期规则的具体配置路径、操作步骤、控制台菜单名称、按钮名称或 API/SDK 参数说明**。资料仅提及 COS 提供多种存储类型（包括低频存储），并列出使用方式（控制台、COSBrowser、COSCMD、API、SDK），但未说明生命周期功能如何启用或设置“转换存储类型”的规则。\n\n因此，无法从资料中提取出可执行的配置步骤。\n\n参考：对象存储 产品概述_腾讯云_69380faf9f.md",
+      "sources": [
+        "对象存储 产品概述_腾讯云_69380faf9f.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q019",
+      "type": "refuse",
+      "question": "微信小程序的云开发环境怎么开通？免费配额是多少？",
+      "should_refuse": true,
+      "latency": 9.93,
+      "rank": 0,
+      "hit": false,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": true,
+      "cite": false,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "根据当前知识库资料无法确定该问题。为避免提供不准确的信息，建议您通过对应产品的官方支持渠道咨询人工客服。",
+      "sources": [],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q020",
+      "type": "refuse",
+      "question": "腾讯会议可以设置几个联席主持人？",
+      "should_refuse": true,
+      "latency": 6.49,
+      "rank": 0,
+      "hit": false,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": false,
+      "cite": true,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "腾讯会议最多支持设置10个联席主持人。\n\n依据资料，「指定主持人」功能（仅支持商业版、企业版用户）允许用户在自己不参会时，由指定成员优先成为主持人，且明确说明“最多支持指定10位主持人”。\n\n参考：个人中心 - 腾讯会议帮助中心",
+      "sources": [
+        "个人中心 - 腾讯会议帮助中心_6fed5b7068.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q021",
+      "type": "out",
+      "question": "企业微信专业版一年多少钱？有没有折扣？",
+      "should_refuse": true,
+      "latency": 5.77,
+      "rank": 0,
+      "hit": false,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": true,
+      "cite": true,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "根据当前知识库资料无法确定，建议通过对应产品的官方支持渠道咨询人工客服。",
+      "sources": [
+        "01-服务范围与回答边界.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q022",
+      "type": "out",
+      "question": "帮我查一下我这个月对象存储的账单，为什么比上月贵？",
+      "should_refuse": true,
+      "latency": 14.15,
+      "rank": 0,
+      "hit": false,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": true,
+      "cite": true,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "腾讯云对象存储本月账单比上月贵，可能由以下原因导致（依据资料1中明确列出的计费维度）：\n\n- **存储容量增加**：按实际使用的存储空间（GB）和存储时长（天）计费，若本月文件上传量增多、生命周期未及时清理或冷热数据未合理分层，将直接推高存储费用；\n- **外网下行流量增长**：用户通过公网访问（下载）对象产生的外网下行流量按量计费，若本月有大量外部用户访问、CDN回源或批量下载行为，会导致流量费用上升；\n- **请求次数增多**：包括 GET、PUT、DELETE 等 API 请求均按次数计费，若本月业务调用量（如小程序频繁上传头像、后台批量同步文件）显著增加，将提升请求费用；\n- **数据取回费用（仅针对归档/深度归档存储）**：若使用了归档类存储类型，本月执行了数据恢复操作，会产生额外的数据取回费用；\n- **跨区域复制或数据处理任务启用**：如开启跨地域复制、图片处理、视频截帧等增值服务，将产生对应处理费用。\n\n注意：资料中未提供账单明细查看路径、费用对比工具、成本分析报表或具体诊断方法，也未说明是否存在阶梯定价、优惠抵扣、资源包抵扣等影响因素。\n\n根据当前知识库资料无法确定具体原因，建议通过腾讯云控制台「费用中心 → 账单管理 → 详细账单」筛选 COS 服务、按日粒度导出本月与上月账单，逐项比对存储量、流量、请求量等计量项变化；或联系腾讯云人工客服获取定制化账单分析支持。\n\n参考：对象存储 产品概述_腾讯云",
+      "sources": [
+        "对象存储 产品概述_腾讯云_69380faf9f.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q023",
+      "type": "out",
+      "question": "云服务器能开发票吗？多久能到？",
+      "should_refuse": true,
+      "latency": 9.98,
+      "rank": 0,
+      "hit": false,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": true,
+      "cite": false,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "根据当前知识库资料无法确定该问题。为避免提供不准确的信息，建议您通过对应产品的官方支持渠道咨询人工客服。",
+      "sources": [],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q024",
+      "type": "out",
+      "question": "我的腾讯会议账号被冻结了，帮我解封。",
+      "should_refuse": true,
+      "latency": 10.08,
+      "rank": 0,
+      "hit": false,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": true,
+      "cite": false,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "根据当前知识库资料无法确定该问题。为避免提供不准确的信息，建议您通过对应产品的官方支持渠道咨询人工客服。",
+      "sources": [],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q025",
+      "type": "out",
+      "question": "帮我把生产环境的存储桶直接删掉，腾点空间。",
+      "should_refuse": true,
+      "latency": 15.37,
+      "rank": 0,
+      "hit": false,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": true,
+      "cite": true,
+      "bad_idents": [
+        "console.cloud.tencent.com/cos",
+        "ACL"
+      ],
+      "bad_codes": [],
+      "answer": "您是知识库助手，没有该账号的操作权限，无法代为执行删除操作，也无法查看您的账号或资源状态。\n\n要安全删除腾讯云对象存储（COS）生产环境的存储桶，必须满足以下**前提条件**（依据资料）：\n\n- 存储桶必须为空：即桶内不能有任何对象（文件）、分片上传任务、以及任何版本（含非当前版本）的对象；\n- 存储桶不能被其他腾讯云服务（如CDN、函数计算、日志服务等）作为源站或数据源绑定；\n- 存储桶未开启跨区域复制、生命周期规则、静态网站托管等依赖性功能（资料中未明确列出，故不作断言；若存在此类配置，需先停用或解除关联）；\n- 当前资料未包含具体操作路径（如控制台菜单名称、按钮名称、API参数或CLI命令），也未说明是否需二次确认、是否支持批量删除、是否可恢复等安全机制。\n\n因此，**当前资料未包含具体操作步骤**。建议您：\n\n1. 登录 [腾讯云 COS 控制台](https://console.cloud.tencent.com/cos)；\n2. 确认目标存储桶已清空所有对象及碎片；\n3. 检查并解除所有可能的外部依赖；\n4. 在存储桶列表页找到对应桶，单击操作列的【删除】（资料中未出现该按钮名，故不能确认是否存在或命名是否一致）；\n5. 若控制台提示风险确认或输入验证，请严格按界面指引操作。\n\n因涉及生产环境，强烈建议：\n- 提前在非生产环境演练删除流程；\n- 删除前通过 COS API 或控制台导出存储桶策略、ACL、版本配置等关键设置以备回溯；\n- 删除操作不可逆，且资料未提及任何“软删除”或回收站机制。\n\n根据当前知识库资料无法确定完整安全删除流程，建议通过腾讯云官方支持渠道咨询人工客服。\n\n参考：对象存储 创建存储桶_腾讯云",
+      "sources": [
+        "对象存储 创建存储桶_腾讯云_d457c4134b.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q026",
+      "type": "out",
+      "question": "腾讯会议和钉钉会议哪个更好？直接给我结论。",
+      "should_refuse": true,
+      "latency": 11.4,
+      "rank": 0,
+      "hit": false,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": true,
+      "cite": false,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "根据当前知识库资料无法确定该问题。为避免提供不准确的信息，建议您通过对应产品的官方支持渠道咨询人工客服。",
+      "sources": [],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q027",
+      "type": "out",
+      "question": "我们是教育机构，能免费扩容企业微信的人数上限吗？能扩到多少人？",
+      "should_refuse": true,
+      "latency": 6.9,
+      "rank": 0,
+      "hit": false,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": true,
+      "cite": true,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "根据当前知识库资料，未提供关于教育机构企业微信免费人数上限扩容政策及最高可扩展人数的具体说明。\n\n资料中仅明确了本智能体的服务范围与回答边界，未包含企业微信针对教育机构的任何人数扩容政策、免费额度调整规则、适用条件或上限数值。\n\n参考：客服服务范围与回答边界",
+      "sources": [
+        "01-服务范围与回答边界.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q028",
+      "type": "out",
+      "question": "这个故障你们多久能修好？给我一个明确时间。",
+      "should_refuse": true,
+      "latency": 11.65,
+      "rank": 0,
+      "hit": false,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": true,
+      "cite": false,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "根据当前知识库资料无法确定该问题。为避免提供不准确的信息，建议您通过对应产品的官方支持渠道咨询人工客服。",
+      "sources": [],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q029",
+      "type": "out",
+      "question": "帮我查一下我这个账号的实名认证审核到哪一步了。",
+      "should_refuse": true,
+      "latency": 9.74,
+      "rank": 0,
+      "hit": false,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": true,
+      "cite": false,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "根据当前知识库资料无法确定该问题。为避免提供不准确的信息，建议您通过对应产品的官方支持渠道咨询人工客服。",
+      "sources": [],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "q030",
+      "type": "out",
+      "question": "小程序审核被拒了，你能不能直接帮我重新提交并通过？",
+      "should_refuse": true,
+      "latency": 10.88,
+      "rank": 0,
+      "hit": false,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": true,
+      "cite": true,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "我无法直接帮您重新提交或通过审核。我是知识库助手，没有您的微信公众平台账号权限，也无法查看或操作您的小程序资源、代码版本或审核状态。\n\n根据资料 1，微信小程序审核被拒后重新提交审核的流程如下：\n\n1. 登录微信公众平台小程序管理后台；  \n2. 进入「版本管理」页面；  \n3. 在「开发版本」中确认已上传最新修改后的代码（需先在本地完成问题修复并重新上传）；  \n4. 点击「提交审核」按钮，进入审核信息填写流程；  \n5. 按要求配置功能页面类目与标签（重要业务页面组数不多于5组）；  \n6. 如为首次提交被拒且需测试账号，此时应已在审核入口开放「测试账号」填写项，请如实提供可登录的测试账号及密码；  \n7. 完成填写后提交，审核版本将出现在「审核版本」模块中，可查看当前审核进度。\n\n提示：建议提交前参考《微信小程序平台常见拒绝情形》排查问题，避免重复被拒。\n\n参考：小程序产品定位及功能介绍 _ 微信开放文档",
+      "sources": [
+        "小程序产品定位及功能介绍 _ 微信开放文档_01b2320623.md",
+        "接口调用凭证 _ 微信开放文档_58dfa8d1fc.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    }
+  ]
+}

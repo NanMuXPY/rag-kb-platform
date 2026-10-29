@@ -1,0 +1,320 @@
+{
+  "summary": {
+    "tag": "E7-final",
+    "persist": "db_e2_800",
+    "total": 10,
+    "failed": 0,
+    "recall@4": 1.0,
+    "mrr": 1.0,
+    "must_contain_rate": 1.0,
+    "refuse_acc": null,
+    "cite_rate": 1.0,
+    "bad_ident_count": 16,
+    "p50": 11.49,
+    "p95": 17.7,
+    "time": "2026-10-30 01:20:50"
+  },
+  "records": [
+    {
+      "id": "h01",
+      "type": "hard",
+      "question": "企微那边拿的 token 最多能撑多久啊",
+      "should_refuse": false,
+      "latency": 8.01,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [
+        "7200"
+      ],
+      "must_ok": true,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "企业微信 access_token 的有效期正常情况下为 7200 秒（即 2 小时）。\n\n该有效期通过接口返回的 `expires_in` 字段明确告知，值为 `7200`。但需注意：企业微信可能出于运营需要提前使 access_token 失效，因此开发者应实现失效后自动重新获取的逻辑，不可仅依赖固定时间缓存。\n\n参考：获取access_token - 文档 - 企业微信开发者中心",
+      "sources": [
+        "获取access_token - 文档 - 企业微信开发者中心_87e7cfe4f9.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "h02",
+      "type": "hard",
+      "question": "往 cos 传个 6G 的大文件直接报错了，是不是不让这么传",
+      "should_refuse": false,
+      "latency": 14.16,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [
+        "分块上传"
+      ],
+      "must_ok": true,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [
+        "Multipart"
+      ],
+      "bad_codes": [],
+      "answer": "是的，COS 不支持使用**简单上传（PUT Object）**方式上传 6GB 的文件，因为简单上传仅支持**不超过 5GB** 的单个对象。\n\n对于 6GB 文件，推荐以下上传方式（按适用性排序）：\n\n1. **使用控制台上传**：  \n   控制台支持上传最大 **512GB** 的单个对象，操作最简单，无需开发。  \n   操作路径（依据资料1）：  \n   1. 登录 对象存储控制台；  \n   2. 在左侧导航栏中，单击 存储桶列表，进入存储桶列表页面；  \n   3. 单击目标存储桶，进入文件列表页面；  \n   4. 在文件列表中，单击 上传文件。\n\n2. **使用分块上传（Multipart Upload）**：  \n   通过 API 或 SDK 调用分块上传接口，支持最大 **48.82TB**（50000GB）对象，具备断点续传、并行上传、高失败容忍等优势，特别适合大文件或网络不稳定场景。  \n   （资料1明确指出：“如需上传大于 5GB 的单个对象，可使用……分块上传”）\n\n3. **使用 COSCMD 工具**：  \n   支持上传最大 **40TB** 的单个对象，适合命令行批量操作用户。\n\n注意：即使文件小于 5GB，若超过 100MB，资料1也建议优先使用分块上传以提升成功率和效率。\n\n参考：对象存储 简单上传_腾讯云_e0699b1374.md",
+      "sources": [
+        "对象存储 简单上传_腾讯云_e0699b1374.md",
+        "对象存储 产品概述_腾讯云_69380faf9f.md",
+        "对象存储 控制台快速入门_腾讯云_5ae2ad3a65.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "h03",
+      "type": "hard",
+      "question": "开会的时候想快速静音，有没有快捷一点的办法",
+      "should_refuse": false,
+      "latency": 9.63,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [
+        "Ctrl",
+        "Shift",
+        "Command",
+        "Shift"
+      ],
+      "bad_codes": [],
+      "answer": "可以通过快捷键快速静音：\n\n1. 确保腾讯会议客户端版本满足要求：Windows 3.8 及以上，或 macOS 3.9 及以上；  \n2. 在客户端主界面点击左下角【设置】按钮 → 进入【快捷键】页面；  \n3. 找到“开启/关闭麦克风”功能，为其设置自定义快捷键（如默认为 `Ctrl + Shift + M` / `Command + Shift + M`）；  \n4. 开会时，直接按下该快捷键即可一键静音或取消静音。\n\n注：勾选对应快捷键的【全局快捷键】选项后，即使腾讯会议不在前台运行，该快捷键仍可生效。\n\n参考：腾讯会议快捷键功能使用指南-腾讯会议 - 腾讯会议帮助中心",
+      "sources": [
+        "腾讯会议快捷键功能使用指南-腾讯会议 - 腾讯会议帮助中心_e34f950991.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "h04",
+      "type": "hard",
+      "question": "云主机密码忘了咋整，能自己在后台重置吗",
+      "should_refuse": false,
+      "latency": 13.22,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "可以，腾讯云服务器支持在控制台自助重置密码。\n\n操作步骤如下：  \n1. 登录 云服务器控制台。  \n2. 在实例管理页面，根据视图模式选择操作：  \n   - 列表视图：选择需重置密码的云服务器所在行右侧的 **更多 > 密码/密钥 > 重置密码**；  \n   - 页签视图：在目标云服务器页面中，单击 **重置密码**。  \n3. 在弹出的重置密码窗口中：  \n   - 确认需要重置密码的 **用户名**（如 Linux 实例默认为 `root` 或 `ubuntu`，Windows 实例为 `Administrator`）；  \n   - 输入符合复杂度要求的 **新密码** 和 **确认密码**；  \n   - 选择重置方式：**在线重置**（无需重启，要求实例与自动化助手状态均为“运行中”）或 **离线重置**（会关机，适用于不满足在线条件的场景）；  \n   - 如选择离线重置，需阅读并勾选 **离线重置须知**；  \n4. 单击 **重置密码** 完成操作。\n\n注意：  \n- 控制台已优先采用 TAT 密码重置方式，优势为无需重启机器；  \n- 若实例安装了第三方安全软件（如360、火绒），可能拦截重置命令，新版控制台已优化以降低拦截风险。\n\n参考：云服务器 重置实例密码_腾讯云_21f972daea.md",
+      "sources": [
+        "云服务器 重置实例密码_腾讯云_21f972daea.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "h05",
+      "type": "hard",
+      "question": "小程序页面里想做个能左右滑的轮播图，用哪个组件",
+      "should_refuse": false,
+      "latency": 6.56,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "应使用 `swiper` 组件。\n\n`swiper` 是微信小程序中专门用于实现滑块视图（如左右滑动轮播图）的内置组件，支持自动播放、循环滑动、指示点等轮播图常用功能。\n\n参考：视图容器 _ 微信开放文档",
+      "sources": [
+        "视图容器 _ 微信开放文档_1e3e382844.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "h06",
+      "type": "hard",
+      "question": "在企微后台给新来的同事开个账号要怎么弄",
+      "should_refuse": false,
+      "latency": 8.77,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "在企业微信后台为新员工创建账号，需通过「管理后台」的「通讯录」模块手动添加成员，或调用「创建成员」API 接口。根据资料，**手动创建路径未在提供的资料中说明**；资料仅描述了 API 接口所需的参数要求（如 `userid`、`name`、`mobile`/`email` 必填其一、`department` 等），并未给出管理后台的具体操作步骤（例如菜单名称、按钮位置、页面路径）。\n\n因此，当前资料未包含“企业微信后台如何为新员工创建账号”的具体界面操作流程。\n\n参考：创建成员 - 文档 - 企业微信开发者中心",
+      "sources": [
+        "创建成员 - 文档 - 企业微信开发者中心_609ecc9cc2.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "h07",
+      "type": "hard",
+      "question": "对象存储建桶",
+      "should_refuse": false,
+      "latency": 12.04,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [
+        "console.cloud.tencent.com/cos"
+      ],
+      "bad_codes": [],
+      "answer": "腾讯云对象存储（COS）创建存储桶可通过对象存储控制台完成，具体步骤如下：\n\n1. 登录 [对象存储控制台](https://console.cloud.tencent.com/cos)。  \n2. 在左侧导航栏中，单击 **存储桶列表**。  \n3. 在存储桶列表页面，单击 **创建存储桶**。  \n4. 在跳转的 **创建存储桶** 界面中，配置以下信息：  \n   - **存储桶类型**：选择通用存储桶或元数据加速桶（元数据加速桶仅对白名单用户开放）；  \n   - **名称**：输入自定义存储桶名称（仅支持小写字母、数字和中划线“-”，不能以“-”开头或结尾，且创建后不可修改）；  \n   - 其他必填项（如地域、访问权限等）按界面提示完成配置。\n\n注意：同一主账号下最多可创建200个存储桶；存储桶名称全局唯一，且创建后名称和所属地域均不可修改。\n\n参考：对象存储 创建存储桶_腾讯云_d457c4134b.md",
+      "sources": [
+        "对象存储 创建存储桶_腾讯云_d457c4134b.md",
+        "对象存储 控制台快速入门_腾讯云_5ae2ad3a65.md",
+        "对象存储 产品概述_腾讯云_69380faf9f.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "h08",
+      "type": "hard",
+      "question": "chromadb 老报 readonly database，删了目录重建还是报，怎么破",
+      "should_refuse": false,
+      "latency": 13.9,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "根据当前知识库资料无法确定该问题。为避免提供不准确的信息，建议您通过对应产品的官方支持渠道咨询人工客服。",
+      "sources": [
+        "01-ChromaDB只读错误与旁路重建方案.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "h09",
+      "type": "hard",
+      "question": "docker 里改了代码，重启容器一点变化都没有",
+      "should_refuse": false,
+      "latency": 10.95,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "根据当前知识库资料无法确定该问题。为避免提供不准确的信息，建议您通过对应产品的官方支持渠道咨询人工客服。",
+      "sources": [
+        "02-Docker改代码不生效与数据卷丢失.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "h10",
+      "type": "hard",
+      "question": "服务器能 ping 通外网 IP，但装东西全部超时",
+      "should_refuse": false,
+      "latency": 17.7,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [
+        "DNS"
+      ],
+      "must_ok": true,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [
+        "yum",
+        "CentOS/RHEL",
+        "Ubuntu/Debian",
+        "connection",
+        "timed",
+        "x.x.x",
+        "x.x",
+        "yum",
+        "makecache",
+        "yum/apt"
+      ],
+      "bad_codes": [],
+      "answer": "问题现象是：腾讯云服务器能 `ping` 通外网 IP，但 `yum`（CentOS/RHEL）或 `apt`（Ubuntu/Debian）安装软件包时超时。\n\n根据【资料 1】，该现象符合“**能连 IP 但无法解析域名**”的典型特征——即出方向 TCP 连通性正常，但 DNS 解析失败，导致包管理器无法访问镜像源域名（如 `mirrors.tencentyun.com`、`archive.ubuntu.com`、`repo.centos.org` 等）。\n\n### 解决步骤如下：\n\n1. **确认 DNS 故障**  \n   执行以下命令验证：\n   ```bash\n   nslookup mirrors.tencentyun.com\n   ```\n   若返回 `connection timed out` 或 `server can't find ...`，且 `/etc/resolv.conf` 中配置的是内网 DNS（如 `10.x.x.x` 或 `192.168.x.x`），则极可能为内网 DNS 失效。\n\n2. **临时替换 DNS 服务器**  \n   编辑 `/etc/resolv.conf`，将 `nameserver` 行替换为公共 DNS，例如：\n   ```bash\n   echo \"nameserver 223.5.5.5\" > /etc/resolv.conf\n   echo \"nameserver 223.6.6.6\" >> /etc/resolv.conf\n   ```\n\n3. **防止 DHCP 覆盖**  \n   执行以下命令锁定文件，避免系统重启或网络重连后被覆盖：\n   ```bash\n   chattr +i /etc/resolv.conf\n   ```\n\n4. **备份原配置（操作前必做）**  \n   ```bash\n   cp /etc/resolv.conf /etc/resolv.conf.bak\n   ```\n\n5. **验证修复效果**  \n   再次执行：\n   ```bash\n   nslookup mirrors.tencentyun.com\n   yum makecache  # 或 apt update\n   ```\n   若成功返回解析结果且 `yum/apt` 不再超时，说明问题已解决。\n\n> ⚠️ 注意：若使用腾讯云官方镜像源（如 `mirrors.tencentyun.com`），DNS 修复后仍超时，需进一步检查该域名是否在当前地域可用，或临时切换为公网镜像源（如 `mirrors.aliyun.com` 或 `archive.ubuntu.com`），但此属镜像源策略问题，非 DNS 层面故障。\n\n参考：云服务器出网超时：内网 DNS 失效排查",
+      "sources": [
+        "03-云服务器出网超时内网DNS失效.md",
+        "云服务器 云服务器概述_腾讯云_911f2b0413.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    }
+  ]
+}

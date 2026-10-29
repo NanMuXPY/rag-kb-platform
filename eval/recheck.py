@@ -71,8 +71,9 @@ def main():
 
         s = data["summary"]
         print(f"\n{tag}  可答题 {len(ans)}，带事实校验 {total}")
-        print(f"  严格口径 must_contain  {strict}/{total} = {strict / total:.1%}")
-        print(f"  归一化口径 must_contain {fixed}/{total} = {fixed / total:.1%}")
+        if total:
+            print(f"  严格口径 must_contain  {strict}/{total} = {strict / total:.1%}")
+            print(f"  归一化口径 must_contain {fixed}/{total} = {fixed / total:.1%}")
         if detail:
             print(f"  仅因空格被误判：{', '.join(detail)}")
 
