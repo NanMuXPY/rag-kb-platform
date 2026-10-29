@@ -1,0 +1,325 @@
+{
+  "summary": {
+    "tag": "E5-dedup",
+    "persist": "db_e2_800",
+    "total": 10,
+    "failed": 0,
+    "recall@4": 0.8,
+    "mrr": 0.8,
+    "must_contain_rate": 1.0,
+    "refuse_acc": null,
+    "cite_rate": 1.0,
+    "bad_ident_count": 18,
+    "p50": 10.47,
+    "p95": 15.0,
+    "time": "2026-10-30 00:58:49"
+  },
+  "records": [
+    {
+      "id": "h01",
+      "type": "hard",
+      "question": "企微那边拿的 token 最多能撑多久啊",
+      "should_refuse": false,
+      "latency": 6.63,
+      "rank": 0,
+      "hit": false,
+      "must_hit": [
+        "7200"
+      ],
+      "must_ok": true,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "企业微信 access_token 的有效期为 7200 秒（即 2 小时）。\n\n参考：<D:\\WORK\\cxl\\rag-kb-v2\\data\\微信小程序\\接口调用凭证 _ 微信开放文档_58dfa8d1fc.md>",
+      "sources": [
+        "接口调用凭证 _ 微信开放文档_58dfa8d1fc.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "h02",
+      "type": "hard",
+      "question": "往 cos 传个 6G 的大文件直接报错了，是不是不让这么传",
+      "should_refuse": false,
+      "latency": 15.0,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [
+        "分块上传"
+      ],
+      "must_ok": true,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [
+        "Multipart"
+      ],
+      "bad_codes": [],
+      "answer": "是的，COS 不支持通过**简单上传（PUT Object）**方式上传 6GB 文件，因为简单上传有 **5GB 的大小限制**。\n\n对于 6GB 文件，推荐以下上传方式（按优先级和适用性排序）：\n\n1. **使用控制台上传**  \n   - 控制台支持上传最大 **512GB** 的单个对象，完全满足 6GB 需求。  \n   - 操作路径（依据资料1）：  \n     1. 登录对象存储控制台；  \n     2. 在左侧导航栏单击**存储桶列表**，进入存储桶列表页面；  \n     3. 单击目标存储桶，进入文件列表页面；  \n     4. 在文件列表中单击**上传文件**。\n\n2. **使用分块上传（Multipart Upload）**  \n   - 支持最大 **48.82TB**，适合大文件、弱网或需断点续传的场景；  \n   - 资料明确建议：即使文件小于 5GB，但超过 100MB 时也**优先使用分块上传**，以提升成功率和传输效率；  \n   - 可通过 REST API 或任一支持的 SDK（如 Python、Java、Node.js 等）调用分块上传接口实现。\n\n3. **使用 COSCMD 工具**  \n   - 支持最大 **40TB** 单个对象上传，适合命令行操作习惯的用户；  \n   - 具体使用方法请参见 COSCMD 工具文档（资料1中提及，但当前资料未提供详细步骤）。\n\n注意：不推荐继续尝试简单上传（如直接 PUT Object），因其硬性限制为 ≤5GB，6GB 必然失败。\n\n参考：<对象存储 简单上传_腾讯云_e0699b1374.md>",
+      "sources": [
+        "对象存储 简单上传_腾讯云_e0699b1374.md",
+        "对象存储 控制台快速入门_腾讯云_5ae2ad3a65.md",
+        "对象存储 产品概述_腾讯云_69380faf9f.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "h03",
+      "type": "hard",
+      "question": "开会的时候想快速静音，有没有快捷一点的办法",
+      "should_refuse": false,
+      "latency": 9.46,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [
+        "Ctrl",
+        "Shift",
+        "Command",
+        "Shift"
+      ],
+      "bad_codes": [],
+      "answer": "可以通过快捷键快速静音。默认快捷键为：\n\n- Windows：`Ctrl + Shift + M`  \n- macOS：`Command + Shift + M`\n\n该快捷键用于「开启/关闭麦克风」，即一键切换静音与取消静音状态。\n\n如需自定义或确认当前快捷键设置，请按以下步骤操作：  \n1. 在腾讯会议客户端主界面，点击左下角【设置】按钮；  \n2. 选择【快捷键】；  \n3. 查看或修改「开启/关闭麦克风」对应的快捷键。\n\n注意：需使用 Windows 3.8+ 或 macOS 3.9+ 版本，且功能在免费版及以上版本中可用。\n\n参考：<腾讯会议快捷键功能使用指南-腾讯会议 - 腾讯会议帮助中心_e34f950991.md>",
+      "sources": [
+        "腾讯会议快捷键功能使用指南-腾讯会议 - 腾讯会议帮助中心_e34f950991.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "h04",
+      "type": "hard",
+      "question": "云主机密码忘了咋整，能自己在后台重置吗",
+      "should_refuse": false,
+      "latency": 10.26,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [
+        "Automation",
+        "Tools"
+      ],
+      "bad_codes": [],
+      "answer": "可以，腾讯云服务器支持在控制台自助重置密码，且优先采用 TAT（Tencent Automation Tools）方式，无需重启实例。\n\n操作步骤如下：  \n1. 登录 **云服务器控制台**；  \n2. 在实例管理页面，单击 **实例名称** 进入该实例的详细信息页面；  \n3. 在实例详情页面，选择 **执行命令 > 执行命令**，通过 TAT 工具执行密码重置操作。\n\n注意：该流程依赖 TAT 服务正常运行，且实例需满足 TAT 客户端已安装并在线等前提条件（资料中未详述具体前提，故不额外补充）。\n\n参考：<云服务器 重置实例密码_腾讯云_21f972daea.md>",
+      "sources": [
+        "云服务器 重置实例密码_腾讯云_21f972daea.md",
+        "云服务器 快速配置 Linux 云服务器_腾讯云_ad645a26af.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "h05",
+      "type": "hard",
+      "question": "小程序页面里想做个能左右滑的轮播图，用哪个组件",
+      "should_refuse": false,
+      "latency": 5.79,
+      "rank": 0,
+      "hit": false,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "根据当前知识库资料无法确定该问题。为避免提供不准确的信息，建议您通过对应产品的官方支持渠道咨询人工客服。",
+      "sources": [
+        "小程序产品定位及功能介绍 _ 微信开放文档_01b2320623.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "h06",
+      "type": "hard",
+      "question": "在企微后台给新来的同事开个账号要怎么弄",
+      "should_refuse": false,
+      "latency": 13.01,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "在企业微信后台为新员工创建账号，可通过调用企业微信 API 的「创建成员」接口实现。具体操作需由具备权限的管理员在自有系统或通过脚本发起 HTTPS POST 请求，不能直接在企业微信管理后台网页界面中手动逐个添加（资料中未提供网页端创建账号的操作路径、按钮或菜单名称）。\n\n请求方式与必要参数如下：\n\n1. 请求地址：`https://qyapi.weixin.qq.com/cgi-bin/user/create?access_token=ACCESS_TOKEN`  \n2. 请求方法：POST  \n3. 请求包体中必须包含以下字段（根据资料 1 示例）：\n   - `userid`：员工唯一标识（必填，仅限字母、数字、下划线、减号）\n   - `name`：员工姓名（必填）\n   - `department`：所属部门 ID 列表（必填，如 `[1, 2]`）\n   - `enable`：账号启用状态（1 表示启用）\n\n其他字段如 `mobile`、`email`、`position`、`gender` 等为可选，但建议按需填写以完善成员信息。\n\n注意：使用该接口前，需已获取有效的 `access_token`（通过企业 secret 调用获取 access_token 接口获得），且调用方需具备“通讯录管理”相关权限。\n\n当前资料未包含企业微信管理后台网页端（如 https://work.weixin.qq.com/）中点击哪个菜单、哪个按钮来创建账号的具体操作步骤。\n\n参考：<创建成员 - 文档 - 企业微信开发者中心_609ecc9cc2.md>",
+      "sources": [
+        "创建成员 - 文档 - 企业微信开发者中心_609ecc9cc2.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "h07",
+      "type": "hard",
+      "question": "对象存储建桶",
+      "should_refuse": false,
+      "latency": 10.68,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "腾讯云对象存储创建存储桶可通过对象存储控制台完成，具体步骤如下：\n\n1. 登录对象存储控制台。  \n2. 在左侧导航栏中，单击**存储桶列表**。  \n3. 在存储桶列表页面，单击**创建存储桶**。  \n4. 在跳转的**创建存储桶**界面中，配置以下信息：  \n   - **存储桶类型**：选择通用存储桶（元数据加速桶仅对白名单用户开放）；  \n   - **名称**：输入自定义存储桶名称（仅支持小写字母、数字、“-”，不能以“-”开头或结尾，且全名+地域简称+APPID组成的完整请求域名总长不超过60字符）；  \n   - 其他必填项（如地域、访问权限等）需按界面提示完成配置（资料中未展开说明具体字段，但步骤明确要求在该界面配置）。\n\n注意：存储桶创建成功后，名称和所属地域不可修改；同一主账号下最多可创建200个存储桶，且所有存储桶名称全局唯一。\n\n参考：<对象存储 创建存储桶_腾讯云_d457c4134b.md>",
+      "sources": [
+        "对象存储 创建存储桶_腾讯云_d457c4134b.md",
+        "对象存储 控制台快速入门_腾讯云_5ae2ad3a65.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "h08",
+      "type": "hard",
+      "question": "chromadb 老报 readonly database，删了目录重建还是报，怎么破",
+      "should_refuse": false,
+      "latency": 12.88,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [
+        "shutil.rmtree",
+        "recreate",
+        "collection.delete"
+      ],
+      "bad_codes": [],
+      "answer": "该问题的根本原因是 ChromaDB 的 `PersistentClient` 按**路径缓存 SQLite 连接单例**，删除目录后旧连接仍持有已失效的文件句柄（指向原 inode），导致新目录的写入实际落在无效句柄上，因此即使删除重建、修改权限也无效。\n\n**正确解决方式是采用“旁路重建”方案，而非在原路径操作：**\n\n1. 创建一个**全新路径**（如 `./db_md_rebuild`）初始化 ChromaDB `PersistentClient`，确保建立全新 SQLite 连接；\n2. 在新路径中完成全部向量数据写入；\n3. 将原库目录（如 `./db_md`）**原子重命名为备份名**（如 `./db_md_old`）；\n4. 将新库目录（`./db_md_rebuild`）**原子重命名为原路径名**（`./db_md`）；\n5. 调用 `os._exit(0)` 强制退出当前进程，由 Docker Compose 的 restart 策略拉起新进程；\n6. 新进程启动时，通过持久化卷中的状态文件识别“刚完成重建”，直接加载新路径下的数据库。\n\n⚠️ 注意：严禁在原路径执行 `shutil.rmtree` + `recreate` 或 `collection.delete()` 后重写，此类操作无法清除底层连接缓存与锁状态。\n\n参考：<D:\\WORK\\cxl\\rag-kb-v2\\data\\排障经验\\01-ChromaDB只读错误与旁路重建方案.md>",
+      "sources": [
+        "01-ChromaDB只读错误与旁路重建方案.md",
+        "02-Docker改代码不生效与数据卷丢失.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "h09",
+      "type": "hard",
+      "question": "docker 里改了代码，重启容器一点变化都没有",
+      "should_refuse": false,
+      "latency": 10.05,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [],
+      "must_ok": null,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [],
+      "bad_codes": [],
+      "answer": "这是因为后端代码是**烧进镜像**的（在 Dockerfile 中通过 `COPY` 指令写入），而非通过挂载（bind mount）方式动态加载。执行 `docker compose restart` 仅重启容器，使用的仍是旧镜像，因此修改的代码不会生效。\n\n必须重建镜像并更新容器：\n\n1. 在项目根目录下执行以下命令，强制重新构建镜像并启动服务：\n   ```bash\n   docker compose up -d --build\n   ```\n\n注意：  \n- 若修改的是挂载文件（如 `.env`、`nginx.conf`），则 `docker compose restart` 或 `docker compose up -d` 即可生效；  \n- 判断依据是：该文件是否出现在 Dockerfile 的 `COPY` 指令中——若在，则必须重建镜像；若不在且已正确配置挂载，则无需重建。\n\n参考：<D:\\WORK\\cxl\\rag-kb-v2\\data\\排障经验\\02-Docker改代码不生效与数据卷丢失.md>",
+      "sources": [
+        "02-Docker改代码不生效与数据卷丢失.md",
+        "01-ChromaDB只读错误与旁路重建方案.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    },
+    {
+      "id": "h10",
+      "type": "hard",
+      "question": "服务器能 ping 通外网 IP，但装东西全部超时",
+      "should_refuse": false,
+      "latency": 14.58,
+      "rank": 1,
+      "hit": true,
+      "must_hit": [
+        "DNS"
+      ],
+      "must_ok": true,
+      "leaked": [],
+      "refuse_ok": null,
+      "cite": true,
+      "bad_idents": [
+        "TCP/ICMP",
+        "yum",
+        "x.x.x",
+        "yum",
+        "makecache",
+        "CentOS/RHEL",
+        "yum",
+        "Ubuntu/Debian"
+      ],
+      "bad_codes": [],
+      "answer": "问题定位为：**DNS 解析失败**，而非网络连通性问题（因 `ping` 公网 IP 正常，说明出方向 TCP/ICMP 通，但 `yum`/`apt` 依赖域名解析，超时大概率源于 DNS 不可用）。\n\n解决方案如下（依据【资料 1】）：\n\n1. 检查当前 DNS 配置：  \n   运行 `cat /etc/resolv.conf`，确认 nameserver 是否指向腾讯云内网 DNS（如 10.x.x.x 地址）；\n\n2. 测试 DNS 是否生效：  \n   运行 `nslookup mirrors.aliyun.com` 或 `nslookup archive.ubuntu.com`（根据系统类型），若无响应或超时，确认 DNS 故障；\n\n3. 临时替换为公共 DNS：  \n   编辑 `/etc/resolv.conf`，将 nameserver 替换为可靠公共 DNS，例如：  \n   ```\n   nameserver 223.5.5.5  \n   nameserver 223.6.6.6\n   ```\n\n4. 防止被 DHCP 覆盖：  \n   执行 `chattr +i /etc/resolv.conf` 锁定文件（修改前建议先备份：`cp /etc/resolv.conf /etc/resolv.conf.bak`）；\n\n5. 验证修复效果：  \n   再次运行 `nslookup mirrors.aliyun.com` 确认可解析，然后尝试 `yum makecache` 或 `apt update`。\n\n> 注意：该方案适用于 CentOS/RHEL（yum）及 Ubuntu/Debian（apt）等主流 Linux 发行版，操作逻辑一致。\n\n参考：<D:\\WORK\\cxl\\rag-kb-v2\\data\\排障经验\\03-云服务器出网超时内网DNS失效.md>",
+      "sources": [
+        "03-云服务器出网超时内网DNS失效.md",
+        "云服务器 网络与安全概述_腾讯云_200bffef92.md"
+      ],
+      "steps": [
+        "route",
+        "rewrite",
+        "retrieve",
+        "grade_documents",
+        "generate"
+      ]
+    }
+  ]
+}

@@ -163,7 +163,12 @@ class RAGEngine:
         k = settings.retriever_k
         mode = settings.retriever_mode
 
-        if mode == "mmr":
+        if mode == "hybrid":
+            # 向量 + BM25 双通道，RRF 融合：救回专有名词/接口名这类精确词
+            from app.retrieval import hybrid_search
+            documents = hybrid_search(self.db, state["question"], k, kb_ids,
+                                      fetch_k=max(settings.retriever_fetch_k, k))
+        elif mode == "mmr":
             # 最大边际相关：先取 fetch_k 候选，再兼顾相关性与多样性选出 k 条
             documents = self.db.max_marginal_relevance_search(
                 state["question"], k=k, fetch_k=settings.retriever_fetch_k,

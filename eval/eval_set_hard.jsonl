@@ -1,0 +1,10 @@
+{"id":"h01","type":"hard","question":"企微那边拿的 token 最多能撑多久啊","expected_docs":["获取access_token"],"must_contain":["7200"],"must_not_contain":[],"should_refuse":false,"note":"口语+产品简称（企微/token），原文 expires_in 7200"}
+{"id":"h02","type":"hard","question":"往 cos 传个 6G 的大文件直接报错了，是不是不让这么传","expected_docs":["简单上传"],"must_contain":["分块上传"],"must_not_contain":[],"should_refuse":false,"note":"口语化报障，考察能否定位到简单上传 5GB 上限与分块上传"}
+{"id":"h03","type":"hard","question":"开会的时候想快速静音，有没有快捷一点的办法","expected_docs":["快捷键"],"must_contain":[],"must_not_contain":[],"should_refuse":false,"note":"同义表述（静音/快捷键），不点产品名"}
+{"id":"h04","type":"hard","question":"云主机密码忘了咋整，能自己在后台重置吗","expected_docs":["重置实例密码"],"must_contain":[],"must_not_contain":[],"should_refuse":false,"note":"云主机=云服务器的口语说法"}
+{"id":"h05","type":"hard","question":"小程序页面里想做个能左右滑的轮播图，用哪个组件","expected_docs":["视图容器"],"must_contain":[],"must_not_contain":[],"should_refuse":false,"note":"功能描述替代组件名（swiper）"}
+{"id":"h06","type":"hard","question":"在企微后台给新来的同事开个账号要怎么弄","expected_docs":["创建成员"],"must_contain":[],"must_not_contain":[],"should_refuse":false,"note":"开账号=创建成员"}
+{"id":"h07","type":"hard","question":"对象存储建桶","expected_docs":["创建存储桶"],"must_contain":[],"must_not_contain":[],"should_refuse":false,"note":"极短口语，缺动词宾语"}
+{"id":"h08","type":"hard","question":"chromadb 老报 readonly database，删了目录重建还是报，怎么破","expected_docs":["01-ChromaDB"],"must_contain":[],"must_not_contain":[],"should_refuse":false,"note":"自有排障文档，含精确报错词"}
+{"id":"h09","type":"hard","question":"docker 里改了代码，重启容器一点变化都没有","expected_docs":["02-Docker"],"must_contain":[],"must_not_contain":[],"should_refuse":false,"note":"自有排障文档，口语描述"}
+{"id":"h10","type":"hard","question":"服务器能 ping 通外网 IP，但装东西全部超时","expected_docs":["03-云服务器出网超时"],"must_contain":["DNS"],"must_not_contain":[],"should_refuse":false,"note":"自有排障文档，症状描述式提问"}

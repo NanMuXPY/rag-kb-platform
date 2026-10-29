@@ -53,8 +53,8 @@ class Settings:
     chunk_size: int = 800
     chunk_overlap: int = 120
     retriever_k: int = 4
-    # 检索策略：plain（原始相似度）/ dedup（同文档去重）/ mmr（最大边际相关）
-    retriever_mode: str = field(default_factory=lambda: os.getenv("RETRIEVER_MODE", "plain").strip().lower())
+    # 检索策略：plain（相似度）/ dedup（同文档去重）/ mmr（最大边际相关）/ hybrid（向量+BM25）
+    retriever_mode: str = field(default_factory=lambda: os.getenv("RETRIEVER_MODE", "hybrid").strip().lower())
     # dedup 与 mmr 的候选池大小（先多取再筛）
     retriever_fetch_k: int = field(default_factory=lambda: int(os.getenv("RETRIEVER_FETCH_K", "12")))
     # MMR 相关性与多样性权衡：1.0 只看相关性，0.0 只看多样性
