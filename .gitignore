@@ -21,3 +21,6 @@ uploads/
 
 # 工具临时目录
 .playwright-cli/
+
+# 临时探针脚本
+temp/
