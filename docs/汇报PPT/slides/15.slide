@@ -1,0 +1,62 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, flexDirection: 'column' }}>
+    <Box style={{ height: 68, background: '#1E4FA8', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 60, paddingRight: 60 }}>
+        <Text style={{ fontSize: 34, color: '#FFFFFF', fontWeight: 'bold' }}>三个排障故事：现象 / 根因 / 一句话结论</Text>
+        <Text style={{ fontSize: 15, color: '#FFFFFF', opacity: 0.72 }}>04 · Debugging</Text>
+    </Box>
+    <Box style={{ flex: 1, flexDirection: 'column', paddingLeft: 60, paddingRight: 60, paddingTop: 22, paddingBottom: 8, gap: 18 }}>
+        <Box style={{ flexDirection: 'row', alignItems: 'center', background: '#E8EFF8', borderLeft: '4px solid #1E4FA8', paddingTop: 11, paddingBottom: 11, paddingLeft: 20, paddingRight: 20 }}>
+            <Text style={{ fontSize: 18, color: '#1A2230', lineHeight: 1.4 }}>
+                <span style={{ fontWeight: 'bold' }}>共同特征　</span>三个坑都是“静默失败”：没有异常栈，只有看起来正常的结果——所以排查必须靠打印中间态，不能靠读代码。
+            </Text>
+        </Box>
+        <Table
+            style={{ width: '100%', height: 342 }}
+            defaultTextStyle={{ fontSize: 16, textAlign: 'left', color: '#1A2230' }}
+            defaultCellStyle={{ border: { bottom: { width: 1, color: '#D6DCE5' } } }}
+            cells={[
+                [
+                    { text: '坑', textStyle: { bold: true, color: '#FFFFFF', fontSize: 16 }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                    { text: '现象', textStyle: { bold: true, color: '#FFFFFF', fontSize: 16 }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                    { text: '根因', textStyle: { bold: true, color: '#FFFFFF', fontSize: 16 }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                    { text: '结论', textStyle: { bold: true, color: '#FFFFFF', fontSize: 16 }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                ],
+                [
+                    { text: '01　Chroma 只读', textStyle: { bold: true, color: '#1A2230' } },
+                    { text: '重建索引直接抛 readonly database，服务起不来', textStyle: { color: '#4A5568' } },
+                    { text: '容器内进程与宿主挂载的权限不一致，库文件被只读打开', textStyle: { color: '#4A5568' } },
+                    { text: '旁路重建：新库建在临时目录，原子改名后进程自愈重启，服务不中断', textStyle: { color: '#1E4FA8' } },
+                ],
+                [
+                    { text: '02　glob 静默失效', textStyle: { bold: true, color: '#1A2230' } },
+                    { text: '服务器重建报“未在 data 下找到 .md 文档”，但文件明明在', textStyle: { color: '#4A5568' } },
+                    { text: 'v2 重写时 glob 从 **/*.md 改成 *.md，不再递归，而语料全在子目录', textStyle: { color: '#4A5568' } },
+                    { text: '默认参数改动后必须用真实数据跑一次冒烟——静默失败最贵', textStyle: { color: '#1E4FA8' } },
+                ],
+                [
+                    { text: '03　引用校验误杀', textStyle: { bold: true, color: '#1A2230' } },
+                    { text: '线上稳定返回 52 字符拒答，本地同一问题 10/10 正常', textStyle: { color: '#4A5568' } },
+                    { text: '模型三种合法引用写法解析器都不认：照抄占位符、一行列多篇、用标题代替文件名', textStyle: { color: '#4A5568' } },
+                    { text: '安全闸要有灰度：占位符只裁引用行、多文档拆开比对、标题宽松匹配，伪造仍降级', textStyle: { color: '#1E4FA8' } },
+                ],
+            ]}
+        />
+        <Box style={{ flexDirection: 'row', gap: 32 }}>
+            <Box style={{ flexDirection: 'row', alignItems: 'flex-start', flex: 1 }}>
+                <Text style={{ fontSize: 17, color: '#1E4FA8', fontWeight: 'bold', marginRight: 10 }}>①</Text>
+                <Text style={{ fontSize: 16, color: '#4A5568', lineHeight: 1.45 }}>打印每轮生成原文，而不是只看最终返回值</Text>
+            </Box>
+            <Box style={{ flexDirection: 'row', alignItems: 'flex-start', flex: 1 }}>
+                <Text style={{ fontSize: 17, color: '#1E4FA8', fontWeight: 'bold', marginRight: 10 }}>②</Text>
+                <Text style={{ fontSize: 16, color: '#4A5568', lineHeight: 1.45 }}>把探针脚本拷进容器跑，隔离环境差异</Text>
+            </Box>
+            <Box style={{ flexDirection: 'row', alignItems: 'flex-start', flex: 1 }}>
+                <Text style={{ fontSize: 17, color: '#1E4FA8', fontWeight: 'bold', marginRight: 10 }}>③</Text>
+                <Text style={{ fontSize: 16, color: '#4A5568', lineHeight: 1.45 }}>逐项对比本地与线上的配置与语料，不看代码猜</Text>
+            </Box>
+        </Box>
+    </Box>
+    <Box style={{ height: 50, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 8, paddingLeft: 60, paddingRight: 60 }}>
+        <Text style={{ fontSize: 14, color: '#8B97A8' }}>企业内部技术支持知识库 · 课程作业汇报</Text>
+        <Text style={{ fontSize: 14, color: '#8B97A8' }}>15 / 18</Text>
+    </Box>
+</Slide>

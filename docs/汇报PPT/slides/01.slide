@@ -1,0 +1,24 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, flexDirection: 'row' }}>
+    <Box style={{ width: 14, height: '100%', background: '#1E4FA8' }} />
+    <Box style={{ flex: 1, flexDirection: 'column', paddingTop: 132, paddingLeft: 88, paddingRight: 130, paddingBottom: 76 }}>
+        <Text style={{ fontSize: 18, color: '#1E4FA8', letterSpacing: 1.6, fontWeight: 'bold' }}>
+            腾讯云 AI CODING 课程作业 · 方向二 AI 应用创新
+        </Text>
+        <Box style={{ width: 96, height: 4, background: '#1E4FA8', marginTop: 30, marginBottom: 32 }} />
+        <Text style={{ fontSize: 66, color: '#1A2230', fontWeight: 'bold', lineHeight: 1.18 }}>
+            企业内部技术支持知识库
+        </Text>
+        <Text style={{ fontSize: 24, color: '#4A5568', marginTop: 22, lineHeight: 1.4 }}>
+            基于 LangGraph 自适应 RAG 的企业文档中台
+        </Text>
+        <Text style={{ fontSize: 17, color: '#8B97A8', marginTop: 14, lineHeight: 1.4 }}>
+            An Enterprise Knowledge Base with Auditable Governance and Verified Answers
+        </Text>
+        <Box style={{ flex: 1 }} />
+        <Box style={{ height: 1, background: '#D6DCE5', marginBottom: 18 }} />
+        <Box style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Text style={{ fontSize: 15, color: '#4A5568' }}>汇报人　卞琪翔　·　深圳职业技术大学</Text>
+            <Text style={{ fontSize: 15, color: '#8B97A8' }}>2026-11-10</Text>
+        </Box>
+    </Box>
+</Slide>

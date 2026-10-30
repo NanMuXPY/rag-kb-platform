@@ -1,0 +1,65 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, flexDirection: 'column' }}>
+    <Box style={{ height: 68, background: '#1E4FA8', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 60, paddingRight: 60 }}>
+        <Text style={{ fontSize: 34, color: '#FFFFFF', fontWeight: 'bold' }}>五类对手，最难打的是员工已经在用的那个</Text>
+        <Text style={{ fontSize: 15, color: '#FFFFFF', opacity: 0.72 }}>01 · Landscape</Text>
+    </Box>
+    <Box style={{ flex: 1, flexDirection: 'column', paddingLeft: 60, paddingRight: 60, paddingTop: 24, paddingBottom: 10, gap: 22 }}>
+        <Box style={{ flexDirection: 'row', alignItems: 'center', background: '#E8EFF8', borderLeft: '4px solid #1E4FA8', paddingTop: 12, paddingBottom: 12, paddingLeft: 20, paddingRight: 20 }}>
+            <Text style={{ fontSize: 19, color: '#1A2230', lineHeight: 1.4 }}>
+                <span style={{ fontWeight: 'bold' }}>竞品不是一类　</span>只对标 Dify / FastGPT 会漏掉两个更危险的对手：办公套件自带的 AI，与本来就占着工单入口的 ITSM。
+            </Text>
+        </Box>
+        <Table
+            style={{ width: '100%', height: 372 }}
+            defaultTextStyle={{ fontSize: 16, textAlign: 'left', color: '#1A2230' }}
+            defaultCellStyle={{ border: { bottom: { width: 1, color: '#D6DCE5' } } }}
+            cells={[
+                [
+                    { text: '类别', textStyle: { bold: true, color: '#FFFFFF', fontSize: 16 }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                    { text: '代表产品', textStyle: { bold: true, color: '#FFFFFF', fontSize: 16 }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                    { text: '威胁', textStyle: { bold: true, color: '#FFFFFF', fontSize: 16, textAlign: 'center' }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                    { text: '判断', textStyle: { bold: true, color: '#FFFFFF', fontSize: 16 }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                ],
+                [
+                    { text: '通用 RAG 平台' },
+                    { text: 'Dify / FastGPT / RAGFlow / MaxKB', textStyle: { color: '#4A5568' } },
+                    { text: '高', textStyle: { color: '#D9534F', bold: true, textAlign: 'center' } },
+                    { text: '功能更全，但无 IT 排障场景封装', textStyle: { color: '#4A5568' } },
+                ],
+                [
+                    { text: '云厂商智能体平台' },
+                    { text: '腾讯云 ADP / 阿里云百炼 / Bedrock KB', textStyle: { color: '#4A5568' } },
+                    { text: '中', textStyle: { color: '#4A5568', textAlign: 'center' } },
+                    { text: '基础设施稳，按量计费 + 数据出域', textStyle: { color: '#4A5568' } },
+                ],
+                [
+                    { text: '办公套件 AI 知识库', textStyle: { bold: true } },
+                    { text: '腾讯乐享 / 飞书智能伙伴 / 语雀 AI', textStyle: { color: '#4A5568' } },
+                    { text: '最高', textStyle: { color: '#D9534F', bold: true, textAlign: 'center' } },
+                    { text: '零迁移成本，是企业的默认选项', textStyle: { color: '#4A5568' } },
+                ],
+                [
+                    { text: 'ITSM 套件' },
+                    { text: 'ServiceNow / Zendesk / Jira SM', textStyle: { color: '#4A5568' } },
+                    { text: '中高', textStyle: { color: '#4A5568', textAlign: 'center' } },
+                    { text: '强在工单闭环，知识库只是附属品', textStyle: { color: '#4A5568' } },
+                ],
+                [
+                    { text: '自建框架（本项目）', textStyle: { bold: true, color: '#1E4FA8' } },
+                    { text: 'LangChain + Chroma + 自研治理层', textStyle: { color: '#1A2230', bold: true } },
+                    { text: '—', textStyle: { color: '#8B97A8', textAlign: 'center' } },
+                    { text: '唯一同时做到私有化、库级权限、审批审计', textStyle: { color: '#1E4FA8', bold: true } },
+                ],
+            ]}
+        />
+        <Box style={{ background: '#F7F9FC', borderLeft: '4px solid #3D7BD9', paddingTop: 12, paddingBottom: 12, paddingLeft: 20, paddingRight: 20 }}>
+            <Text style={{ fontSize: 18, color: '#1A2230', lineHeight: 1.45 }}>
+                生存空间来自三个可被审计的事实：<span style={{ color: '#1E4FA8', fontWeight: 'bold' }}>数据不出内网</span>、<span style={{ color: '#1E4FA8', fontWeight: 'bold' }}>治理逻辑可查</span>、<span style={{ color: '#1E4FA8', fontWeight: 'bold' }}>答案质量可复现</span>——SaaS 与开源平台在这三点上都不做承诺。
+            </Text>
+        </Box>
+    </Box>
+    <Box style={{ height: 50, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 8, paddingLeft: 60, paddingRight: 60 }}>
+        <Text style={{ fontSize: 14, color: '#8B97A8' }}>企业内部技术支持知识库 · 课程作业汇报</Text>
+        <Text style={{ fontSize: 14, color: '#8B97A8' }}>05 / 18</Text>
+    </Box>
+</Slide>

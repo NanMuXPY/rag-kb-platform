@@ -1,0 +1,129 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, flexDirection: 'column' }}>
+    <Box style={{ height: 68, background: '#1E4FA8', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 60, paddingRight: 60 }}>
+        <Text style={{ fontSize: 34, color: '#FFFFFF', fontWeight: 'bold' }}>治理四件套，在开源 RAG 平台上集体空白</Text>
+        <Text style={{ fontSize: 15, color: '#FFFFFF', opacity: 0.72 }}>01 · Matrix</Text>
+    </Box>
+    <Box style={{ flex: 1, flexDirection: 'column', paddingLeft: 60, paddingRight: 60, paddingTop: 24, paddingBottom: 10, gap: 20 }}>
+        <Box style={{ flexDirection: 'row', alignItems: 'center', background: '#E8EFF8', borderLeft: '4px solid #1E4FA8', paddingTop: 12, paddingBottom: 12, paddingLeft: 20, paddingRight: 20 }}>
+            <Text style={{ fontSize: 19, color: '#1A2230', lineHeight: 1.4 }}>
+                <span style={{ fontWeight: 'bold' }}>结论先行　</span>我们赢在治理、输在解析。竞品留出的这块空白，恰好是需求方列的第一优先级。
+            </Text>
+        </Box>
+        <Table
+            style={{ width: '100%', height: 388 }}
+            defaultTextStyle={{ fontSize: 16, textAlign: 'center', color: '#4A5568' }}
+            defaultCellStyle={{ border: { bottom: { width: 1, color: '#E5E7EB' } } }}
+            cells={[
+                [
+                    { text: '能力维度', textStyle: { bold: true, color: '#FFFFFF', textAlign: 'left' }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                    { text: '本项目 v2.2', textStyle: { bold: true, color: '#FFFFFF' }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                    { text: 'Dify', textStyle: { bold: true, color: '#FFFFFF' }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                    { text: 'FastGPT', textStyle: { bold: true, color: '#FFFFFF' }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                    { text: 'RAGFlow', textStyle: { bold: true, color: '#FFFFFF' }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                    { text: '腾讯乐享', textStyle: { bold: true, color: '#FFFFFF' }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                    { text: 'ServiceNow', textStyle: { bold: true, color: '#FFFFFF' }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                ],
+                [
+                    { text: '私有化 / 数据不出域', textStyle: { textAlign: 'left' } },
+                    { text: '✓', textStyle: { color: '#1E4FA8', bold: true }, cellStyle: { background: { color: '#E8EFF8' } } },
+                    { text: '✓', textStyle: { color: '#1E4FA8', bold: true } },
+                    { text: '✓', textStyle: { color: '#1E4FA8', bold: true } },
+                    { text: '✓', textStyle: { color: '#1E4FA8', bold: true } },
+                    { text: '△' },
+                    { text: '✕', textStyle: { color: '#8B97A8' } },
+                ],
+                [
+                    { text: '知识库级权限', textStyle: { textAlign: 'left' } },
+                    { text: '✓', textStyle: { color: '#1E4FA8', bold: true }, cellStyle: { background: { color: '#E8EFF8' } } },
+                    { text: '△' },
+                    { text: '△' },
+                    { text: '△' },
+                    { text: '✓', textStyle: { color: '#1E4FA8', bold: true } },
+                    { text: '✓', textStyle: { color: '#1E4FA8', bold: true } },
+                ],
+                [
+                    { text: '① 上传审批流', textStyle: { textAlign: 'left', bold: true, color: '#1A2230' } },
+                    { text: '✓', textStyle: { color: '#1E4FA8', bold: true }, cellStyle: { background: { color: '#E8EFF8' } } },
+                    { text: '✕', textStyle: { color: '#D9534F' } },
+                    { text: '✕', textStyle: { color: '#D9534F' } },
+                    { text: '✕', textStyle: { color: '#D9534F' } },
+                    { text: '△' },
+                    { text: '✕', textStyle: { color: '#8B97A8' } },
+                ],
+                [
+                    { text: '② 版本备份 / 回滚', textStyle: { textAlign: 'left', bold: true, color: '#1A2230' } },
+                    { text: '✓', textStyle: { color: '#1E4FA8', bold: true }, cellStyle: { background: { color: '#E8EFF8' } } },
+                    { text: '✕', textStyle: { color: '#D9534F' } },
+                    { text: '✕', textStyle: { color: '#D9534F' } },
+                    { text: '✕', textStyle: { color: '#D9534F' } },
+                    { text: '✓', textStyle: { color: '#1E4FA8', bold: true } },
+                    { text: '△' },
+                ],
+                [
+                    { text: '③ 审计留痕', textStyle: { textAlign: 'left', bold: true, color: '#1A2230' } },
+                    { text: '✓', textStyle: { color: '#1E4FA8', bold: true }, cellStyle: { background: { color: '#E8EFF8' } } },
+                    { text: '✕', textStyle: { color: '#D9534F' } },
+                    { text: '✕', textStyle: { color: '#D9534F' } },
+                    { text: '✕', textStyle: { color: '#D9534F' } },
+                    { text: '✓', textStyle: { color: '#1E4FA8', bold: true } },
+                    { text: '✓', textStyle: { color: '#1E4FA8', bold: true } },
+                ],
+                [
+                    { text: '引用溯源', textStyle: { textAlign: 'left' } },
+                    { text: '✓', textStyle: { color: '#1E4FA8', bold: true }, cellStyle: { background: { color: '#E8EFF8' } } },
+                    { text: '△' },
+                    { text: '✓', textStyle: { color: '#1E4FA8', bold: true } },
+                    { text: '✓', textStyle: { color: '#1E4FA8', bold: true } },
+                    { text: '✓', textStyle: { color: '#1E4FA8', bold: true } },
+                    { text: '△' },
+                ],
+                [
+                    { text: '拒答边界', textStyle: { textAlign: 'left' } },
+                    { text: '✓', textStyle: { color: '#1E4FA8', bold: true }, cellStyle: { background: { color: '#E8EFF8' } } },
+                    { text: '△' },
+                    { text: '△' },
+                    { text: '△' },
+                    { text: '✓', textStyle: { color: '#1E4FA8', bold: true } },
+                    { text: '△' },
+                ],
+                [
+                    { text: '混合检索（向量+BM25）', textStyle: { textAlign: 'left' } },
+                    { text: '✓', textStyle: { color: '#1E4FA8', bold: true }, cellStyle: { background: { color: '#E8EFF8' } } },
+                    { text: '△' },
+                    { text: '△' },
+                    { text: '✓', textStyle: { color: '#1E4FA8', bold: true } },
+                    { text: '△' },
+                    { text: '△' },
+                ],
+                [
+                    { text: '自带评测体系', textStyle: { textAlign: 'left' } },
+                    { text: '✓', textStyle: { color: '#1E4FA8', bold: true }, cellStyle: { background: { color: '#E8EFF8' } } },
+                    { text: '✕', textStyle: { color: '#8B97A8' } },
+                    { text: '△' },
+                    { text: '✕', textStyle: { color: '#8B97A8' } },
+                    { text: '△' },
+                    { text: '✕', textStyle: { color: '#8B97A8' } },
+                ],
+                [
+                    { text: '文档解析（PDF/OCR）', textStyle: { textAlign: 'left' } },
+                    { text: '✕', textStyle: { color: '#D9534F', bold: true }, cellStyle: { background: { color: '#E8EFF8' } } },
+                    { text: '△' },
+                    { text: '△' },
+                    { text: '✓', textStyle: { color: '#1E4FA8', bold: true } },
+                    { text: '✓', textStyle: { color: '#1E4FA8', bold: true } },
+                    { text: '△' },
+                ],
+            ]}
+        />
+        <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Text style={{ fontSize: 15, color: '#8B97A8' }}>
+                ✓ 原生支持　△ 需插件 / 定制 / 仅高价版　✕ 不支持　　依据：各产品公开文档与计费页，未实测竞品
+            </Text>
+            <Text style={{ fontSize: 15, color: '#D9534F' }}>现存最大短板在最后一行</Text>
+        </Box>
+    </Box>
+    <Box style={{ height: 50, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 8, paddingLeft: 60, paddingRight: 60 }}>
+        <Text style={{ fontSize: 14, color: '#8B97A8' }}>企业内部技术支持知识库 · 课程作业汇报</Text>
+        <Text style={{ fontSize: 14, color: '#8B97A8' }}>06 / 18</Text>
+    </Box>
+</Slide>

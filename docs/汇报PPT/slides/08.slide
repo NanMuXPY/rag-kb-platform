@@ -1,0 +1,76 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, flexDirection: 'column' }}>
+    <Box style={{ height: 68, background: '#1E4FA8', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 60, paddingRight: 60 }}>
+        <Text style={{ fontSize: 34, color: '#FFFFFF', fontWeight: 'bold' }}>六节点自适应图，加三道物理闸</Text>
+        <Text style={{ fontSize: 15, color: '#FFFFFF', opacity: 0.72 }}>02 · Architecture</Text>
+    </Box>
+    <Box style={{ flex: 1, flexDirection: 'column', paddingLeft: 60, paddingRight: 60, paddingTop: 24, paddingBottom: 10, gap: 18 }}>
+        <Box style={{ flexDirection: 'row', alignItems: 'center', background: '#E8EFF8', borderLeft: '4px solid #1E4FA8', paddingTop: 12, paddingBottom: 12, paddingLeft: 20, paddingRight: 20 }}>
+            <Text style={{ fontSize: 19, color: '#1A2230', lineHeight: 1.4 }}>
+                <span style={{ fontWeight: 'bold' }}>设计要点　</span>自适应不等于“多走几步”：路由先分掉闲聊，评分不足才重写，两次仍不过就拒答——每条回边都有出口。
+            </Text>
+        </Box>
+        <Box style={{ flexDirection: 'row', alignItems: 'stretch', gap: 8 }}>
+            <Box style={{ flex: 1, border: '1px solid #D6DCE5', borderRadius: 4, paddingTop: 14, paddingBottom: 14, paddingLeft: 12, paddingRight: 12 }}>
+                <Text style={{ fontSize: 18, color: '#3D7BD9', fontWeight: 'bold' }}>01</Text>
+                <Text style={{ fontSize: 19, color: '#1A2230', fontWeight: 'bold', marginTop: 6 }}>意图路由</Text>
+                <Text style={{ fontSize: 15, color: '#4A5568', marginTop: 8, lineHeight: 1.4 }}>闲聊走独立节点，不占用检索链路</Text>
+            </Box>
+            <Text style={{ fontSize: 18, color: '#8B97A8', alignSelf: 'center' }}>→</Text>
+            <Box style={{ flex: 1, border: '1px solid #D6DCE5', borderRadius: 4, paddingTop: 14, paddingBottom: 14, paddingLeft: 12, paddingRight: 12 }}>
+                <Text style={{ fontSize: 18, color: '#3D7BD9', fontWeight: 'bold' }}>02</Text>
+                <Text style={{ fontSize: 19, color: '#1A2230', fontWeight: 'bold', marginTop: 6 }}>问句改写</Text>
+                <Text style={{ fontSize: 15, color: '#4A5568', marginTop: 8, lineHeight: 1.4 }}>口语补全成可检索的书面表述</Text>
+            </Box>
+            <Text style={{ fontSize: 18, color: '#8B97A8', alignSelf: 'center' }}>→</Text>
+            <Box style={{ flex: 1, border: '1px solid #D6DCE5', borderRadius: 4, paddingTop: 14, paddingBottom: 14, paddingLeft: 12, paddingRight: 12 }}>
+                <Text style={{ fontSize: 18, color: '#3D7BD9', fontWeight: 'bold' }}>03</Text>
+                <Text style={{ fontSize: 19, color: '#1A2230', fontWeight: 'bold', marginTop: 6 }}>混合检索</Text>
+                <Text style={{ fontSize: 15, color: '#4A5568', marginTop: 8, lineHeight: 1.4 }}>向量 + BM25，RRF 融合，按库过滤</Text>
+            </Box>
+            <Text style={{ fontSize: 18, color: '#8B97A8', alignSelf: 'center' }}>→</Text>
+            <Box style={{ flex: 1, border: '1px solid #D6DCE5', borderRadius: 4, paddingTop: 14, paddingBottom: 14, paddingLeft: 12, paddingRight: 12 }}>
+                <Text style={{ fontSize: 18, color: '#3D7BD9', fontWeight: 'bold' }}>04</Text>
+                <Text style={{ fontSize: 19, color: '#1A2230', fontWeight: 'bold', marginTop: 6 }}>文档打分</Text>
+                <Text style={{ fontSize: 15, color: '#4A5568', marginTop: 8, lineHeight: 1.4 }}>逐条判相关性，全部不相关则拒答</Text>
+            </Box>
+            <Text style={{ fontSize: 18, color: '#8B97A8', alignSelf: 'center' }}>→</Text>
+            <Box style={{ flex: 1, border: '1px solid #D6DCE5', borderRadius: 4, paddingTop: 14, paddingBottom: 14, paddingLeft: 12, paddingRight: 12 }}>
+                <Text style={{ fontSize: 18, color: '#3D7BD9', fontWeight: 'bold' }}>05</Text>
+                <Text style={{ fontSize: 19, color: '#1A2230', fontWeight: 'bold', marginTop: 6 }}>受约束生成</Text>
+                <Text style={{ fontSize: 15, color: '#4A5568', marginTop: 8, lineHeight: 1.4 }}>9 条硬规则，禁拼操作路径</Text>
+            </Box>
+            <Text style={{ fontSize: 18, color: '#8B97A8', alignSelf: 'center' }}>→</Text>
+            <Box style={{ flex: 1, border: '1px solid #D6DCE5', borderRadius: 4, paddingTop: 14, paddingBottom: 14, paddingLeft: 12, paddingRight: 12 }}>
+                <Text style={{ fontSize: 18, color: '#3D7BD9', fontWeight: 'bold' }}>06</Text>
+                <Text style={{ fontSize: 19, color: '#1A2230', fontWeight: 'bold', marginTop: 6 }}>质检</Text>
+                <Text style={{ fontSize: 15, color: '#4A5568', marginTop: 8, lineHeight: 1.4 }}>幻觉 / 有用性双判，不过则回边重试</Text>
+            </Box>
+        </Box>
+        <Box style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Text style={{ fontSize: 15, color: '#8B97A8' }}>回边：</Text>
+            <Text style={{ fontSize: 15, color: '#4A5568' }}>质检不通过 → 重试计数 +1（计入图状态，非类属性，并发安全）→ 回到 02；满 2 次直接输出拒答话术</Text>
+        </Box>
+        <Box style={{ height: 1, background: '#D6DCE5' }} />
+        <Box style={{ flexDirection: 'row', gap: 16 }}>
+            <Box style={{ flex: 1, borderLeft: '3px solid #D9534F', background: '#F7F9FC', paddingTop: 12, paddingBottom: 12, paddingLeft: 16, paddingRight: 16 }}>
+                <Text style={{ fontSize: 17, color: '#D9534F', fontWeight: 'bold' }}>G1　零文档硬闸</Text>
+                <Text style={{ fontSize: 15, color: '#4A5568', marginTop: 6, lineHeight: 1.4 }}>检索为空时不调模型直接拒答——E0 实测此时有 3/11 概率纯编造</Text>
+            </Box>
+            <Box style={{ flex: 1, borderLeft: '3px solid #D9534F', background: '#F7F9FC', paddingTop: 12, paddingBottom: 12, paddingLeft: 16, paddingRight: 16 }}>
+                <Text style={{ fontSize: 17, color: '#D9534F', fontWeight: 'bold' }}>G1′　相关性闸</Text>
+                <Text style={{ fontSize: 15, color: '#4A5568', marginTop: 6, lineHeight: 1.4 }}>文档全部被判不相关 → 拒答，而不是让模型“尽量答”</Text>
+            </Box>
+            <Box style={{ flex: 1, borderLeft: '3px solid #D9534F', background: '#F7F9FC', paddingTop: 12, paddingBottom: 12, paddingLeft: 16, paddingRight: 16 }}>
+                <Text style={{ fontSize: 17, color: '#D9534F', fontWeight: 'bold' }}>G2　引用白名单</Text>
+                <Text style={{ fontSize: 15, color: '#4A5568', marginTop: 6, lineHeight: 1.4 }}>「参考」必须命中本次检索文档，全部伪造则降级为拒答</Text>
+            </Box>
+        </Box>
+        <Box style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', background: '#1E4FA8', paddingTop: 11, paddingBottom: 11, paddingLeft: 20, paddingRight: 20 }}>
+            <Text style={{ fontSize: 15, color: '#FFFFFF' }}>LangGraph 1.2 · 百炼 qwen-plus + text-embedding-v4 · Chroma · BM25 + RRF · FastAPI · SQLite + JWT · Docker Compose 双容器</Text>
+        </Box>
+    </Box>
+    <Box style={{ height: 50, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 8, paddingLeft: 60, paddingRight: 60 }}>
+        <Text style={{ fontSize: 14, color: '#8B97A8' }}>企业内部技术支持知识库 · 课程作业汇报</Text>
+        <Text style={{ fontSize: 14, color: '#8B97A8' }}>08 / 18</Text>
+    </Box>
+</Slide>

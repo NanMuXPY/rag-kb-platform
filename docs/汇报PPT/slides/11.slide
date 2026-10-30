@@ -1,0 +1,60 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, flexDirection: 'column' }}>
+    <Box style={{ height: 68, background: '#1E4FA8', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 60, paddingRight: 60 }}>
+        <Text style={{ fontSize: 34, color: '#FFFFFF', fontWeight: 'bold' }}>先造尺子：40 题、两轮重复、归一化复核</Text>
+        <Text style={{ fontSize: 15, color: '#FFFFFF', opacity: 0.72 }}>03 · Method</Text>
+    </Box>
+    <Box style={{ flex: 1, flexDirection: 'column', paddingLeft: 60, paddingRight: 60, paddingTop: 24, paddingBottom: 10, gap: 20 }}>
+        <Box style={{ flexDirection: 'row', alignItems: 'center', background: '#E8EFF8', borderLeft: '4px solid #1E4FA8', paddingTop: 12, paddingBottom: 12, paddingLeft: 20, paddingRight: 20 }}>
+            <Text style={{ fontSize: 19, color: '#1A2230', lineHeight: 1.4 }}>
+                <span style={{ fontWeight: 'bold' }}>方法论　</span>没有可复现的评测，任何“效果提升”都只是印象。四件工具先做出来，再做优化。
+            </Text>
+        </Box>
+        <Box style={{ flexDirection: 'column' }}>
+            <Box style={{ flexDirection: 'row', alignItems: 'center', height: 88, borderBottom: '1px solid #E5E7EB' }}>
+                <Text style={{ fontSize: 22, color: '#1E4FA8', fontWeight: 'bold', width: 52 }}>01</Text>
+                <Box style={{ width: 210 }}>
+                    <Text style={{ fontSize: 22, color: '#1A2230', fontWeight: 'bold' }}>评测集</Text>
+                </Box>
+                <Text style={{ fontSize: 17, color: '#4A5568', flex: 1, lineHeight: 1.45 }}>
+                    30 题标准集（事实 / 操作 / 多跳 / 该拒答 8 类）+ 10 题困难集（口语化、简称、错别字），共 40 题
+                </Text>
+            </Box>
+            <Box style={{ flexDirection: 'row', alignItems: 'center', height: 88, borderBottom: '1px solid #E5E7EB' }}>
+                <Text style={{ fontSize: 22, color: '#1E4FA8', fontWeight: 'bold', width: 52 }}>02</Text>
+                <Box style={{ width: 210 }}>
+                    <Text style={{ fontSize: 22, color: '#1A2230', fontWeight: 'bold' }}>两轮重复</Text>
+                </Box>
+                <Text style={{ fontSize: 17, color: '#4A5568', flex: 1, lineHeight: 1.45 }}>
+                    关键配置各跑两遍再看结论——拒答指标一轮 80%、一轮 93.3%，1 题就差 6.7 个百分点
+                </Text>
+            </Box>
+            <Box style={{ flexDirection: 'row', alignItems: 'center', height: 88, borderBottom: '1px solid #E5E7EB' }}>
+                <Text style={{ fontSize: 22, color: '#1E4FA8', fontWeight: 'bold', width: 52 }}>03</Text>
+                <Box style={{ width: 210 }}>
+                    <Text style={{ fontSize: 22, color: '#1A2230', fontWeight: 'bold' }}>归一化复核</Text>
+                </Box>
+                <Text style={{ fontSize: 17, color: '#4A5568', flex: 1, lineHeight: 1.45 }}>
+                    零 API 成本的重算脚本：答案写「5 GB」而关键字是「5GB」，严格子串比对会误判成缺事实
+                </Text>
+            </Box>
+            <Box style={{ flexDirection: 'row', alignItems: 'center', height: 88 }}>
+                <Text style={{ fontSize: 22, color: '#1E4FA8', fontWeight: 'bold', width: 52 }}>04</Text>
+                <Box style={{ width: 210 }}>
+                    <Text style={{ fontSize: 22, color: '#1A2230', fontWeight: 'bold' }}>幻觉代理校验</Text>
+                </Box>
+                <Text style={{ fontSize: 17, color: '#4A5568', flex: 1, lineHeight: 1.45 }}>
+                    答案里的产品标识与错误码必须全库可查，查不到计入幻觉——但通用词会误报，需逐条看
+                </Text>
+            </Box>
+        </Box>
+        <Box style={{ background: '#F7F9FC', borderLeft: '4px solid #D9534F', paddingTop: 12, paddingBottom: 12, paddingLeft: 20, paddingRight: 20 }}>
+            <Text style={{ fontSize: 18, color: '#1A2230', lineHeight: 1.45 }}>
+                尺子造好后立刻抓到 <span style={{ color: '#D9534F', fontWeight: 'bold' }}>3 处评分器自身误判</span>：空格、拒答话术没被识别、禁词覆盖不全——问题不在模型，在量具。
+            </Text>
+        </Box>
+    </Box>
+    <Box style={{ height: 50, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 8, paddingLeft: 60, paddingRight: 60 }}>
+        <Text style={{ fontSize: 14, color: '#8B97A8' }}>企业内部技术支持知识库 · 课程作业汇报</Text>
+        <Text style={{ fontSize: 14, color: '#8B97A8' }}>11 / 18</Text>
+    </Box>
+</Slide>

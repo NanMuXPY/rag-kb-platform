@@ -1,0 +1,11 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, flexDirection: 'row' }}>
+    <Box style={{ width: 430, height: '100%', background: '#1E4FA8', flexDirection: 'column', justifyContent: 'center', paddingLeft: 84 }}>
+        <Text style={{ fontSize: 136, color: '#FFFFFF', fontWeight: 'bold', lineHeight: 1 }}>03</Text>
+        <Text style={{ fontSize: 13, color: '#FFFFFF', opacity: 0.72, letterSpacing: 4, marginTop: 14 }}>SECTION</Text>
+    </Box>
+    <Box style={{ flex: 1, flexDirection: 'column', justifyContent: 'center', paddingLeft: 78 }}>
+        <Text style={{ fontSize: 56, color: '#1A2230', fontWeight: 'bold', lineHeight: 1.2 }}>实验与结果</Text>
+        <Box style={{ width: 72, height: 4, background: '#1E4FA8', marginTop: 26, marginBottom: 24 }} />
+        <Text style={{ fontSize: 18, color: '#8B97A8' }}>Experiments</Text>
+    </Box>
+</Slide>

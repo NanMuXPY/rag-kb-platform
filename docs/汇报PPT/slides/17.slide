@@ -1,0 +1,76 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, flexDirection: 'column' }}>
+    <Box style={{ height: 68, background: '#1E4FA8', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 60, paddingRight: 60 }}>
+        <Text style={{ fontSize: 34, color: '#FFFFFF', fontWeight: 'bold' }}>下一步：先补解析，最后才谈规模</Text>
+        <Text style={{ fontSize: 15, color: '#FFFFFF', opacity: 0.72 }}>04 · Roadmap</Text>
+    </Box>
+    <Box style={{ flex: 1, flexDirection: 'column', paddingLeft: 60, paddingRight: 60, paddingTop: 22, paddingBottom: 8, gap: 18 }}>
+        <Box style={{ flexDirection: 'row', alignItems: 'center', background: '#E8EFF8', borderLeft: '4px solid #1E4FA8', paddingTop: 11, paddingBottom: 11, paddingLeft: 20, paddingRight: 20 }}>
+            <Text style={{ fontSize: 18, color: '#1A2230', lineHeight: 1.4 }}>
+                <span style={{ fontWeight: 'bold' }}>排序依据　</span>先解决“进不去场景”的问题，再解决“用得更好”的问题；规模与高可用放在最后。
+            </Text>
+        </Box>
+        <Box style={{ flexDirection: 'row', gap: 44, height: 404 }}>
+            <Box style={{ width: 596, flexDirection: 'column' }}>
+                <Text style={{ fontSize: 20, color: '#1A2230', fontWeight: 'bold' }}>演进路线</Text>
+                <Box style={{ height: 1, background: '#D6DCE5', marginTop: 10, marginBottom: 6 }} />
+                <Box style={{ flexDirection: 'row', alignItems: 'center', height: 78, borderBottom: '1px solid #E5E7EB' }}>
+                    <Text style={{ fontSize: 20, color: '#D9534F', fontWeight: 'bold', width: 56 }}>P0</Text>
+                    <Text style={{ fontSize: 17, color: '#1A2230', flex: 1, lineHeight: 1.4 }}>PDF / Word 解析入库；评测集瑕疵复核（q018 禁词、q020 标注）</Text>
+                    <Text style={{ fontSize: 16, color: '#4A5568' }}>1–2 天</Text>
+                </Box>
+                <Box style={{ flexDirection: 'row', alignItems: 'center', height: 78, borderBottom: '1px solid #E5E7EB' }}>
+                    <Text style={{ fontSize: 20, color: '#3D7BD9', fontWeight: 'bold', width: 56 }}>P1</Text>
+                    <Text style={{ fontSize: 17, color: '#1A2230', flex: 1, lineHeight: 1.4 }}>企微 OAuth + 组织架构同步；bge-reranker 接入</Text>
+                    <Text style={{ fontSize: 16, color: '#4A5568' }}>约 3 天</Text>
+                </Box>
+                <Box style={{ flexDirection: 'row', alignItems: 'center', height: 78, borderBottom: '1px solid #E5E7EB' }}>
+                    <Text style={{ fontSize: 20, color: '#3D7BD9', fontWeight: 'bold', width: 56 }}>P2</Text>
+                    <Text style={{ fontSize: 17, color: '#1A2230', flex: 1, lineHeight: 1.4 }}>答不出 → 生成待办并通知；企微 H5 / 侧边栏</Text>
+                    <Text style={{ fontSize: 16, color: '#4A5568' }}>约 5 天</Text>
+                </Box>
+                <Box style={{ flexDirection: 'row', alignItems: 'center', height: 78 }}>
+                    <Text style={{ fontSize: 20, color: '#8B97A8', fontWeight: 'bold', width: 56 }}>P3</Text>
+                    <Text style={{ fontSize: 17, color: '#4A5568', flex: 1, lineHeight: 1.4 }}>万级文档压测；高可用与多活</Text>
+                    <Text style={{ fontSize: 16, color: '#8B97A8' }}>暂不排</Text>
+                </Box>
+            </Box>
+            <Box style={{ flex: 1, flexDirection: 'column' }}>
+                <Text style={{ fontSize: 20, color: '#1A2230', fontWeight: 'bold' }}>成本对照（100 人 / 一年）</Text>
+                <Box style={{ height: 1, background: '#D6DCE5', marginTop: 10, marginBottom: 6 }} />
+                <Box style={{ flexDirection: 'row', alignItems: 'center', height: 50, borderBottom: '1px solid #E5E7EB' }}>
+                    <Text style={{ fontSize: 17, color: '#1E4FA8', fontWeight: 'bold', flex: 1 }}>本项目（自建）</Text>
+                    <Text style={{ fontSize: 18, color: '#1E4FA8', fontWeight: 'bold' }}>1.5–3 千元</Text>
+                </Box>
+                <Box style={{ flexDirection: 'row', alignItems: 'center', height: 50, borderBottom: '1px solid #E5E7EB' }}>
+                    <Text style={{ fontSize: 17, color: '#4A5568', flex: 1 }}>Dify 自部署</Text>
+                    <Text style={{ fontSize: 16, color: '#4A5568' }}>5–8 千元</Text>
+                </Box>
+                <Box style={{ flexDirection: 'row', alignItems: 'center', height: 50, borderBottom: '1px solid #E5E7EB' }}>
+                    <Text style={{ fontSize: 17, color: '#4A5568', flex: 1 }}>RAGFlow 自部署</Text>
+                    <Text style={{ fontSize: 16, color: '#4A5568' }}>1–1.7 万元</Text>
+                </Box>
+                <Box style={{ flexDirection: 'row', alignItems: 'center', height: 50, borderBottom: '1px solid #E5E7EB' }}>
+                    <Text style={{ fontSize: 17, color: '#4A5568', flex: 1 }}>百炼知识库标准版</Text>
+                    <Text style={{ fontSize: 16, color: '#4A5568' }}>300 元起 + token</Text>
+                </Box>
+                <Box style={{ flexDirection: 'row', alignItems: 'center', height: 50, borderBottom: '1px solid #E5E7EB' }}>
+                    <Text style={{ fontSize: 17, color: '#4A5568', flex: 1 }}>腾讯乐享（按人头）</Text>
+                    <Text style={{ fontSize: 16, color: '#4A5568' }}>万元级起</Text>
+                </Box>
+                <Box style={{ flexDirection: 'row', alignItems: 'center', height: 50 }}>
+                    <Text style={{ fontSize: 17, color: '#4A5568', flex: 1 }}>ServiceNow</Text>
+                    <Text style={{ fontSize: 16, color: '#4A5568' }}>10 万美元级</Text>
+                </Box>
+            </Box>
+        </Box>
+        <Box style={{ background: '#F7F9FC', borderLeft: '4px solid #3D7BD9', paddingTop: 11, paddingBottom: 11, paddingLeft: 20, paddingRight: 20 }}>
+            <Text style={{ fontSize: 17, color: '#1A2230', lineHeight: 1.45 }}>
+                在「100 人、内网、结构化文档、要审计」这个交集里，<span style={{ fontWeight: 'bold', color: '#1E4FA8' }}>自建的成本优势是 3–10 倍</span>，代价是自己承担解析与运维。
+            </Text>
+        </Box>
+    </Box>
+    <Box style={{ height: 50, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 8, paddingLeft: 60, paddingRight: 60 }}>
+        <Text style={{ fontSize: 14, color: '#8B97A8' }}>企业内部技术支持知识库 · 课程作业汇报</Text>
+        <Text style={{ fontSize: 14, color: '#8B97A8' }}>17 / 18</Text>
+    </Box>
+</Slide>
