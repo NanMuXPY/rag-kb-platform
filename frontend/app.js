@@ -245,7 +245,17 @@
     renderMessages();
   }
 
-  // ---- 发送 ----
+  // ---- 发送（SSE 流式） ----
+  // 后端走 /chat/stream，事件：step（节点进度）/ token（正文增量）/ reset（重试清屏）/ final
+  const STAGE_LABEL = {
+    route: "正在理解问题…",
+    rewrite: "正在改写检索词…",
+    retrieve: "正在检索知识库…",
+    grade_documents: "正在筛选相关段落…",
+    generate: "正在组织回答…",
+    chitchat: "正在回复…",
+  };
+
   async function send(question) {
     if (busy || !question.trim()) return;
     busy = true;
@@ -253,14 +263,26 @@
 
     appendMsg({ role: "user", content: question });
 
+    // 占位气泡：路由/检索这几秒只更新阶段文案，不出字
     const pdiv = document.createElement("div");
     pdiv.className = "msg msg-bot pending";
-    pdiv.innerHTML = `<div class="bubble"><span class="pulse"></span>正在检索知识库…</div>`;
+    pdiv.innerHTML = `<div class="bubble"><span class="pulse"></span><span class="stage">正在理解问题…</span></div>`;
     messages.appendChild(pdiv);
     thread.scrollTop = thread.scrollHeight;
+    const stageEl = pdiv.querySelector(".stage");
+    let live = null;                       // 正文容器，第一个 token 才创建
+    let streamed = "";                     // 已显示的增量文本
+
+    const ensureLive = () => {
+      if (live) return live;
+      pdiv.className = "msg msg-bot";
+      pdiv.innerHTML = `<div class="bubble"><div class="answer-text"></div></div>`;
+      live = pdiv.querySelector(".answer-text");
+      return live;
+    };
 
     try {
-      const r = await fetch(`${API_BASE}/chat`, {
+      const r = await fetch(`${API_BASE}/chat/stream`, {
         method: "POST",
         headers: authHeaders(),
         body: JSON.stringify({ question, session_id: current.id }),
@@ -270,12 +292,51 @@
         const e = await r.json().catch(() => ({}));
         throw new Error(e.detail || `HTTP ${r.status}`);
       }
-      const d = await r.json();
-      const refused = d.route === "vectorstore" &&
-        /无法确定|官方支持渠道/.test(d.answer || "");
+
+      const reader = r.body.getReader();
+      const dec = new TextDecoder();
+      let buf = "", finalPayload = null, failure = null;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        let cut;
+        while ((cut = buf.indexOf("\n\n")) >= 0) {
+          const block = buf.slice(0, cut).trim();
+          buf = buf.slice(cut + 2);
+          if (!block.startsWith("data:")) continue;
+          let ev;
+          try { ev = JSON.parse(block.slice(5).trim()); } catch { continue; }
+
+          if (ev.type === "step") {
+            if (stageEl) stageEl.textContent = STAGE_LABEL[ev.node] || "处理中…";
+          } else if (ev.type === "token") {
+            streamed += ev.text;
+            ensureLive().textContent = streamed;
+            thread.scrollTop = thread.scrollHeight;
+          } else if (ev.type === "reset") {
+            streamed = "";
+            if (live) live.textContent = "";
+          } else if (ev.type === "final") {
+            finalPayload = ev;
+          } else if (ev.type === "error") {
+            failure = ev.detail;
+          }
+        }
+      }
+
+      if (failure) throw new Error(failure);
+      if (!finalPayload) throw new Error("连接中断，未收到完整回答");
+
+      // G2 引用校验在生成结束后做，final 里的 answer 是校验后的最终版（引用行已规范化）
+      const answer = finalPayload.answer || streamed || "（无内容）";
+      const refused = finalPayload.route === "vectorstore" &&
+        /无法确定|官方支持渠道|资料未包含|知识库中没有/.test(answer);
       appendMsg({
-        role: "assistant", content: d.answer,
-        sources: d.sources, trace: d.trace, route: d.route, refused,
+        role: "assistant", content: answer,
+        sources: finalPayload.sources, trace: finalPayload.trace,
+        route: finalPayload.route, refused,
       });
     } catch (err) {
       appendMsg({

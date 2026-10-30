@@ -48,6 +48,19 @@ class GraphState(TypedDict):
     kb_ids: list               # 允许检索的知识库 id（字符串，权限过滤）
 
 
+def _stream_writer():
+    """取 LangGraph 的 custom 流写入器；非流式调用（graph.invoke / 普通 stream）时返回 None。
+
+    节点跑在图执行线程里，只有调用方显式用 stream_mode="custom" 时 writer 才存在，
+    所以这里必须容错——否则一次普通 ask() 就会炸。
+    """
+    try:
+        from langgraph.config import get_stream_writer
+        return get_stream_writer()
+    except Exception:
+        return None
+
+
 def _trace(state: dict, node: str, t0: float, note: str = "") -> dict:
     entry = {"node": node, "ms": int((time.perf_counter() - t0) * 1000)}
     if note:
@@ -210,9 +223,12 @@ class RAGEngine:
     def _node_generate(self, state: GraphState):
         t0 = time.perf_counter()
         documents = state.get("documents") or []
+        writer = _stream_writer()          # 非流式调用时返回 None
 
         # G1 硬闸：无证据不调模型（E0 实测零文档时 3/11 概率纯编造）
         if not documents:
+            if writer:
+                writer({"type": "token", "text": REFUSAL_REPLY})
             return {
                 "generation": REFUSAL_REPLY,
                 **_trace(state, "generate", t0, "G1 hard refusal, LLM skipped"),
@@ -224,8 +240,26 @@ class RAGEngine:
         )
         context += f"\n\n【对话历史】\n{_history_text(state.get('chat_history') or [])}"
 
-        answer = self.generator.invoke({"context": context, "question": state["question"]}).content
-        # G2 引用白名单
+        inputs = {"context": context, "question": state["question"]}
+        if writer is not None:
+            # 重试轮次要通知前端清屏，否则两轮文字会叠在一起
+            if (state.get("retries") or {}).get("regeneration", 0) > 0:
+                writer({"type": "reset"})
+            buf: list[str] = []
+            try:
+                for chunk in self.generator.stream(inputs):
+                    piece = getattr(chunk, "content", "") or ""
+                    if piece:
+                        buf.append(piece)
+                        writer({"type": "token", "text": piece})
+                answer = "".join(buf).strip()
+            except Exception:
+                answer = ""                     # 流式中断：回落到一次性生成
+            if not answer:
+                answer = self.generator.invoke(inputs).content
+        else:
+            answer = self.generator.invoke(inputs).content
+        # G2 引用白名单（流式时这段在末尾，前端以 final 事件为准可整体替换）
         answer = verify_citations(answer, documents)
 
         retries = dict(state.get("retries") or {})
@@ -295,6 +329,44 @@ class RAGEngine:
                 if isinstance(state, dict):
                     final.update(state)
 
+        return self._pack(final, chat_history)
+
+    # ----- 流式入口（SSE 用） -----
+    def ask_stream(self, question: str, chat_history: list[dict] | None = None,
+                   kb_ids: list | None = None):
+        """逐事件产出：step / token / reset / final。
+
+        与非流式 ask() 共用同一张图和同一个 _pack，保证两条出口的结果结构一致。
+        """
+        inputs = {
+            "question": question,
+            "generation": "",
+            "documents": [],
+            "chat_history": chat_history or [],
+            "retries": {"regeneration": 0, "re_retrieval": 0},
+            "trace": [],
+            "route": "",
+            "kb_ids": kb_ids or ["default"],
+        }
+        final: dict = {}
+        for mode, chunk in self.graph.stream(
+            inputs, stream_mode=["updates", "custom"], config={"recursion_limit": 50}
+        ):
+            if mode == "custom":
+                if isinstance(chunk, dict) and chunk.get("type"):
+                    yield chunk                   # 节点内 writer 推的 token / reset
+                continue
+            for _node, state in (chunk or {}).items():
+                if not isinstance(state, dict):
+                    continue
+                final.update(state)
+                trace = state.get("trace") or []
+                if trace:
+                    yield {"type": "step", **trace[-1]}
+        yield {"type": "final", **self._pack(final, chat_history)}
+
+    def _pack(self, final: dict, chat_history: list[dict] | None) -> dict:
+        """图状态 → 对外结果。ask 与 ask_stream 都走这里。"""
         answer = (final.get("generation") or "").strip()
         documents = final.get("documents") or []
         history = final.get("chat_history") or (chat_history or [])

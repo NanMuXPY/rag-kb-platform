@@ -4,11 +4,12 @@
 # ---------------------------------------------------------------------------
 from __future__ import annotations
 
+import json
 from uuid import uuid4
 
 from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel, Field
 from typing import Optional
 
@@ -151,6 +152,58 @@ def chat(req: ChatRequest, request: Request):
         steps=result["steps"],
         trace=result["trace"],
         route=result["route"],
+    )
+
+
+@app.post("/chat/stream")
+def chat_stream(req: ChatRequest, request: Request):
+    """SSE 流式问答：事件类型 step / token / reset / final / error。
+
+    与非流式 /chat 共用同一张图和同一个 _pack，结果结构一致。区别只在于时序：
+    路由与检索阶段（约 2–5s）只发 step 事件，前端据此显示「正在检索资料」；
+    进入生成节点后逐 token 推送，首字通常在 5s 内出现。
+
+    G2 引用校验必须等全文生成完才能做，所以 final 里的 answer 可能与已推送的 token
+    有极小差异（引用行被重写成规范文档名）。**前端收到 final 后应以它覆盖显示内容。**
+    """
+    if settings.demo_token and request.headers.get("X-Demo-Token") == settings.demo_token:
+        identity = "demo"
+        kb_ids = None
+    else:
+        user = get_current_user(request)
+        identity = user["username"]
+        kb_ids = workspace.readable_kb_ids(user)
+
+    session_id = req.session_id or str(uuid4())
+    scoped = f"{identity}:{session_id}"
+    history = sessions.get_history(scoped) or []
+
+    def event_stream():
+        def emit(payload: dict) -> str:
+            return "data: " + json.dumps(payload, ensure_ascii=False) + "\n\n"
+
+        try:
+            for ev in get_engine().ask_stream(req.question, history, kb_ids):
+                if ev.get("type") == "final":
+                    sessions.put_history(scoped, ev.get("chat_history") or [])
+                    payload = {k: v for k, v in ev.items() if k != "chat_history"}
+                    payload["session_id"] = session_id
+                else:
+                    payload = ev
+                yield emit(payload)
+        except ValueError as exc:
+            yield emit({"type": "error", "detail": str(exc)})
+        except Exception as exc:
+            yield emit({"type": "error", "detail": f"{type(exc).__name__}: {exc}"})
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",      # 反代不缓冲，否则要等全部吐完才到浏览器
+        },
     )
 
 
