@@ -45,6 +45,14 @@ class Settings:
     embed_model: str = field(default_factory=lambda: os.getenv("EMBEDDING_MODEL", "text-embedding-v4"))
     # 百炼单请求硬上限 10 条，务必与 batch 对齐
     embed_batch_size: int = field(default_factory=lambda: int(os.getenv("EMBEDDING_BATCH_SIZE", "10")))
+    # 并发批数：入库从"串行小批量"改成"N 批并行 + 失败退避"
+    embed_concurrency: int = field(default_factory=lambda: int(os.getenv("EMBEDDING_CONCURRENCY", "4")))
+
+    # ----- OCR（扫描件）：默认关闭；设置 OCR_MODEL 即开启视觉模型转文字 -----
+    ocr_model: str = field(default_factory=lambda: os.getenv("OCR_MODEL", "").strip())
+    ocr_api_key: str = field(default_factory=lambda: os.getenv("OCR_API_KEY", "").strip())
+    ocr_base_url: str = field(default_factory=lambda: os.getenv("OCR_API_BASE", "").strip())
+    ocr_max_pages: int = field(default_factory=lambda: int(os.getenv("OCR_MAX_PAGES", "30")))
 
     # ----- 知识库 -----
     data_dir: Path = field(default_factory=lambda: _PROJECT_ROOT / os.getenv("DATA_DIR", "data"))
@@ -59,6 +67,10 @@ class Settings:
     retriever_fetch_k: int = field(default_factory=lambda: int(os.getenv("RETRIEVER_FETCH_K", "12")))
     # MMR 相关性与多样性权衡：1.0 只看相关性，0.0 只看多样性
     mmr_lambda: float = field(default_factory=lambda: float(os.getenv("MMR_LAMBDA", "0.5")))
+    # BM25：token 缓存落盘 + 变更后后台重建；超过阈值自动降级为纯向量（并明确报状态）
+    bm25_cache: bool = field(default_factory=lambda: (
+        os.getenv("BM25_CACHE", "True").lower() != "false"))
+    bm25_max_chunks: int = field(default_factory=lambda: int(os.getenv("BM25_MAX_CHUNKS", "20000")))
     rebuild_vectorstore: bool = field(default_factory=lambda: (
         os.getenv("REBUILD_VECTORSTORE", "False").lower() == "true"
     ))

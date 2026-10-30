@@ -260,6 +260,13 @@ def save_file(kb_id: int, filename: str, data: bytes, uploader: dict) -> dict:
     if role not in {"editor", "kb_admin", "super"}:
         raise PermissionError("只读权限，如需上传请联系知识库管理员")
 
+    # 先验抽取：抽不出文字的文件（扫描件/损坏/加密）当场拒收，
+    # 避免"上传成功 → 审批通过 → 0 chunk 入库"的静默失败。
+    from app.extract import extract_bytes
+    probe = extract_bytes(data, name)
+    if not probe.text.strip():
+        raise ValueError(f"未能从《{name}》提取文字：{probe.note or '内容为空'}")
+
     direct = role in {"kb_admin", "super"}
     status = "approved" if direct else "pending"
 
