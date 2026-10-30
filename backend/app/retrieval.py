@@ -296,35 +296,42 @@ def rrf_fuse(lists: list[list[Document]], k: int) -> list[Document]:
 
 def hybrid_search(db, query: str, k: int, kb_ids: list[str],
                   fetch_k: int = 12) -> list[Document]:
-    """向量 + BM25 混合检索，多库时按库分配配额。
+    """向量 + BM25 混合检索；多库时做「全局排序 + 覆盖度补位」。
 
-    为什么多库要分配额（v2.4 线上验收发现）：把一份 5KB 的 Excel 传进一个新建的库，
-    再问表里的内容，top-8 全被默认库（185 chunk）占满，新库的切片一个都没进来——
-    用户的心智是"我刚传的，你应该知道"，而全局 top-k 只会让大库吃掉全部名额。
-    做法：多库时每库各取 per 个候选（向量 + BM25 各一份），再用同一套 RRF 合并；
-    只算一次 embedding，避免 N 次向量化。
+    为什么不是"每库分配额"（v2.4 第一版做法，已废弃）：
+      给每个库固定保底名额，会让**无关的小库**也拿到名额。线上实测：默认库 185 chunk、
+      另一个库只有 1 个测试文件，问「新增成员调哪个接口」时，小库的"库内第 1 名"
+      靠 RRF 1/(60+1) 压过了大库的"库内第 4 名" 1/(60+4)，把真正相关的文档挤出了 top-4，
+      打分器看到 4 篇全不相关 → 直接拒答。**RRF 只该融合"检索通道"，不该融合"知识库"。**
+
+    现在的做法：
+      1. 所有库一起检索（where kb_id $in [...]），让 chunk 在同一空间里比分数，顺序才公平；
+      2. 取完 top-k 后检查覆盖度，某库一篇都没进来，就把它的 top-1 **追加到末尾**；
+      3. 追加而非替换 —— 新库仍被看见（打分器会给它机会），但不会挤掉强相关结果。
+
+    这同时解决了两个诉求："我刚传的你应该知道" 和 "别为了小库牺牲相关性"。
     """
     kb_ids = [str(x) for x in kb_ids]
-    if not kb_ids:
-        vector_hits = db.similarity_search(query, k=fetch_k)
-        keyword_hits = bm25_search(db, query, fetch_k, [])
-        return rrf_fuse([vector_hits, keyword_hits], k)
+    where = {"kb_id": {"$in": kb_ids}} if kb_ids else None
 
-    if len(kb_ids) == 1:
-        where = {"kb_id": {"$in": kb_ids}}
+    if where:
         vector_hits = db.similarity_search(query, k=fetch_k, filter=where)
-        keyword_hits = bm25_search(db, query, fetch_k, kb_ids)
-        return rrf_fuse([vector_hits, keyword_hits], k)
+    else:
+        vector_hits = db.similarity_search(query, k=fetch_k)
+    keyword_hits = bm25_search(db, query, fetch_k, kb_ids)
+    fused = rrf_fuse([vector_hits, keyword_hits], k)
 
-    per = max(2, min(fetch_k, math.ceil(k * 2 / len(kb_ids))))
-    try:
-        vec = db.embeddings.embed_query(query)
-        search = lambda kb: db.similarity_search_by_vector(vec, k=per, filter={"kb_id": kb})
-    except AttributeError:                      # 老版本包装没有 embeddings 属性，退回文本查询
-        search = lambda kb: db.similarity_search(query, k=per, filter={"kb_id": kb})
+    if len(kb_ids) <= 1:
+        return fused
 
-    lists: list[list[Document]] = []
+    covered = {str((d.metadata or {}).get("kb_id", "")) for d in fused}
     for kb in kb_ids:
-        lists.append(search(kb))
-        lists.append(bm25_search(db, query, per, [kb]))
-    return rrf_fuse(lists, k)
+        if kb in covered:
+            continue
+        try:
+            extra = db.similarity_search(query, k=1, filter={"kb_id": kb})
+        except Exception:
+            extra = []
+        if extra and all(x.page_content != extra[0].page_content for x in fused):
+            fused.append(extra[0])
+    return fused

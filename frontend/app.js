@@ -269,7 +269,7 @@
     pdiv.innerHTML = `<div class="bubble"><span class="pulse"></span><span class="stage">正在理解问题…</span></div>`;
     messages.appendChild(pdiv);
     thread.scrollTop = thread.scrollHeight;
-    const stageEl = pdiv.querySelector(".stage");
+    let stageEl = pdiv.querySelector(".stage");
     let live = null;                       // 正文容器，第一个 token 才创建
     let streamed = "";                     // 已显示的增量文本
 
@@ -316,8 +316,14 @@
             ensureLive().textContent = streamed;
             thread.scrollTop = thread.scrollHeight;
           } else if (ev.type === "reset") {
+            // 质检没过、要重新生成：清空并明确告知，否则用户会以为卡住了
             streamed = "";
-            if (live) live.textContent = "";
+            live = null;
+            pdiv.className = "msg msg-bot pending";
+            pdiv.innerHTML = `<div class="bubble"><span class="pulse"></span>` +
+              `<span class="stage">正在重新核对资料…</span></div>`;
+            stageEl = pdiv.querySelector(".stage");
+            thread.scrollTop = thread.scrollHeight;
           } else if (ev.type === "final") {
             finalPayload = ev;
           } else if (ev.type === "error") {
