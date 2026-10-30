@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------
-# 统一文本抽取：md / txt / pdf / docx 一条通路
+# 统一文本抽取：md / txt / pdf / docx / xlsx / pptx 一条通路
 #
 # 为什么单独成模块（v2.3）：
 #   1. 建库（批量扫目录）原来只认 .md，上传通路却支持 pdf/docx，两套逻辑两套坑；
@@ -8,6 +8,14 @@
 #
 # OCR 策略：默认不开（settings.ocr_model 为空）。开启后对"无文字层的页"渲染成图，
 # 交给视觉模型转文字——比装 PaddleOCR/Tesseract 省事，代价是按页计费，故设页数上限。
+#
+# v2.4 补 xlsx / pptx：
+#   - 表格与幻灯片是技术支持场景最常见的"口径来源"（配额表、参数表、值班表、
+#     上线步骤 PPT），只认 md/docx 等于把半个知识库挡在门外；
+#   - 表格按行转成 `列名=值；列名=值`，而不是裸的 `a | b | c`：切块是 800 字符硬切，
+#     一行被切走时只有带上列名才知道每个数字是什么；
+#   - 公式取缓存值（data_only），没有缓存值（文件没被 Excel 打开过）时退回公式文本；
+#   - 超大表按行数截断并在 note 里说明，避免一张 10 万行的导出表把库撑爆。
 # ---------------------------------------------------------------------------
 from __future__ import annotations
 
@@ -19,8 +27,14 @@ from dataclasses import dataclass, field
 
 from app.config import settings
 
-# 可入库的文本类格式（.xlsx/.pptx 暂不支持：表格与版式需要单独切块策略）
-SUPPORTED_EXTS = {".md", ".txt", ".pdf", ".docx"}
+# 可入库的文本类格式。.xls/.ppt 是二进制旧格式，解析库不支持，故不收（提示另存为新格式）
+SUPPORTED_EXTS = {".md", ".txt", ".pdf", ".docx", ".xlsx", ".pptx"}
+
+# 旧格式 → 新格式的提示语，报错时告诉用户该怎么办，而不是干巴巴一句"不支持"
+LEGACY_HINT = {".xls": ".xlsx", ".ppt": ".pptx", ".doc": ".docx"}
+
+# 单个工作表最多读多少行（防止有人把百万行导出报表丢进来）
+SHEET_MAX_ROWS = 5000
 
 # 中文文本常见的三种编码，按顺序试
 _TEXT_ENCODINGS = ("utf-8", "gb18030", "utf-16")
@@ -196,12 +210,149 @@ def _extract_docx(data: bytes, result: ExtractResult) -> None:
     result.engine = "docx"
 
 
+def _cell(v) -> str:
+    """单元格值 → 干净字符串：去掉 Excel 里常见的 .0 尾巴与全角空格。"""
+    if v is None:
+        return ""
+    if isinstance(v, float) and v.is_integer():
+        return str(int(v))
+    if hasattr(v, "isoformat"):            # datetime / date
+        s = v.isoformat()
+        return s[:10] if len(s) >= 10 and s[10] == "T" else s
+    s = str(v).replace("\u3000", " ").strip()
+    return re.sub(r"\s+", " ", s)
+
+
+def _extract_xlsx(data: bytes, result: ExtractResult) -> None:
+    """表格 → 每个工作表一段，每行 `列名=值；列名=值`。"""
+    from openpyxl import load_workbook
+
+    def _load(**kw):
+        return load_workbook(io.BytesIO(data), read_only=True, data_only=True, **kw)
+
+    try:
+        book = _load()
+    except Exception as exc:
+        raise RuntimeError(f"xlsx 打开失败 {type(exc).__name__}: {exc}") from exc
+
+    parts: list[str] = []
+    truncated: list[str] = []
+    try:
+        for sheet in book.worksheets:
+            rows = []
+            for row in sheet.iter_rows(values_only=True):
+                rows.append([_cell(c) for c in row])
+                if len(rows) >= SHEET_MAX_ROWS + 1:      # +1 是表头
+                    break
+            if len(rows) > SHEET_MAX_ROWS:
+                rows = rows[: SHEET_MAX_ROWS + 1]
+                truncated.append(sheet.title)
+
+            # 去掉整行为空的行（Excel 里格式化残留的空行很多）
+            rows = [r for r in rows if any(c for c in r)]
+            if not rows:
+                continue
+
+            header = rows[0]
+            has_header = sum(1 for c in header if c) >= 2      # 至少两列有名字才算表头
+            lines = [f"【工作表：{sheet.title}】"]
+            for r in rows[1:] if has_header else rows:
+                pairs = []
+                for i, val in enumerate(r):
+                    if not val:
+                        continue
+                    name = header[i] if has_header and i < len(header) and header[i] else f"列{i + 1}"
+                    pairs.append(f"{name}={val}")
+                if pairs:
+                    lines.append("；".join(pairs))
+            if has_header:                                       # 表头本身也是一条事实
+                cols = [c for c in header if c]
+                lines.insert(1, "表头：" + " | ".join(cols))
+            parts.append("\n".join(lines))
+            result.pages += 1
+    finally:
+        book.close()
+
+    # 公式没有缓存值（文件从没被 Excel/WPS 打开保存过）时，上面全是空——退回读公式文本
+    if not any(parts):
+        try:
+            book = load_workbook(io.BytesIO(data), read_only=True, data_only=False)
+            for sheet in book.worksheets:
+                lines = [f"【工作表：{sheet.title}】"]
+                for row in sheet.iter_rows(values_only=True):
+                    cells = [f"{c}" for c in row if isinstance(c, str) and c.startswith("=")]
+                    if cells:
+                        lines.append("公式：" + " | ".join(cells))
+                if len(lines) > 1:
+                    parts.append("\n".join(lines))
+            book.close()
+            if parts:
+                result.note = "表格只有公式没有计算结果，已按公式文本入库"
+        except Exception as exc:
+            result.errors.append(f"公式回读失败 {type(exc).__name__}: {exc}")
+
+    result.text = "\n\n".join(parts)
+    result.engine = "openpyxl"
+    if truncated:
+        result.note = (result.note + "；" if result.note else "") + \
+            f"{'、'.join(truncated)} 超过 {SHEET_MAX_ROWS} 行，仅取前 {SHEET_MAX_ROWS} 行"
+
+
+def _shape_texts(shape) -> list[str]:
+    """递归取形状里的文字：组合形状要下钻，表格要按行拼。"""
+    from pptx.enum.shapes import MSO_SHAPE_TYPE
+
+    out: list[str] = []
+    if shape.shape_type == MSO_SHAPE_TYPE.GROUP:
+        for sub in shape.shapes:
+            out.extend(_shape_texts(sub))
+        return out
+    if getattr(shape, "has_table", False):
+        for row in shape.table.rows:
+            cells = [_cell(c.text) for c in row.cells]
+            cells = [c for c in cells if c]
+            if cells:
+                out.append(" | ".join(cells))
+        return out
+    if getattr(shape, "has_text_frame", False) and shape.text_frame:
+        txt = _clean(shape.text_frame.text)
+        if txt:
+            out.append(txt)
+    return out
+
+
+def _extract_pptx(data: bytes, result: ExtractResult) -> None:
+    """幻灯片 → 每页一段，含表格与演讲者备注（备注里常写口径与前提）。"""
+    from pptx import Presentation
+
+    prs = Presentation(io.BytesIO(data))
+    parts: list[str] = []
+    for idx, slide in enumerate(prs.slides, 1):
+        blocks: list[str] = []
+        for shape in slide.shapes:
+            blocks.extend(_shape_texts(shape))
+        note = ""
+        if slide.has_notes_slide and slide.notes_slide.notes_text_frame:
+            note = _clean(slide.notes_slide.notes_text_frame.text)
+            if note:
+                blocks.append(f"备注：{note}")
+        if blocks:
+            parts.append(f"【第 {idx} 页】\n" + "\n".join(blocks))
+    result.text = "\n\n".join(parts)
+    result.pages = len(prs.slides)
+    result.engine = "python-pptx"
+
+
 def extract_bytes(data: bytes, filename: str) -> ExtractResult:
     """核心入口：字节流 + 文件名 → 抽取结果。异常只记在 errors 里。"""
     ext = os.path.splitext(filename or "")[1].lower()
     result = ExtractResult()
     if ext not in SUPPORTED_EXTS:
-        result.note = f"不支持的格式 {ext or '(无扩展名)'}"
+        hint = LEGACY_HINT.get(ext)
+        result.note = (
+            f"不支持 {ext} 旧格式，请用 Office/WPS 另存为 {hint} 后再上传"
+            if hint else f"不支持的格式 {ext or '(无扩展名)'}，支持 {'/'.join(sorted(SUPPORTED_EXTS))}"
+        )
         return result
 
     try:
@@ -209,10 +360,18 @@ def extract_bytes(data: bytes, filename: str) -> ExtractResult:
             _extract_pdf(data, result)
         elif ext == ".docx":
             _extract_docx(data, result)
+        elif ext == ".xlsx":
+            _extract_xlsx(data, result)
+        elif ext == ".pptx":
+            _extract_pptx(data, result)
         else:
             result.text = _decode_bytes(data)
             result.pages = 1
             result.engine = "text"
+    except ImportError as exc:            # 依赖没装：说清楚缺什么，别让上传直接 500
+        result.errors.append(f"{type(exc).__name__}: {exc}")
+        result.note = f"缺少解析 {ext} 的依赖，请在后端安装 requirements.txt"
+        return result
     except Exception as exc:
         result.errors.append(f"{type(exc).__name__}: {exc}")
         result.note = "解析失败，原文可能已损坏或被加密"

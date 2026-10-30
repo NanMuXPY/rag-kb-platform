@@ -13,7 +13,14 @@
 - **审批流**：editor 上传 → `pending` → 库管理员批准后增量入向量库（无需全量重建）；拒绝不入库。
 - **数据安全三闸**：①同名覆盖自动存旧版本（`.versions/`）；②删除进回收站（`.trash/`，可恢复）；③全操作审计流水（注册/登录/上传/审批/下载/授权/删除/跨库搜索，记录谁·何时·哪个库·哪个文件）。
 - **超管特权**：跨库语义搜索（返回命中 chunk + 所属知识库 + 原文件名）、创建/删除知识库。
-- **文件类型**：md/txt 直接索引；pdf/docx 提取文本索引，原始文件均可下载（≤20MB）。
+- **文件类型**（v2.4）：md / txt / pdf / docx / **xlsx** / **pptx** 统一走 `app/extract.py` 抽取后索引，原始文件均可下载（≤20MB）；扫描件可开 OCR，`.xls/.ppt` 旧格式提示另存。
+
+## 加固与评测口径（v2.3 / v2.4）
+
+- **v2.3**（`docs/v2.3-加固说明.md`）：统一抽取（md/txt/pdf/docx + 扫描件 OCR）、建库多格式 + 跳过报告、
+  BM25 按库分区 + 后台重建、并发入库、重建进度。
+- **v2.4**（`docs/v2.4-说明.md`）：xlsx/pptx 入库；拒答评测改三态（pass/partial/fail）并修掉两处
+  substring 误伤；prompt 增加规则 10「术语不可替换」（名字相近但不同的功能不得互相顶替）。
 
 ## 企业版（v2.1）：账号 · 审批 · 角色权限
 
@@ -48,8 +55,8 @@ rag-kb-v2/
 │   └── requirements.txt
 ├── frontend/           # index.html + app.css + app.js（无构建，nginx 托管）
 ├── deploy/nginx.conf
-├── data/               # 内置语料 6 大主题 30 篇 → 171 chunks（800/120）
-├── eval/               # eval_set.jsonl 30 题 + run_eval.py（HTTP 协议，与 v1 通用）
+├── data/               # 内置语料 6 大主题 39 篇 → 185 chunks（800/120）
+├── eval/               # eval_set.jsonl 30 题 + eval_set_hard.jsonl 10 题 + grading.py 判分口径
 ├── docker-compose.yaml # backend + nginx:alpine，宿主 8080
 └── .env                # 百炼 Key（勿提交）
 ```
@@ -59,7 +66,7 @@ rag-kb-v2/
 ```bash
 cd backend
 uvicorn api.main:app --host 127.0.0.1 --port 14052
-# 首次启动自动建向量库（171 chunks），之后加载已有库
+# 首次启动自动建向量库（185 chunks），之后加载已有库
 ```
 
 前端开发预览：直接打开 `frontend/index.html`（自动回退直连 127.0.0.1:14052）。
@@ -76,7 +83,7 @@ docker compose up -d --build
 
 环境变量见 `.env.example`；公网防护三开关：`DEMO_TOKEN` / `DAILY_IP_LIMIT` / `ADMIN_TOKEN`。
 
-## 质量闸门（E1 双闸，继承自 v1 实验）
+## 质量闸门（E1 双闸 + E6/E7 生成规则 + v2.4 拒答三态评测）
 
 - **G1 硬闸**：检索打分后零文档 → 不调 LLM 直接拒答（E0 实测零文档时 3/11 概率纯编造）
 - **G2 引用白名单**：答案中「参考：X」必须命中本次检索文档，全伪造则降级拒答

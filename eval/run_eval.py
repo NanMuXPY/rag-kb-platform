@@ -35,17 +35,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 BACKEND = ROOT / "backend"
 sys.path.insert(0, str(BACKEND))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from grading import grade_refusal, leaked as grade_leaked  # noqa: E402
 
 EVAL_FILE = ROOT / "eval" / "eval_set.jsonl"
 RESULT_DIR = ROOT / "eval" / "results"
-
-# 表达"答不出/转人工"的标记词
-REFUSE_MARKERS = [
-    "无法确定", "无法查询", "无法提供", "无法代为", "无法帮您", "无法直接", "无法代您",
-    "不能", "不在", "没有相关", "资料不足", "知识库", "人工", "建议您",
-    # E6 补：模型按"操作步骤硬约束"回复时用的是这几种表述，旧标记词认不出来
-    "资料未包含", "资料中没有", "未提供具体", "未涵盖", "未给出",
-]
 
 STOPWORDS = {
     "the", "and", "for", "with", "this", "that", "http", "https", "www",
@@ -178,13 +173,14 @@ def main():
         rec["must_hit"] = [k for k in must if k in answer]
         rec["must_ok"] = all(k in answer for k in must) if must else None
 
-        # --- 拒答判定 ---
-        leaked = [k for k in (item.get("must_not_contain") or []) if k in answer]
+        # --- 拒答判定（三段式口径见 eval/grading.py）---
+        leaked = grade_leaked(answer, item)
         rec["leaked"] = leaked
-        said_refuse = any(m in answer for m in REFUSE_MARKERS)
         if item["should_refuse"]:
-            rec["refuse_ok"] = said_refuse and not leaked
+            rec["refuse_grade"] = grade_refusal(answer, item)
+            rec["refuse_ok"] = rec["refuse_grade"] == "pass"
         else:
+            rec["refuse_grade"] = None
             rec["refuse_ok"] = None
 
         # --- 引用 ---
@@ -219,6 +215,9 @@ def main():
     must_ok = [r for r in answerable if r["must_ok"] is not None]
     must_rate = (sum(1 for r in must_ok if r["must_ok"]) / len(must_ok)) if must_ok else 0
     refuse_acc = (sum(1 for r in refusable if r["refuse_ok"]) / len(refusable)) if refusable else None
+    refuse_partial = sum(1 for r in refusable if r.get("refuse_grade") == "partial")
+    refuse_soft = ((sum(1 for r in refusable if r.get("refuse_grade") in ("pass", "partial")) / len(refusable))
+                   if refusable else None)
 
     total_ids = sum(len(r.get("bad_idents", [])) + len(r.get("bad_codes", [])) for r in answered)
     lat = [r["latency"] for r in answered]
@@ -234,6 +233,8 @@ def main():
         "mrr": round(mrr, 4),
         "must_contain_rate": round(must_rate, 4),
         "refuse_acc": round(refuse_acc, 4) if refuse_acc is not None else None,
+        "refuse_soft_acc": round(refuse_soft, 4) if refuse_soft is not None else None,
+        "refuse_partial": refuse_partial,
         "cite_rate": round(cite, 4),
         "bad_ident_count": total_ids,
         "p50": round(p50, 2),
@@ -253,7 +254,9 @@ def main():
     print(f"  recall@4         {summary['recall@4']:.1%}")
     print(f"  MRR              {summary['mrr']:.3f}")
     print(f"  must_contain     {summary['must_contain_rate']:.1%}")
-    print(f"  拒答准确率       {('%.1f%%' % (summary['refuse_acc'] * 100)) if summary['refuse_acc'] is not None else '—（本次无拒答题）'}")
+    print(f"  拒答准确率(严)   {('%.1f%%' % (summary['refuse_acc'] * 100)) if summary['refuse_acc'] is not None else '—（本次无拒答题）'}")
+    if summary.get("refuse_soft_acc") is not None:
+        print(f"  拒答准确率(宽)   {summary['refuse_soft_acc']:.1%}   半拒答 {summary['refuse_partial']} 题")
     print(f"  引用率           {summary['cite_rate']:.1%}")
     print(f"  标识符幻觉数     {summary['bad_ident_count']}")
     print(f"  延迟 P50 / P95   {summary['p50']}s / {summary['p95']}s")

@@ -14,6 +14,7 @@ import sqlite3
 import time
 
 from app.users import _connect, _db_lock
+from app.extract import SUPPORTED_EXTS
 from app.knowledge import DEFAULT_KB  # 向量库中默认库的标记（与迁移保持一致）
 
 DEFAULT_KB_ID = 1
@@ -226,7 +227,7 @@ def list_members(kb_id: int) -> list[dict]:
 # ---------------------------------------------------------------------------
 # 文件：上传（版本备份）→ 审批 → 下载 / 回收站删除
 # ---------------------------------------------------------------------------
-ALLOWED_FILE_EXTS = {".md", ".txt", ".pdf", ".docx"}
+ALLOWED_FILE_EXTS = SUPPORTED_EXTS          # 与抽取层共用一份白名单，避免两处漂移
 MAX_FILE_MB = 20
 
 
@@ -252,7 +253,7 @@ def save_file(kb_id: int, filename: str, data: bytes, uploader: dict) -> dict:
     name = os.path.basename(filename or "")
     ext = os.path.splitext(name)[1].lower()
     if ext not in ALLOWED_FILE_EXTS:
-        raise ValueError(f"不支持的文件类型 {ext}（仅 md/txt/pdf/docx）")
+        raise ValueError(f"不支持的文件类型 {ext}（仅 {'/'.join(sorted(ALLOWED_FILE_EXTS))}）")
     if len(data) > MAX_FILE_MB * 1024 * 1024:
         raise ValueError(f"文件超过 {MAX_FILE_MB}MB 上限")
 

@@ -27,6 +27,7 @@ def normalize_doc_name(name: str) -> str:
     name = name.replace("\\\\", "/").replace("\\", "/").split("/")[-1]
     name = re.sub(r"\.md$", "", name, flags=re.I)
     name = re.sub(r"_[0-9a-f]{6,}$", "", name, flags=re.I)
+    name = re.sub(r"^[0-9a-f]{6,}_", "", name, flags=re.I)   # 上传时加的随机前缀（780a7c84_xxx.xlsx）
     return re.sub(r"\s+", "", name)
 
 
@@ -53,20 +54,23 @@ def loose_name(name: str) -> str:
 
 
 def _match(cited: str, stems: set[str]) -> bool:
+    return _best_stem(cited, stems) is not None
+
+
+def _best_stem(cited: str, stems: set[str]) -> str | None:
+    """返回与引用最贴合的白名单文档名，用于把引用行改写成规范形态。"""
     if not cited:
-        return False
-    if any(cited in s or s in cited for s in stems):
-        return True
-    lc = loose_name(cited)
-    if len(lc) < 4:
-        return False
-    for s in stems:
-        ls = loose_name(s)
-        if len(ls) < 4:
-            continue
-        if lc in ls or ls in lc:
-            return True
-    return False
+        return None
+    cands = [s for s in stems if cited in s or s in cited]
+    if not cands:
+        lc = loose_name(cited)
+        if len(lc) < 4:
+            return None
+        cands = [s for s in stems if len(loose_name(s)) >= 4
+                 and (lc in loose_name(s) or loose_name(s) in lc)]
+    if not cands:
+        return None
+    return max(cands, key=len)
 
 
 # 引用行可能列多个文档：参考：文档A、文档B（也可能用逗号/分号/斜杠分隔）
@@ -91,7 +95,7 @@ def verify_citations(generation: str, documents) -> str:
     holder = 0
     for m in hits:
         names = [n for n in _CITE_SPLIT.split(m.group(1)) if n.strip()]
-        matched = False
+        bests: set[str] = set()
         has_placeholder = False
         for raw in names:
             cited = normalize_doc_name(raw)
@@ -100,10 +104,13 @@ def verify_citations(generation: str, documents) -> str:
             if cited.lower() in _PLACEHOLDER_NAMES:
                 has_placeholder = True
                 continue
-            if _match(cited, stems):
-                matched = True
-        if matched:
-            kept.append(m.group(0).strip())
+            stem = _best_stem(cited, stems)
+            if stem:
+                bests.add(stem)
+        if bests:
+            # 统一改写成白名单里的文档名：模型常把整条路径（/app/backend/db/kb_files/4/xxx.xlsx）
+            # 或带哈希后缀的文件名抄进「参考」，对用户没有意义
+            kept.append("参考：" + "、".join(sorted(bests)))
         elif has_placeholder:
             holder += 1          # 占位符没填：不算伪造，只是没写名字
         elif names:
@@ -115,7 +122,9 @@ def verify_citations(generation: str, documents) -> str:
 
     if not kept:
         return REFUSAL_REPLY
-    if dropped:
-        head = generation[: hits[0].start()].rstrip()
-        return head + "\n\n" + "\n".join(kept)
-    return generation
+
+    # 无论是否删过伪造引用，都按白名单重写引用行（顺带把整条路径/哈希后缀归一化）
+    head = generation[: hits[0].start()].rstrip()
+    tail = generation[hits[-1].end():].strip()
+    out = head + "\n\n" + "\n".join(kept)
+    return out + ("\n\n" + tail if tail else "")

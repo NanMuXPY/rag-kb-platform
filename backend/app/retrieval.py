@@ -14,6 +14,7 @@
 # ---------------------------------------------------------------------------
 from __future__ import annotations
 
+import math
 import os
 import pickle
 import re
@@ -295,7 +296,35 @@ def rrf_fuse(lists: list[list[Document]], k: int) -> list[Document]:
 
 def hybrid_search(db, query: str, k: int, kb_ids: list[str],
                   fetch_k: int = 12) -> list[Document]:
-    where = {"kb_id": {"$in": [str(x) for x in kb_ids]}}
-    vector_hits = db.similarity_search(query, k=fetch_k, filter=where)
-    keyword_hits = bm25_search(db, query, fetch_k, kb_ids)
-    return rrf_fuse([vector_hits, keyword_hits], k)
+    """向量 + BM25 混合检索，多库时按库分配配额。
+
+    为什么多库要分配额（v2.4 线上验收发现）：把一份 5KB 的 Excel 传进一个新建的库，
+    再问表里的内容，top-8 全被默认库（185 chunk）占满，新库的切片一个都没进来——
+    用户的心智是"我刚传的，你应该知道"，而全局 top-k 只会让大库吃掉全部名额。
+    做法：多库时每库各取 per 个候选（向量 + BM25 各一份），再用同一套 RRF 合并；
+    只算一次 embedding，避免 N 次向量化。
+    """
+    kb_ids = [str(x) for x in kb_ids]
+    if not kb_ids:
+        vector_hits = db.similarity_search(query, k=fetch_k)
+        keyword_hits = bm25_search(db, query, fetch_k, [])
+        return rrf_fuse([vector_hits, keyword_hits], k)
+
+    if len(kb_ids) == 1:
+        where = {"kb_id": {"$in": kb_ids}}
+        vector_hits = db.similarity_search(query, k=fetch_k, filter=where)
+        keyword_hits = bm25_search(db, query, fetch_k, kb_ids)
+        return rrf_fuse([vector_hits, keyword_hits], k)
+
+    per = max(2, min(fetch_k, math.ceil(k * 2 / len(kb_ids))))
+    try:
+        vec = db.embeddings.embed_query(query)
+        search = lambda kb: db.similarity_search_by_vector(vec, k=per, filter={"kb_id": kb})
+    except AttributeError:                      # 老版本包装没有 embeddings 属性，退回文本查询
+        search = lambda kb: db.similarity_search(query, k=per, filter={"kb_id": kb})
+
+    lists: list[list[Document]] = []
+    for kb in kb_ids:
+        lists.append(search(kb))
+        lists.append(bm25_search(db, query, per, [kb]))
+    return rrf_fuse(lists, k)

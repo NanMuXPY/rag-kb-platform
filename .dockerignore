@@ -10,3 +10,6 @@ server.log
 docs/
 eval/results/
 frontend/*.md
+temp/
+.playwright-cli/
+*.png

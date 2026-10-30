@@ -127,9 +127,9 @@
     </section>
     <section class="admin-sec">
       <h3>上传文档</h3>
-      <p class="admin-hint">支持 .md / .txt / .pdf / .docx，5MB 以内。上传后自动重建索引，期间问答不中断。</p>
+      <p class="admin-hint">支持 .md / .txt / .pdf / .docx / .xlsx / .pptx，5MB 以内。上传后自动重建索引，期间问答不中断。</p>
       <div class="dropzone" id="dropzone" tabindex="0">
-        <input type="file" id="fileInput" accept=".md,.txt,.pdf,.docx" hidden>
+        <input type="file" id="fileInput" accept=".md,.txt,.pdf,.docx,.xlsx,.pptx" hidden>
         <span>拖到此处，或 <em>点击选择文件</em></span>
       </div>
       <div class="upload-result" id="uploadResult"></div>
@@ -203,7 +203,7 @@
       <h3 id="fileSecTitle">文件</h3>
       <p class="admin-hint" id="fileSecHint"></p>
       <div class="dropzone" id="fileDropzone" tabindex="0" hidden>
-        <input type="file" id="kbFileInput" accept=".md,.txt,.pdf,.docx" hidden>
+        <input type="file" id="kbFileInput" accept=".md,.txt,.pdf,.docx,.xlsx,.pptx" hidden>
         <span>上传到当前知识库：拖到此处，或 <em>点击选择</em>（≤20MB）</span>
       </div>
       <div class="upload-result" id="kbUploadResult"></div>
