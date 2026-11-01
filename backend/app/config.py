@@ -99,6 +99,9 @@ class Settings:
         _PROJECT_ROOT / os.getenv("DATA_DIR", "data") / "users.db"))
     seed_admin_user: str = field(default_factory=lambda: os.getenv("SEED_ADMIN_USER", "admin").strip())
     seed_admin_password: str = field(default_factory=lambda: os.getenv("SEED_ADMIN_PASSWORD", "admin123"))
+    # 开放管理 API：设置 ADMIN_API_KEY 后，外部程序（机器人/脚本/其他模型）
+    # 可凭 X-API-Key 头调用 /open/v1/*（批量账号管理、问答等）。留空则整个通道关闭。
+    admin_api_key: str = field(default_factory=lambda: os.getenv("ADMIN_API_KEY", "").strip())
     # 多知识库文件存储：默认与向量库同卷（持久化），避开 data/ 的建库扫描范围
     files_dir: Path = field(default_factory=lambda: (
         _PROJECT_ROOT / os.getenv("KB_FILES_DIR", "kb_files")))

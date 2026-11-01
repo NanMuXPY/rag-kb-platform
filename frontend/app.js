@@ -51,10 +51,13 @@
   function showApp() {
     $("authView").hidden = true;
     $("shell").style.display = "";
+    const isAdmin = me.role === "admin" || me.role === "superadmin";
     $("whoName").textContent = me.display_name || me.username;
-    $("whoRole").textContent = me.role === "admin" ? "管理员" : "员工";
-    $("whoRole").className = "who-dot" + (me.role === "admin" ? " admin" : "");
-    $("btnAdmin").hidden = me.role !== "admin";
+    // whoRole 是状态圆点，角色文字放 title 提示，避免把长文字塞进 8px 圆点
+    const roleEl = $("whoRole");
+    roleEl.className = "who-dot" + (isAdmin ? " admin" : "");
+    roleEl.title = isAdmin ? (me.role === "superadmin" ? "超级管理员" : "管理员") : "员工";
+    $("btnAdmin").hidden = !isAdmin;
     if (!sessions.length) newSession();
   }
 
@@ -437,9 +440,12 @@
       }
       div.innerHTML =
         `<div class="uinfo"><span class="uname">${esc(u.display_name || u.username)}</span>` +
-        `<span class="uacct">${esc(u.username)}${u.role === "admin" ? " · 管理员" : ""}</span></div>` +
+        `<span class="uacct">${esc(u.username)}${u.role === "admin" ? " · 管理员" : ""}</span>` +
+        `${u.group ? `<span class="ugroup">${esc(u.group)}</span>` : ""}</div>` +
         `<span class="ustatus s-${u.status}">${STATUS_CN[u.status] || u.status}</span>` +
-        `<div class="uacts">${actions.join("")}</div>`;
+        `<div class="uacts">` +
+        `<button class="uact" data-a="setgroup" data-u="${esc(u.username)}">设分组</button>` +
+        actions.join("") + `</div>`;
       el.appendChild(div);
     }
     el.querySelectorAll(".uact").forEach((b) => {
@@ -450,6 +456,14 @@
   async function userAction(action, username) {
     const confirmMap = { del: `删除账号「${username}」？`, disable: `停用「${username}」？` };
     if (confirmMap[action] && !confirm(confirmMap[action])) return;
+    // 设分组：弹输入框，空串 = 清除分组
+    let groupValue = "";
+    if (action === "setgroup") {
+      const cur = (allUsers.find((u) => u.username === username) || {}).group || "";
+      const input = prompt(`为「${username}」设置分组（部门/团队），留空清除：`, cur);
+      if (input === null) return;   // 取消
+      groupValue = input.trim();
+    }
     const urlMap = {
       approve: `/admin/users/${encodeURIComponent(username)}/approve`,
       reject: `/admin/users/${encodeURIComponent(username)}/reject`,
@@ -457,6 +471,7 @@
       enable: `/admin/users/${encodeURIComponent(username)}/enable`,
       promote: `/admin/users/${encodeURIComponent(username)}/role?role=admin`,
       demote: `/admin/users/${encodeURIComponent(username)}/role?role=user`,
+      setgroup: `/admin/users/${encodeURIComponent(username)}/group?group=${encodeURIComponent(groupValue)}`,
       del: `/admin/users/${encodeURIComponent(username)}`,
     };
     const method = action === "del" ? "DELETE" : "POST";

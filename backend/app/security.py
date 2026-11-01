@@ -70,6 +70,23 @@ def require_super_user(user: dict = Depends(get_current_user)) -> dict:
     return user
 
 
+def require_api_key(request: Request) -> str:
+    """开放管理 API 鉴权：X-API-Key 与服务端 ADMIN_API_KEY 恒时比较。
+
+    未配置 ADMIN_API_KEY 时整个 /open/v1/* 通道视为关闭（403），
+    避免"忘了配密钥 = 裸奔"的静默事故。用 hmac.compare_digest 防时序侧信道。
+    """
+    import hmac as _hmac
+    expected = settings.admin_api_key
+    if not expected:
+        raise HTTPException(status_code=403,
+                            detail="开放 API 未启用（服务端未配置 ADMIN_API_KEY）")
+    got = request.headers.get("X-API-Key", "")
+    if not got or not _hmac.compare_digest(got, expected):
+        raise HTTPException(status_code=401, detail="API Key 无效")
+    return "openapi"
+
+
 def demo_identity(request: Request) -> str:
     """兼容通道：设置 DEMO_TOKEN 时允许旧评测脚本以 X-Demo-Token 访问 /chat，
     身份记为 demo（与登录用户共用每 IP 限流池）。"""

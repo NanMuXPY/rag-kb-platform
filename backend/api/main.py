@@ -267,6 +267,14 @@ def admin_role(username: str, role: str, admin: dict = Depends(require_admin_use
         raise HTTPException(status_code=400, detail=str(exc))
 
 
+@app.post("/admin/users/{username}/group")
+def admin_group(username: str, group: str = "", admin: dict = Depends(require_admin_user)):
+    try:
+        return users.set_group(username, group, admin["username"])
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+
+
 @app.delete("/admin/users/{username}")
 def admin_delete_user(username: str, admin: dict = Depends(require_admin_user)):
     try:
@@ -500,6 +508,118 @@ def super_search(q: str, _: dict = Depends(require_super_user)):
         })
     workspace.audit(_["username"], "search.cross", target=q[:50])
     return {"results": out}
+
+
+# ---------------------------------------------------------------------------
+# 开放管理 API（/open/v1/*）：供外部程序调用 —— 机器人、脚本、其他模型/Agent
+# 鉴权：X-API-Key 请求头 = 服务端 ADMIN_API_KEY（未配置则整个通道关闭）
+# 能力：用户列表/创建、批量审批·停用·改角色·设分组、分组统计、无会话问答
+# ---------------------------------------------------------------------------
+from app.security import require_api_key
+
+
+class OpenUserCreate(BaseModel):
+    username: str = Field(..., min_length=2, max_length=32)
+    password: str = Field(..., min_length=8, max_length=72)
+    display_name: str = Field("", max_length=32)
+    group: str = Field("", max_length=32)
+    auto_approve: bool = Field(True, description="true=创建即激活，免审批")
+
+
+class OpenBatchRequest(BaseModel):
+    usernames: list[str] = Field(..., min_length=1, max_length=500)
+    action: str = Field(..., description="approve|disable|enable|set_role|set_group|delete")
+    value: str = Field("", description="set_role→user/admin；set_group→分组名")
+
+
+class OpenChatRequest(BaseModel):
+    question: str = Field(..., min_length=1)
+    kb_ids: Optional[list[int]] = Field(None, description="限定检索的知识库，空则默认库")
+
+
+@app.get("/open/v1/users")
+def open_users(group: str = "", status: str = "", key: str = Depends(require_api_key)):
+    out = users.list_users()
+    if group:
+        out = [u for u in out if u["group"] == group]
+    if status:
+        out = [u for u in out if u["status"] == status]
+    return {"total": len(out), "users": out}
+
+
+@app.get("/open/v1/groups")
+def open_groups(key: str = Depends(require_api_key)):
+    """分组统计：每个分组多少人、多少激活，便于外部系统做看板。"""
+    counts: dict[str, dict] = {}
+    for u in users.list_users():
+        g = u["group"] or "(未分组)"
+        c = counts.setdefault(g, {"group": u["group"], "total": 0, "active": 0})
+        c["total"] += 1
+        c["active"] += u["status"] == "active"
+    return {"groups": list(counts.values())}
+
+
+@app.post("/open/v1/users")
+def open_create_user(req: OpenUserCreate, key: str = Depends(require_api_key)):
+    problem = users.validate_registration(req.username, req.password)
+    if problem:
+        raise HTTPException(status_code=400, detail=problem)
+    try:
+        user = users.create_user(req.username, req.password, req.display_name or "")
+        if req.group:
+            user = users.set_group(req.username, req.group, "openapi")
+        if req.auto_approve:
+            user = users.set_status(req.username, "active", "openapi")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    workspace.audit(key, "open.user_create", target=req.username,
+                    detail=f"group={req.group} auto_approve={req.auto_approve}")
+    return user
+
+
+@app.post("/open/v1/users/batch")
+def open_batch(req: OpenBatchRequest, key: str = Depends(require_api_key)):
+    """批量账号操作：一次请求对多个用户执行同一动作，逐个返回结果不中断。"""
+    actions = {"approve", "disable", "enable", "set_role", "set_group", "delete"}
+    if req.action not in actions:
+        raise HTTPException(status_code=400,
+                            detail=f"action 必须是 {'/'.join(sorted(actions))}")
+    results = []
+    for name in req.usernames:
+        try:
+            if req.action == "approve":
+                users.set_status(name, "active", "openapi")
+            elif req.action == "disable":
+                users.set_status(name, "disabled", "openapi")
+            elif req.action == "enable":
+                users.set_status(name, "active", "openapi")
+            elif req.action == "set_role":
+                users.set_role(name, req.value, "openapi")
+            elif req.action == "set_group":
+                users.set_group(name, req.value, "openapi")
+            elif req.action == "delete":
+                users.delete_user(name, "openapi")
+            results.append({"username": name, "ok": True})
+        except (ValueError, AssertionError) as exc:
+            results.append({"username": name, "ok": False, "error": str(exc)})
+    ok = sum(1 for r in results if r["ok"])
+    workspace.audit(key, f"open.batch_{req.action}",
+                    detail=f"{ok}/{len(results)} 成功 value={req.value!r}")
+    return {"action": req.action, "total": len(results), "succeeded": ok, "results": results}
+
+
+@app.post("/open/v1/chat")
+def open_chat(req: OpenChatRequest, key: str = Depends(require_api_key)):
+    """无会话问答：给外部模型/机器人一次性的知识库查询入口（不占用户会话）。"""
+    try:
+        result = get_engine().ask(req.question, [], req.kb_ids)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"{type(exc).__name__}: {exc}")
+    workspace.audit(key, "open.chat", target=req.question[:50])
+    return {"answer": result["answer"], "sources": result["sources"],
+            "route": result["route"]}
 
 
 def main():

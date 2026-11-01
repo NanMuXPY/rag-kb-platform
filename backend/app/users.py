@@ -67,6 +67,11 @@ def init_db() -> None:
                 key TEXT PRIMARY KEY, value TEXT NOT NULL
             )
         """)
+        # 迁移：v2.6 起用户可归属「分组」（部门/团队），老库无此列则补
+        cols = {r["name"] for r in conn.execute("PRAGMA table_info(users)").fetchall()}
+        if "grp" not in cols:
+            # 列名用 grp，避开 SQL 关键字 group
+            conn.execute("ALTER TABLE users ADD COLUMN grp TEXT NOT NULL DEFAULT ''")
         # JWT 密钥：首次生成并落库，重启与多进程共享同一密钥
         row = conn.execute("SELECT value FROM meta WHERE key='jwt_secret'").fetchone()
         if not row:
@@ -133,7 +138,8 @@ def _row_to_user(row: sqlite3.Row) -> dict:
     return {
         "id": row["id"], "username": row["username"],
         "display_name": row["display_name"], "role": row["role"],
-        "status": row["status"], "created_at": row["created_at"],
+        "status": row["status"], "group": row["grp"] if "grp" in row.keys() else "",
+        "created_at": row["created_at"],
         "reviewed_at": row["reviewed_at"], "reviewed_by": row["reviewed_by"],
         "last_login_at": row["last_login_at"],
     }
@@ -200,6 +206,29 @@ def set_role(username: str, role: str, reviewer: str) -> dict:
                 raise ValueError("不能移除最后一个管理员")
     log.info("账号 %s 角色 → %s（操作人 %s）", username, role, reviewer)
     return get_user(username)
+
+
+def set_group(username: str, group: str, reviewer: str) -> dict:
+    """设置用户分组（部门/团队标签），空串表示无分组。"""
+    group = (group or "").strip()[:32]
+    with _db_lock, _connect() as conn:
+        cur = conn.execute("UPDATE users SET grp=? WHERE username=?", (group, username))
+        if cur.rowcount == 0:
+            raise ValueError("用户不存在")
+    log.info("账号 %s 分组 → %s（操作人 %s）", username, group or "(空)", reviewer)
+    return get_user(username)
+
+
+def batch_set_group(usernames: list[str], group: str, reviewer: str) -> dict:
+    """批量设置分组：逐个执行，返回每个用户的成功/失败结果。"""
+    results = []
+    for name in usernames:
+        try:
+            user = set_group(name, group, reviewer)
+            results.append({"username": name, "ok": True, "group": user["group"]})
+        except (ValueError, AssertionError) as exc:
+            results.append({"username": name, "ok": False, "error": str(exc)})
+    return {"group": (group or "").strip()[:32], "results": results}
 
 
 def delete_user(username: str, reviewer: str) -> bool:
