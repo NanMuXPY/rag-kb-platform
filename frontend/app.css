@@ -151,6 +151,8 @@ body {
   border-bottom: 1px solid var(--line);
   background: var(--surface);
   display: flex; align-items: baseline;
+  flex-wrap: wrap;           /* 窄窗口标题+副标题换行而非重叠 */
+  gap: 2px 14px;
 }
 .page-title {
   font-family: var(--serif);
@@ -466,24 +468,59 @@ body {
 .token-pop .row { margin-top: 12px; display: flex; gap: 8px; justify-content: flex-end; }
 
 /* ---------- 响应式 ---------- */
+/* 注意：基础隐藏规则必须写在媒体查询之前，否则同优先级会被覆盖（移动端汉堡按钮曾因此永不显示） */
+.rail-toggle { display: none; }
+
 @media (max-width: 720px) {
   .shell { grid-template-columns: 1fr; }
+
+  /* 会话栏改为抽屉式，由 topbar 的 ☰ 呼出 */
   .rail {
-    position: fixed; z-index: 30; inset: 0 auto 0 0; width: 240px;
+    position: fixed; z-index: 30; inset: 0 auto 0 0; width: min(300px, 84vw);
     transform: translateX(-100%);
     transition: transform .25s var(--ease);
+    box-shadow: 8px 0 32px rgba(34, 48, 63, .14);
   }
   .rail.open { transform: none; }
-  .rail-toggle {
-    display: inline-flex;
-    border: 0; background: none; font-size: 18px; cursor: pointer;
-    color: var(--ink); padding: 2px 10px 2px 0;
+  .topbar .rail-toggle {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; margin-right: 8px;
+    border: 1px solid var(--line-strong); border-radius: 8px;
+    background: var(--surface); font-size: 17px; cursor: pointer;
+    color: var(--ink); flex: none;
   }
-  .messages { padding: 18px 16px 8px; }
-  .composer-wrap { padding: 12px 16px 8px; }
+  .topbar { padding: 10px 14px; flex-wrap: wrap; gap: 4px 12px; }
+  .page-title { font-size: 17px; }
   .scope-note { display: none; }
+
+  .empty { margin-top: 7vh; padding: 0 20px; }
+  .messages { padding: 18px 16px 8px; }
+  .msg-user .bubble { max-width: 88%; }
+
+  /* 输入区：缩短占位文本 + 适配 iOS 安全区，避免底部被裁 */
+  .composer-wrap { padding: 10px 14px calc(8px + env(safe-area-inset-bottom)); }
+  .composer { gap: 8px; }
+  #input { font-size: 16px; padding: 9px 12px; min-height: 42px; }  /* 16px 防 iOS 聚焦自动放大 */
+  .btn-send { padding: 9px 16px; }
+  .composer-note { font-size: 11px; }
+
+  /* 抽屉占满全宽，页签收紧 */
+  .drawer { width: 100vw; }
+  .drawer-body { padding: 14px 14px 24px; }
+  .drawer-tab { padding: 6px 8px; font-size: 13px; }
+
+  /* 表单行允许换行，避免 390px 下溢出 */
+  .kb-create { flex-wrap: wrap; }
+  #memberUser { flex: 1 1 100% !important; }
+  #memberRole { flex: 1; }
+
+  /* 审计流水：目标独占一行，避免横向溢出 */
+  .audit-row { grid-template-columns: 92px 64px 1fr; row-gap: 2px; }
+  .atgt { grid-column: 1 / -1; white-space: normal; }
+
+  .auth-view { padding: 16px; }
+  .auth-card { padding: 24px 20px 20px; }
 }
-.rail-toggle { display: none; }
 
 /* ---------- 可访问性 ---------- */
 :focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }

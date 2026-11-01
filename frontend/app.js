@@ -170,6 +170,7 @@
     if (!current) return newSession();
     renderSessionList();
     renderMessages();
+    $("rail").classList.remove("open");   // 手机端：选完会话收起抽屉
   }
 
   function renderSessionList() {
@@ -603,7 +604,7 @@
     const b = e.target.closest(".sample");
     if (b) send(b.dataset.q);
   });
-  $("btnNew").onclick = newSession;
+  $("btnNew").onclick = () => { newSession(); $("rail").classList.remove("open"); };
   $("btnAdmin").onclick = openAdmin;
   $("btnCloseAdmin").onclick = closeAdmin;
   $("drawerMask").onclick = closeAdmin;
