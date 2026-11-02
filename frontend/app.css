@@ -1910,7 +1910,7 @@ select.wfilter { appearance: none; padding-right: 26px;
   .f-time { display: none; }
   .f-name .cell-sub-time { display: inline; }
 }
-@container ftable (max-width: 519px) {
+@container ftable (max-width: 599px) {
   .ftable, .ftable-foot { display: none; }
   .f-cards { display: grid; }
 }
@@ -1984,3 +1984,6 @@ select.wfilter { appearance: none; padding-right: 26px;
 
 /* 矩阵格子弹层底部人数：≥20 人时只提字重，不上色 */
 .mcp-foot.m-big { font-weight: 600; color: var(--ink-soft); }
+
+/* 撤销条倒计时末段（≤3s）：字重 500→600，不改颜色（红色属于危险域） */
+.rev-cd.soon { font-weight: 600; }
