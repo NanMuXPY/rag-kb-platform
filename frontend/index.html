@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>技术支持知识库 · 企业内部版</title>
-<link rel="stylesheet" href="app.css?v=20261102c">
+<link rel="stylesheet" href="app.css?v=20261103">
 </head>
 <body>
 
@@ -117,62 +117,143 @@
       </footer>
     </section>
 
-    <!-- ═══ 视图二：知识库（全员，原「文件中心」） ═══ -->
+    <!-- ═══ 视图二：知识库（列表页 / 详情页 两级结构，hash 路由） ═══ -->
     <section class="view view-pad" id="viewKb" hidden>
-      <div class="kb-layout">
-        <section class="admin-sec">
-          <h3>我的知识库</h3>
-          <div class="kb-chips" id="kbChips">加载中…</div>
-          <div id="kbCreateWrap" hidden>
-            <div class="kb-create">
-              <input id="kbName" placeholder="新知识库名称" maxlength="50">
-              <button class="btn-ghost" id="btnCreateKb">创建</button>
-            </div>
-            <p class="admin-hint">创建者自动成为该库管理员（kb_admin），可授权成员与审批文件。新建库默认隔离，仅成员可见。</p>
+
+      <!-- ─────────── 列表页 #kb ─────────── -->
+      <div class="work" id="kbList">
+        <div class="work-head">
+          <h1 class="work-title" id="kbListTitle" tabindex="-1">知识库</h1>
+          <span class="work-sub" id="kbListSub"></span>
+          <div class="work-actions">
+            <button class="wbtn pri" id="btnNewKb" hidden>＋ 新建知识库</button>
           </div>
-          <div id="crossSearchWrap" hidden>
-            <div class="kb-create">
-              <input id="crossQ" placeholder="跨库搜索全部知识库内容…">
-              <button class="btn-ghost" id="btnCrossSearch">搜索</button>
-            </div>
-            <div id="crossResults"></div>
-          </div>
-        </section>
-        <section class="admin-sec" id="fileSec">
-          <h3 id="fileSecTitle">文件</h3>
-          <p class="admin-hint" id="fileSecHint"></p>
-          <div class="dropzone" id="fileDropzone" tabindex="0" hidden>
-            <input type="file" id="kbFileInput" accept=".md,.txt,.pdf,.docx,.xlsx,.pptx" hidden>
-            <span>上传到当前知识库：拖到此处，或 <em>点击选择</em>（≤20MB）</span>
-          </div>
-          <div class="upload-result" id="kbUploadResult"></div>
-          <div id="fileList" class="file-list"></div>
-        </section>
-        <section class="admin-sec" id="memberSec" hidden>
-          <h3>成员与权限</h3>
-          <div class="kb-create">
-            <input id="memberUser" placeholder="用户名" maxlength="32" style="flex:0 0 110px">
-            <select id="memberRole" class="role-select">
-              <option value="viewer">只读 viewer</option>
-              <option value="editor">可上传 editor</option>
-              <option value="kb_admin">库管理员 kb_admin</option>
+        </div>
+
+        <!-- 工具条 / 批量条：同一位置等高（--bar-h）替换，表格位移 0px -->
+        <div id="kbBarSlot">
+          <div class="work-toolbar" id="kbToolbar">
+            <input class="wsearch" id="kbSearch" type="search" autocomplete="off"
+                   placeholder="搜索库名、编码或描述（按 / 聚焦）" aria-label="搜索知识库">
+            <select class="wfilter" id="kbDept" aria-label="归属部门"></select>
+            <select class="wfilter" id="kbLevel" aria-label="数据分级">
+              <option value="">全部分级</option>
+              <option value="public">公开</option>
+              <option value="internal">内部</option>
+              <option value="confidential">机密</option>
             </select>
-            <button class="btn-ghost" id="btnAddMember">授权</button>
-          </div>
-          <div id="memberList" class="user-list"></div>
-          <h3 style="margin-top:18px">按分组授权（整组生效）</h3>
-          <div class="kb-create">
-            <input id="grantGroup" placeholder="分组名，如：财务组" maxlength="32" style="flex:1">
-            <select id="grantGroupRole" class="role-select">
-              <option value="viewer">只读 viewer</option>
-              <option value="editor">可上传 editor</option>
-              <option value="kb_admin">库管理员 kb_admin</option>
+            <select class="wfilter" id="kbStatus" aria-label="库状态">
+              <option value="">全部状态</option>
+              <option value="active">启用</option>
+              <option value="archived">归档</option>
             </select>
-            <button class="btn-ghost" id="btnGrantGroup">整组授权</button>
+            <button class="linklike" id="kbClear" hidden>清除筛选</button>
+            <span class="wspacer"></span>
+            <button class="wdensity" id="kbDensity" aria-label="切换表格密度"
+                    title="切换密度：舒适 48px / 紧凑 40px">▤</button>
+            <button class="wfilter" id="kbSelMode" aria-pressed="false"
+                    title="显示复选框列，用于批量操作">批量选择</button>
           </div>
-          <div id="groupGrantList" class="user-list"></div>
-          <p class="admin-hint">分组授权对该组全部成员生效（含之后新加入该组的账号）；个人授权优先于分组授权。分组在「控制台 → 用户管理 → 设分组」维护。</p>
-        </section>
+
+          <div class="bulkbar" id="kbBulkbar">
+            <span class="bcount" id="kbBulkCount" aria-live="polite">已选 0 项</span>
+            <button class="bclear" id="kbBulkClear">取消选择</button>
+            <div class="bacts">
+              <button class="wbtn sm" id="kbBulkArchive">归档</button>
+              <button class="wbtn sm" id="kbBulkRestore">恢复启用</button>
+              <button class="rop danger" id="kbBulkDelete">删除</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="progress-line" id="kbProgress" hidden></div>
+        <div class="hint-bar" id="kbHint" hidden></div>
+
+        <div class="kbtable-wrap">
+          <table class="kbtable" id="kbTable">
+            <caption class="sr-only" id="kbCaption">知识库列表</caption>
+            <colgroup>
+              <col class="c-check"><col><col class="c-code"><col class="c-dept"><col class="c-level">
+              <col class="c-scope"><col class="c-status"><col class="c-files"><col class="c-owner">
+              <col class="c-time"><col class="c-ops">
+            </colgroup>
+            <thead>
+              <tr>
+                <th class="c-check" scope="col">
+                  <input type="checkbox" id="kbCheckAll" aria-label="全选当前筛选结果">
+                </th>
+                <th scope="col">知识库</th>
+                <th class="c-code sortable" scope="col" data-sort="code">编码<span class="sort-ind">▲</span></th>
+                <th class="c-dept" scope="col">归属部门</th>
+                <th class="c-level" scope="col">分级</th>
+                <th class="c-scope" scope="col" title="按成员与分组数量推导，明细见库详情">授权范围</th>
+                <th class="c-status" scope="col">状态</th>
+                <th class="c-files num sortable" scope="col" data-sort="files">文件<span class="sort-ind">▲</span></th>
+                <th class="c-owner" scope="col">负责人</th>
+                <th class="c-time time" scope="col"
+                    title="元信息、文件增删与审批的最后变更时间；按编码排序更稳定，故本列不提供排序">变更时间</th>
+                <th class="c-ops" scope="col">操作</th>
+              </tr>
+            </thead>
+            <tbody id="kbTbody"></tbody>
+          </table>
+          <div class="kb-cards" id="kbCards"></div>
+          <div id="kbEmpty"></div>
+          <div class="kbtable-foot" id="kbFoot">
+            <span id="kbFootInfo">—</span>
+            <span class="spacer"></span>
+            <select class="wfilter" id="kbSize" aria-label="每页条数">
+              <option value="20">每页 20</option>
+              <option value="50">每页 50</option>
+              <option value="100">每页 100</option>
+            </select>
+            <div class="pager" id="kbPager"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─────────── 详情页 #kb/{id}/{section} ─────────── -->
+      <div class="work" id="kbDetail" hidden>
+        <div class="crumbs">
+          <button class="crumb" id="kbCrumb">知识库</button>
+          <span class="crumb-sep" aria-hidden="true">/</span>
+          <span class="crumb-now" id="kbCrumbNow">—</span>
+        </div>
+
+        <div class="work-head">
+          <div class="kb-head-main">
+            <div class="detail-title">
+              <h1 class="work-title" id="kbDTitle" tabindex="-1">—</h1>
+              <span class="detail-code" id="kbDCode"></span>
+              <span id="kbDLevel"></span>
+              <span id="kbDStatus"></span>
+            </div>
+            <div class="detail-meta" id="kbDMeta"></div>
+          </div>
+          <div class="work-actions" id="kbDActions">
+            <button class="wbtn pri" id="kbDUpload">＋ 上传文件</button>
+            <button class="wbtn" id="kbDEdit">编辑信息</button>
+            <button class="wbtn" id="kbDMore" aria-label="更多操作" aria-haspopup="menu">⋯</button>
+          </div>
+        </div>
+
+        <div class="subnav" id="kbSubnav" role="tablist" aria-label="知识库分区">
+          <button class="subnav-item" role="tab" data-sec="files" aria-selected="true">
+            文件<span class="subnav-count" id="kbCntFiles"></span>
+          </button>
+          <button class="subnav-item" role="tab" data-sec="members" aria-selected="false">
+            成员与授权<span class="subnav-count" id="kbCntMembers"></span>
+          </button>
+          <button class="subnav-item" role="tab" data-sec="groups" aria-selected="false">
+            分组授权<span class="subnav-count" id="kbCntGroups"></span>
+          </button>
+          <button class="subnav-item" role="tab" data-sec="settings" aria-selected="false">设置</button>
+        </div>
+
+        <div class="kb-section" id="kbSecFiles"></div>
+        <div class="kb-section" id="kbSecMembers" hidden></div>
+        <div class="kb-section" id="kbSecGroups" hidden></div>
+        <div class="kb-section" id="kbSecSettings" hidden></div>
       </div>
     </section>
 
@@ -181,6 +262,7 @@
       <div class="drawer-tabs admin-tabs" role="tablist">
         <button class="drawer-tab active" id="tabKb" role="tab">语料索引</button>
         <button class="drawer-tab" id="tabUsers" role="tab">用户管理 <span class="tab-badge" id="pendingBadge" hidden></span></button>
+        <button class="drawer-tab" id="tabMatrix" role="tab">权限矩阵</button>
         <button class="drawer-tab" id="tabAudit" role="tab">审计日志</button>
       </div>
 
@@ -221,6 +303,35 @@
         </section>
       </div>
 
+      <!-- 权限矩阵页 -->
+      <div id="paneMatrix" class="pane-wide" hidden>
+        <section class="admin-sec">
+          <h3>知识库 × 分组的授权关系</h3>
+          <p class="admin-hint">点单元格修改该分组对本库的角色；授权立即生效并写入审计日志，10 秒内可撤销。</p>
+          <div class="work-toolbar" id="mxToolbar">
+            <input class="wsearch" id="mxSearch" type="search" autocomplete="off"
+                   placeholder="按库名或编码筛选…" aria-label="筛选知识库">
+            <label class="wchk"><input type="checkbox" id="mxSecret"> 只看机密</label>
+            <label class="wchk"><input type="checkbox" id="mxActive"> 只看启用</label>
+            <span class="wspacer"></span>
+            <button class="wfilter" id="mxReload">刷新</button>
+          </div>
+          <div class="revbar" id="mxRev" hidden>
+            <span class="rev-text" id="mxRevText"></span>
+            <button class="rev-btn" id="mxRevUndo">撤销</button>
+            <span class="rev-cd" id="mxRevCd"></span>
+            <button class="bclear" id="mxRevClose" aria-label="关闭撤销条">✕</button>
+          </div>
+          <div class="matrix-host" id="mxHost">
+            <p class="matrix-legend" id="mxLegend">
+              <b>○</b> 只读　<b>◐</b> 可上传　<b>●</b> 库管理员　· 点单元格切换
+            </p>
+            <div class="matrix-wrap" id="mxWrap"></div>
+          </div>
+          <p class="matrix-legend">空格 = 该分组未授权 · 成员仍可能通过个人授权访问</p>
+        </section>
+      </div>
+
       <!-- 审计日志页 -->
       <div id="paneAudit" hidden>
         <section class="admin-sec">
@@ -251,8 +362,79 @@
   <div class="doc-dialog-body" id="ddBody"></div>
 </dialog>
 
+<!-- 统一确认框（替代全站原生 confirm / alert / prompt） -->
+<dialog class="doc-dialog confirm-dialog" id="confirmDialog">
+  <div class="cf-bar" id="cfBar" hidden></div>
+  <header class="doc-dialog-head">
+    <h3 id="cfTitle">确认操作</h3>
+    <button class="icon-btn" id="cfX" aria-label="关闭">✕</button>
+  </header>
+  <div class="doc-dialog-body">
+    <div class="cf-body" id="cfBody"></div>
+    <div class="form-row" id="cfInputWrap" hidden>
+      <label for="cfInput" id="cfInputLabel">请输入以确认</label>
+      <input id="cfInput" autocomplete="off" maxlength="60">
+      <span class="err-tip" id="cfInputTip">名称不一致，按钮保持禁用</span>
+    </div>
+    <div class="form-actions cf-actions">
+      <button class="wbtn" id="cfCancel">取消</button>
+      <button class="wbtn pri" id="cfOk">确定</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- 文件审核弹窗：内容放在弹窗里，「没看到内容就批不了」才是结构性保证 -->
+<dialog class="doc-dialog review-dialog" id="reviewDialog">
+  <header class="doc-dialog-head">
+    <span class="cite-no">审核</span>
+    <h3 id="rvTitle">审批文件</h3>
+    <button class="icon-btn" id="rvClose" aria-label="关闭">✕</button>
+  </header>
+  <div class="doc-dialog-body">
+    <p class="rv-meta" id="rvMeta"></p>
+    <div class="rv-body" id="rvBody"></div>
+    <div class="form-err" id="rvErr" hidden></div>
+    <div class="form-actions cf-actions" id="rvFoot1">
+      <button class="wbtn" id="rvReject">拒绝</button>
+      <span class="wspacer"></span>
+      <button class="wbtn" id="rvCancel">关闭</button>
+      <button class="wbtn pri" id="rvApprove">批准入库</button>
+    </div>
+    <div class="rv-confirm" id="rvFoot2" hidden>
+      <p class="form-note rv-warn">驳回后无法再批准，上传者需重新上传。</p>
+      <div class="form-actions cf-actions">
+        <button class="wbtn" id="rvRejectNo">返回</button>
+        <span class="wspacer"></span>
+        <button class="btn-danger" id="rvRejectYes">确认驳回</button>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<!-- 新建 / 编辑知识库表单 -->
+<dialog class="doc-dialog" id="kbFormDialog">
+  <header class="doc-dialog-head">
+    <span class="cite-no" id="kfKind">新建</span>
+    <h3 id="kfTitle">新建知识库</h3>
+    <button class="icon-btn" id="kfClose" aria-label="关闭">✕</button>
+  </header>
+  <div class="doc-dialog-body">
+    <div class="form-err" id="kfErr" hidden></div>
+    <div id="kfMount"></div>
+    <div class="form-actions">
+      <button class="wbtn" id="kfCancel">取消</button>
+      <button class="wbtn pri" id="kfSubmit">创建</button>
+    </div>
+  </div>
+</dialog>
+
+<!-- 操作反馈（常驻 DOM 的 live region，后插入的不被播报） -->
+<div class="toast-wrap" id="toastWrap" aria-live="polite" aria-atomic="true"></div>
+<div class="kmenu" id="kmenu" role="menu" hidden></div>
+<div class="mcell-pop" id="mcellPop" role="dialog" aria-label="修改授权" hidden></div>
+
 <script src="vendor/marked.min.js?v=20261102"></script>
 <script src="vendor/purify.min.js?v=20261102"></script>
-<script src="app.js?v=20261102c"></script>
+<script src="app.js?v=20261103"></script>
 </body>
 </html>

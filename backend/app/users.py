@@ -305,3 +305,14 @@ def issue_token(username: str, role: str) -> str:
 def decode_token(token: str) -> dict:
     payload = jwt.decode(token, _jwt_secret(), algorithms=["HS256"])
     return payload
+
+
+def list_groups() -> list[dict]:
+    """分组统计：每个分组多少人、多少已激活。供权限矩阵与看板使用。"""
+    counts: dict[str, dict] = {}
+    for u in list_users():
+        c = counts.setdefault(u["group"] or "", {"group": u["group"] or "",
+                                                 "total": 0, "active": 0})
+        c["total"] += 1
+        c["active"] += 1 if u["status"] == "active" else 0
+    return sorted(counts.values(), key=lambda x: (-x["total"], x["group"]))

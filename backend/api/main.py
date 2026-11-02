@@ -331,27 +331,89 @@ def admin_index(_: dict = Depends(require_admin_user)):
 # 多知识库工作区：列表 / 文件 / 上传审批 / 下载 / 成员 / 审计 / 跨库搜索
 # ---------------------------------------------------------------------------
 @app.get("/kbs")
-def my_kbs(user: dict = Depends(get_current_user)):
-    """我的可见知识库（含默认库），带我在每个库的角色。"""
+def my_kbs(q: str = "", dept: str = "", level: str = "", status: str = "",
+           user: dict = Depends(get_current_user)):
+    """我的可见知识库（含默认库），带我在每个库的角色与治理统计列。
+    支持按名称/编码模糊搜索与部门、分级、状态过滤——库多了以后前端不再全量拉取后自己筛。"""
     out = []
-    for kb in workspace.list_kbs():
+    lv = level.strip()
+    st = status.strip()
+    for kb in workspace.list_kbs(include_archived=True):
         role = workspace.kb_role(user, kb["id"])
-        if role:
-            out.append({**kb, "my_role": role})
+        if not role:
+            continue
+        if lv and kb.get("level") != lv:
+            continue
+        if st and kb.get("status") != st:
+            continue
+        if dept and kb.get("dept") != dept:
+            continue
+        if q:
+            kw = q.strip().lower()
+            hay = f"{kb.get('name','')} {kb.get('code','')} {kb.get('description','')}".lower()
+            if kw not in hay:
+                continue
+        out.append({**kb, "my_role": role})
     return out
 
 
 class KbCreateRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=50)
     description: str = Field("", max_length=200)
+    dept: str = Field("", max_length=32)
+    level: str = Field("internal", max_length=16)
+    owner: str = Field("", max_length=32)
+    code: str = Field("", max_length=24)
+
+
+class KbMetaRequest(BaseModel):
+    name: str | None = Field(None, min_length=1, max_length=50)
+    description: str | None = Field(None, max_length=200)
+    dept: str | None = Field(None, max_length=32)
+    level: str | None = Field(None, max_length=16)
+    owner: str | None = Field(None, max_length=32)
+    status: str | None = Field(None, max_length=16)
 
 
 @app.post("/admin/kbs")
 def admin_create_kb(req: KbCreateRequest, admin: dict = Depends(require_admin_user)):
     try:
-        return workspace.create_kb(req.name, req.description, admin["username"])
+        return workspace.create_kb(req.name, req.description, admin["username"],
+                                   dept=req.dept, level=req.level,
+                                   owner=req.owner, code=req.code)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.patch("/admin/kbs/{kb_id}")
+def admin_update_kb(kb_id: int, req: KbMetaRequest,
+                    admin: dict = Depends(require_admin_user)):
+    """更新知识库元信息（部门/分级/负责人/状态/描述/名称）。"""
+    try:
+        return workspace.update_kb_meta(kb_id, admin["username"], **req.model_dump())
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.get("/admin/kb-matrix")
+def kb_matrix(admin: dict = Depends(require_admin_user)):
+    """权限矩阵：每个知识库 × 每个分组的授权关系，一次性返回给矩阵视图。
+    行=知识库，列=分组；单元格=角色或空。附带各部门人数，便于判断「授权是否覆盖全员」。"""
+    kbs = workspace.list_kbs(include_archived=True)
+    groups = users.list_groups()          # [{group, total, active}]
+    grants = workspace.all_group_grants()  # [{kb_id, grp, role}]
+    cell = {}
+    for g in grants:
+        cell.setdefault(g["kb_id"], {})[g["grp"]] = g["role"]
+    rows = []
+    for kb in kbs:
+        rows.append({
+            "kb_id": kb["id"], "name": kb["name"], "code": kb.get("code", ""),
+            "dept": kb.get("dept", ""), "level": kb.get("level", "internal"),
+            "status": kb.get("status", "active"),
+            "grants": cell.get(kb["id"], {}),
+        })
+    return {"groups": groups, "rows": rows}
 
 
 @app.delete("/admin/kbs/{kb_id}")
@@ -383,6 +445,7 @@ async def kb_upload(kb_id: int, file: UploadFile = File(...),
     data = await file.read()
     try:
         result = workspace.save_file(kb_id, file.filename, data, user)
+        workspace.touch_kb(kb_id)          # 传文件 = 库在维护，喂给列表「最后更新」
     except PermissionError as exc:
         raise HTTPException(status_code=403, detail=str(exc))
     except ValueError as exc:
@@ -398,7 +461,10 @@ def kb_download(kb_id: int, fid: int, user: dict = Depends(get_current_user)):
     file = workspace.get_file(fid)
     if not file or file["kb_id"] != kb_id or file["status"] == "deleted":
         raise HTTPException(status_code=404, detail="文件不存在")
-    if file["status"] != "approved" and role not in {"kb_admin", "super"}:
+    # 未入库文件：库管理员可看，上传者本人也可看（否则传完 pdf 自己都打不开核对）
+    if (file["status"] != "approved"
+            and role not in {"kb_admin", "super"}
+            and file["uploader"] != user["username"]):
         raise HTTPException(status_code=403, detail="文件未通过审批")
     import os as _os
     if not _os.path.isfile(file["path"]):
@@ -410,7 +476,9 @@ def kb_download(kb_id: int, fid: int, user: dict = Depends(get_current_user)):
 @app.post("/files/{fid}/approve")
 def file_approve(fid: int, user: dict = Depends(get_current_user)):
     try:
-        return workspace.approve_file(fid, user, approve=True)
+        out = workspace.approve_file(fid, user, approve=True)
+        workspace.touch_kb(out["kb_id"])
+        return out
     except PermissionError as exc:
         raise HTTPException(status_code=403, detail=str(exc))
     except ValueError as exc:
@@ -420,7 +488,9 @@ def file_approve(fid: int, user: dict = Depends(get_current_user)):
 @app.post("/files/{fid}/reject")
 def file_reject(fid: int, user: dict = Depends(get_current_user)):
     try:
-        return workspace.approve_file(fid, user, approve=False)
+        out = workspace.approve_file(fid, user, approve=False)
+        workspace.touch_kb(out["kb_id"])
+        return out
     except PermissionError as exc:
         raise HTTPException(status_code=403, detail=str(exc))
     except ValueError as exc:
@@ -430,11 +500,24 @@ def file_reject(fid: int, user: dict = Depends(get_current_user)):
 @app.delete("/files/{fid}")
 def file_delete(fid: int, user: dict = Depends(get_current_user)):
     try:
-        return workspace.delete_file(fid, user)
+        pre = workspace.get_file(fid)
+        out = workspace.delete_file(fid, user)
+        if pre:
+            workspace.touch_kb(pre["kb_id"])
+        return out
     except PermissionError as exc:
         raise HTTPException(status_code=403, detail=str(exc))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.get("/kbs/{kb_id}/candidate-users")
+def kb_candidate_users(kb_id: int, user: dict = Depends(get_current_user)):
+    """可加入本库的候选人。库管理员即可调用——不需要系统管理员权限。"""
+    role = workspace.kb_role(user, kb_id)
+    if role not in {"kb_admin", "super"}:
+        raise HTTPException(status_code=403, detail="需要知识库管理员权限")
+    return {"users": workspace.candidate_users(kb_id)}
 
 
 @app.get("/kbs/{kb_id}/members")

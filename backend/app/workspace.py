@@ -21,6 +21,11 @@ DEFAULT_KB_ID = 1
 
 KB_ROLES = ("viewer", "editor", "kb_admin")   # 低 → 高
 
+# 数据分级：public 公开 / internal 内部 / confidential 机密
+KB_LEVELS = ("public", "internal", "confidential")
+# 库状态：active 启用 / archived 归档（归档后不参与检索，但保留审计与文件）
+KB_STATUS = ("active", "archived")
+
 
 # ---------------------------------------------------------------------------
 # 建表与迁移（users.db 同库复用，单文件好备份）
@@ -88,6 +93,25 @@ def init_workspace() -> None:
                 "SELECT 1 FROM users WHERE role='superadmin'").fetchone():
             conn.execute("UPDATE users SET role='superadmin' WHERE role='admin'")
 
+        # 迁移 v3.1：知识库标准元信息（编码/归属部门/数据分级/负责人/状态）
+        # 库数量上来后，「名称 + 描述」不足以治理：找不到归谁管、什么密级、还用不用
+        cols = {r["name"] for r in conn.execute("PRAGMA table_info(kbs)").fetchall()}
+        for col, ddl in (
+            ("code",     "ALTER TABLE kbs ADD COLUMN code TEXT NOT NULL DEFAULT ''"),
+            ("dept",     "ALTER TABLE kbs ADD COLUMN dept TEXT NOT NULL DEFAULT ''"),
+            ("level",    "ALTER TABLE kbs ADD COLUMN level TEXT NOT NULL DEFAULT 'internal'"),
+            ("owner",    "ALTER TABLE kbs ADD COLUMN owner TEXT NOT NULL DEFAULT ''"),
+            ("status",   "ALTER TABLE kbs ADD COLUMN status TEXT NOT NULL DEFAULT 'active'"),
+            ("updated_at", "ALTER TABLE kbs ADD COLUMN updated_at REAL NOT NULL DEFAULT 0"),
+        ):
+            if col not in cols:
+                conn.execute(ddl)
+        # 回填：历史库无编码，按 id 生成 KB-000x；负责人默认创建者；更新时间取创建时间
+        conn.execute(
+            "UPDATE kbs SET code='KB-'||substr('0000'||id, -4) WHERE code=''")
+        conn.execute("UPDATE kbs SET owner=created_by WHERE owner=''")
+        conn.execute("UPDATE kbs SET updated_at=created_at WHERE updated_at=0")
+
 
 # ---------------------------------------------------------------------------
 # 审计日志
@@ -147,9 +171,11 @@ def kb_role(user: dict, kb_id: int) -> str | None:
 
 def readable_kb_ids(user: dict) -> list[str]:
     """检索范围（向量库 kb_id 字符串）：默认库 + 我是成员的库 + 我所在分组被授权的库
-    （超管为全部库）。默认库的向量标记是 'default'（历史迁移约定），其余库用数字 id。"""
+    （超管为全部库）。**归档库不参与检索**——这是归档与删除的区别：留档可查、不进问答。
+    默认库的向量标记是 'default'（历史迁移约定），其余库用数字 id。"""
     with _connect() as conn:
-        ids = [r["id"] for r in conn.execute("SELECT id FROM kbs").fetchall()]
+        ids = [r["id"] for r in conn.execute(
+            "SELECT id FROM kbs WHERE status='active'").fetchall()]
     if is_super(user):
         raw = ids
     else:
@@ -162,25 +188,65 @@ def readable_kb_ids(user: dict) -> list[str]:
                 mine |= {r["kb_id"] for r in conn.execute(
                     "SELECT kb_id FROM kb_groups WHERE grp=?",
                     (grp,)).fetchall()}
-        raw = sorted({DEFAULT_KB_ID} | mine)
+        raw = sorted({DEFAULT_KB_ID} | (mine & set(ids)))
     return [str(DEFAULT_KB) if i == DEFAULT_KB_ID else str(i) for i in raw]
 
 
 # ---------------------------------------------------------------------------
 # 知识库管理
 # ---------------------------------------------------------------------------
-def create_kb(name: str, description: str, creator: str) -> dict:
+def create_kb(name: str, description: str, creator: str,
+              dept: str = "", level: str = "internal",
+              owner: str = "", code: str = "") -> dict:
+    """新建知识库。编码缺省按 id 生成 KB-000x；负责人缺省为创建者。"""
+    if level not in KB_LEVELS:
+        raise ValueError(f"数据分级只能是 {KB_LEVELS}")
+    now = time.time()
     with _db_lock, _connect() as conn:
         if conn.execute("SELECT 1 FROM kbs WHERE name=?", (name,)).fetchone():
             raise ValueError("同名知识库已存在")
         cur = conn.execute(
-            "INSERT INTO kbs(name, description, created_by, created_at) VALUES(?,?,?,?)",
-            (name, description, creator, time.time()))
+            "INSERT INTO kbs(name, description, created_by, created_at,"
+            " dept, level, owner, status, updated_at)"
+            " VALUES(?,?,?,?,?,?,?,'active',?)",
+            (name, description, creator, now, dept, level, owner or creator, now))
         kb_id = cur.lastrowid
+        # 编码：未指定则按 id 生成，生成后回写
+        final_code = code.strip() or f"KB-{kb_id:04d}"
+        if conn.execute("SELECT 1 FROM kbs WHERE code=? AND id<>?",
+                        (final_code, kb_id)).fetchone():
+            raise ValueError(f"知识库编码「{final_code}」已被占用")
+        conn.execute("UPDATE kbs SET code=? WHERE id=?", (final_code, kb_id))
         conn.execute(
             "INSERT INTO kb_members(kb_id, username, role, granted_by, granted_at)"
-            " VALUES(?,?,?,?,?)", (kb_id, creator, "kb_admin", creator, time.time()))
-    audit(creator, "kb.create", kb_id, name, description)
+            " VALUES(?,?,?,?,?)", (kb_id, creator, "kb_admin", creator, now))
+    audit(creator, "kb.create", kb_id, name, f"{dept} / {level}")
+    return get_kb(kb_id)
+
+
+def update_kb_meta(kb_id: int, actor: str, **fields) -> dict:
+    """更新知识库元信息（部门/分级/负责人/状态/描述）。只接受白名单字段。"""
+    allowed = {"dept", "level", "owner", "status", "description", "name"}
+    patch = {k: v for k, v in fields.items() if k in allowed and v is not None}
+    if not patch:
+        raise ValueError("没有可更新的字段")
+    if "level" in patch and patch["level"] not in KB_LEVELS:
+        raise ValueError(f"数据分级只能是 {KB_LEVELS}")
+    if "status" in patch and patch["status"] not in KB_STATUS:
+        raise ValueError(f"库状态只能是 {KB_STATUS}")
+    if kb_id == DEFAULT_KB_ID and patch.get("status") == "archived":
+        raise ValueError("默认知识库不可归档")
+    sets = ", ".join(f"{k}=?" for k in patch)
+    with _db_lock, _connect() as conn:
+        if not conn.execute("SELECT 1 FROM kbs WHERE id=?", (kb_id,)).fetchone():
+            raise ValueError("知识库不存在")
+        if "name" in patch and conn.execute(
+                "SELECT 1 FROM kbs WHERE name=? AND id<>?", (patch["name"], kb_id)).fetchone():
+            raise ValueError("同名知识库已存在")
+        conn.execute(f"UPDATE kbs SET {sets}, updated_at=? WHERE id=?",
+                     (*patch.values(), time.time(), kb_id))
+    audit(actor, "kb.update", kb_id, get_kb(kb_id)["name"],
+          " ".join(f"{k}={v}" for k, v in patch.items()))
     return get_kb(kb_id)
 
 
@@ -190,11 +256,18 @@ def get_kb(kb_id: int) -> dict | None:
         return dict(row) if row else None
 
 
-def list_kbs() -> list[dict]:
+def list_kbs(include_archived: bool = True) -> list[dict]:
+    """知识库列表 + 治理用的统计列（文档数/待审数/成员数/分组数）。
+    列表页要一次拿全，避免前端 N+1 请求。"""
+    where = "" if include_archived else " WHERE k.status='active'"
     with _connect() as conn:
         rows = conn.execute(
-            "SELECT k.*, (SELECT COUNT(*) FROM kb_files f WHERE f.kb_id=k.id"
-            " AND f.status='approved') AS file_count FROM kbs k ORDER BY k.id").fetchall()
+            "SELECT k.*,"
+            " (SELECT COUNT(*) FROM kb_files f WHERE f.kb_id=k.id AND f.status='approved') AS file_count,"
+            " (SELECT COUNT(*) FROM kb_files f WHERE f.kb_id=k.id AND f.status='pending')  AS pending_count,"
+            " (SELECT COUNT(*) FROM kb_members m WHERE m.kb_id=k.id)                      AS member_count,"
+            " (SELECT COUNT(*) FROM kb_groups g WHERE g.kb_id=k.id)                       AS group_count"
+            f" FROM kbs k{where} ORDER BY k.id").fetchall()
         return [dict(r) for r in rows]
 
 
@@ -255,6 +328,11 @@ def set_group_grant(kb_id: int, grp: str, role: str, actor: str) -> dict:
     grp = (grp or "").strip()[:32]
     if not grp:
         raise ValueError("分组名不能为空")
+    # 校验分组真实存在：否则会产生孤儿授权，而权限矩阵按「已有分组」取列，看不见它（静默失真）
+    from app.users import list_groups
+    known = {(g["group"] or "").strip() for g in list_groups()}
+    if grp not in known:
+        raise ValueError(f"分组「{grp}」不存在，请先在用户管理中创建该分组的成员")
     with _db_lock, _connect() as conn:
         if not conn.execute("SELECT 1 FROM kbs WHERE id=?", (kb_id,)).fetchone():
             raise ValueError("知识库不存在")
@@ -454,3 +532,34 @@ def delete_file(fid: int, actor: dict) -> dict:
 
 def touch_download(file: dict, actor: dict) -> None:
     audit(actor["username"], "file.download", file["kb_id"], file["name"])
+
+
+def all_group_grants() -> list[dict]:
+    """全部分组授权（供权限矩阵视图一次取全，避免按库循环 N+1）。"""
+    with _connect() as conn:
+        rows = conn.execute(
+            "SELECT kb_id, grp, role, granted_by, granted_at"
+            " FROM kb_groups ORDER BY kb_id, grp").fetchall()
+        return [dict(r) for r in rows]
+
+
+def touch_kb(kb_id: int) -> None:
+    """标记知识库「最后更新」。文件增删审批都算维护动作——否则领导会误判没人维护。"""
+    with _db_lock, _connect() as conn:
+        conn.execute("UPDATE kbs SET updated_at=? WHERE id=?", (time.time(), kb_id))
+
+
+def candidate_users(kb_id: int) -> list[dict]:
+    """可加入本库的候选人（尚未直接授权者）。供库管理员选人——容器里没有系统管理员权限。"""
+    from app.users import list_users
+    with _connect() as conn:
+        have = {r["username"] for r in conn.execute(
+            "SELECT username FROM kb_members WHERE kb_id=?", (kb_id,)).fetchall()}
+    out = []
+    for u in list_users():
+        if u["username"] in have or u["status"] != "active":
+            continue
+        out.append({"username": u["username"],
+                    "display_name": u.get("display_name") or u["username"],
+                    "group": u.get("group") or ""})
+    return out
