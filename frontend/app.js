@@ -4255,8 +4255,12 @@
 
   // 刷新失败但手里还有上次的清单：只在右栏顶部压一条错误带，详情照常可读
   function apiErrBarHTML() {
+    // 403 的 message 本身就是完整句子（"……请联系系统管理员"），再拼 title 会一字不差说两遍
+    const text = apiDocKind === "denied"
+      ? apiDocErr
+      : `${apiErrTitle()}：${apiDocErr}`;
     return `<div class="api-errbar" role="status">
-      <span class="api-errbar-t">${esc(apiErrTitle())}：${esc(apiDocErr)}</span>
+      <span class="api-errbar-t">${esc(text)}</span>
       ${apiErrActBoxHTML()}
     </div>`;
   }
