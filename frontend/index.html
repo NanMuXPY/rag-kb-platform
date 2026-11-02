@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>技术支持知识库 · 企业内部版</title>
-<link rel="stylesheet" href="app.css?v=20261103c">
+<link rel="stylesheet" href="app.css?v=20261103d">
 </head>
 <body>
 
@@ -66,7 +66,6 @@
           <div class="brand-sub">企业内部 · 自适应 RAG</div>
         </div>
       </div>
-      <button class="btn-new" id="btnNew" title="开始新会话">＋ 新会话</button>
     </div>
     <div class="session-list" id="sessionList"></div>
     <div class="rail-foot">
@@ -91,21 +90,58 @@
       <span class="scope-note">企业微信 · 腾讯会议 · 云服务器 · 对象存储 · 小程序</span>
     </header>
 
-    <!-- ═══ 视图一：问答 ═══ -->
+    <!-- ═══ 视图一：问答（idle = 门户 / thread = 对话，同一容器替换） ═══ -->
     <section class="view" id="viewChat">
       <div class="thread" id="thread">
-        <div class="empty" id="empty">
-          <p class="empty-lead">回答都会标注来源文档，无法确定时会明确告知。</p>
-          <p class="empty-hint">试试这些真实问题：</p>
-          <div class="samples" id="samples">
-            <button class="sample" data-q="腾讯云对象存储怎么创建存储桶？">对象存储怎么创建存储桶？</button>
-            <button class="sample" data-q="企业微信如何获取 access_token？">企业微信如何获取 access_token？</button>
-            <button class="sample" data-q="腾讯会议怎么预定会议？">腾讯会议怎么预定会议？</button>
-            <button class="sample" data-q="微信小程序服务器域名怎么配置？">小程序服务器域名怎么配置？</button>
-            <button class="sample" data-q="腾讯云服务器如何重置密码？">云服务器如何重置密码？</button>
+
+        <!-- 门户（#chat）：idle 态，与 .messages 互斥 -->
+        <div class="portal" id="portal" hidden>
+          <div class="portal-inner">
+            <header class="portal-head">
+              <div class="portal-head-main">
+                <h1 class="portal-greet" id="portalGreet" tabindex="-1">你好</h1>
+                <p class="portal-sub" id="portalSub"></p>
+              </div>
+              <div class="portal-head-act" id="portalHeadAct"></div>
+            </header>
+
+            <!-- 段 1：我有权限的知识库 + 最近更新 strip -->
+            <section class="portal-sec">
+              <div class="portal-sec-head">
+                <h2 class="portal-sec-title">我有权限的知识库</h2>
+                <span class="portal-sec-count" id="portalKbCount"></span>
+                <button class="portal-sec-act" id="portalAllKb" hidden></button>
+              </div>
+              <div class="portal-cards" id="portalCards"></div>
+              <div class="portal-strip" id="portalStrip"></div>
+            </section>
+
+            <!-- 段 2：最近提问 -->
+            <section class="portal-sec" id="portalRecentSec">
+              <div class="portal-sec-head">
+                <h2 class="portal-sec-title" id="portalRecentTitle">最近提问</h2>
+              </div>
+              <div id="portalRecent"></div>
+            </section>
+
+            <!-- 段 3：常用问题 -->
+            <section class="portal-sec">
+              <div class="portal-sec-head">
+                <h2 class="portal-sec-title" id="portalSampleTitle">常用问题</h2>
+              </div>
+              <div class="portal-samples" id="portalSamples"></div>
+            </section>
           </div>
         </div>
-        <div class="messages" id="messages"></div>
+
+        <!-- 对话（#chat/s/<id>） -->
+        <div class="messages" id="messages" hidden>
+          <div class="empty" id="empty">
+            <p class="empty-lead">回答都会标注来源文档，无法确定时会明确告知。</p>
+            <p class="empty-hint">试试这些真实问题：</p>
+            <div class="samples" id="samples"></div>
+          </div>
+        </div>
       </div>
       <footer class="composer-wrap">
         <form class="composer" id="composer">
@@ -264,6 +300,7 @@
         <button class="drawer-tab" id="tabUsers" role="tab">用户管理 <span class="tab-badge" id="pendingBadge" hidden></span></button>
         <button class="drawer-tab" id="tabMatrix" role="tab">权限矩阵</button>
         <button class="drawer-tab" id="tabAudit" role="tab">审计日志</button>
+        <button class="drawer-tab" id="tabApi" role="tab">接口</button>
       </div>
 
       <!-- 知识库页 -->
@@ -347,6 +384,27 @@
           </div>
           <div id="auditList" class="audit-list">加载中…</div>
         </section>
+      </div>
+
+      <!-- 接口面板页（第 5 个页签）：契约来自 GET /api/openapi.json 运行时解析 -->
+      <div id="paneApi" class="pane-wide" hidden>
+        <div class="api-metabar">
+          <span class="api-meta" id="apiMeta">FastAPI 契约 · 加载中…</span>
+          <button class="linklike" id="apiRefresh">刷新契约</button>
+        </div>
+        <div class="api-pickwrap">
+          <select class="wfilter api-pick" id="apiPick" aria-label="选择接口"></select>
+        </div>
+        <div class="api-split">
+          <div class="api-left">
+            <div class="api-filter">
+              <input class="wsearch" id="apiSearch" type="search" autocomplete="off"
+                     placeholder="筛选路径或 summary（按 / 聚焦）" aria-label="筛选接口">
+            </div>
+            <div class="api-list" id="apiList"></div>
+          </div>
+          <div class="api-detail" id="apiDetail"></div>
+        </div>
       </div>
     </section>
   </main>
@@ -435,6 +493,6 @@
 
 <script src="vendor/marked.min.js?v=20261102"></script>
 <script src="vendor/purify.min.js?v=20261102"></script>
-<script src="app.js?v=20261103c"></script>
+<script src="app.js?v=20261103d"></script>
 </body>
 </html>

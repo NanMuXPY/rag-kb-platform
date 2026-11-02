@@ -616,6 +616,16 @@ body {
   .toast-wrap { left: 14px; right: 14px; top: 62px; }
   .toast { max-width: none; }
   .pend-head { flex-wrap: wrap; }
+
+  /* 门户（v3.2）：窄屏收内边距，与 .view-pad 同档 */
+  .portal { padding: 14px 14px 32px; }
+  .portal-strip { gap: var(--sp-4); }
+
+  /* 接口面板（v3.2）：详情内距收一档，参数改成标签在上 */
+  .api-detail { padding: 14px 14px 20px; }
+  .api-metabar { height: auto; flex-wrap: wrap; }
+  .api-field { flex-direction: column; align-items: stretch; gap: 4px; }
+  .api-flabel { width: auto; }
 }
 
 /* ---------- 可访问性 ---------- */
@@ -1987,3 +1997,442 @@ select.wfilter { appearance: none; padding-right: 26px;
 
 /* 撤销条倒计时末段（≤3s）：字重 500→600，不改颜色（红色属于危险域） */
 .rev-cd.soon { font-weight: 600; }
+
+/* ══════════════════════════════════════════════════════════════════════
+   v3.2 门户首页（#chat 的 idle 态）—— 依据 docs/门户首页设计.md
+   单列三段：知识库卡 → 最近提问 → 常用问题；不新增颜色 / 字号 / 圆角
+   ══════════════════════════════════════════════════════════════════════ */
+.portal { padding: 22px 28px 40px; }
+.portal-inner {
+  max-width: var(--content-work); margin: 0 auto;
+  container-type: inline-size; container-name: portal;
+}
+
+/* 页头 73 = 27(标题) + 4 + 18(副行) + 24(下边距) */
+.portal-head { display: flex; align-items: flex-start; gap: var(--sp-3); margin-bottom: var(--sp-6); }
+.portal-head-main { flex: 1; min-width: 0; }
+.portal-greet {
+  font-family: var(--serif); font-size: var(--fs-xl); font-weight: 700;
+  line-height: var(--lh-tight); color: var(--ink);
+}
+.portal-sub { margin-top: var(--sp-1); font-size: var(--fs-xs); line-height: 18px; color: var(--muted); }
+.portal-head-act { flex: none; padding-top: 4px; }
+.portal-act {
+  position: relative; border: 0; background: none; padding: 0;
+  font: inherit; font-size: var(--fs-xs); font-weight: 600; color: var(--blue);
+  cursor: pointer;
+}
+.portal-act::after { content: ""; position: absolute; inset: -8px -6px; }   /* 28px 热区 */
+.portal-act:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* 段：段间距 24，无分隔线、无外框 */
+.portal-sec + .portal-sec { margin-top: var(--sp-6); }
+.portal-sec-head { display: flex; align-items: baseline; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+.portal-sec-title {
+  font-family: var(--serif); font-size: var(--fs-lg); font-weight: 700;
+  line-height: 1.35; color: var(--ink);
+}
+.portal-sec-count { font-size: var(--fs-xs); color: var(--muted); }
+.portal-sec-act {
+  margin-left: auto; border: 0; background: none; padding: 0;
+  font: inherit; font-size: var(--fs-xs); font-weight: 600; color: var(--blue);
+  cursor: pointer;
+}
+.portal-sec-act:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* 知识库卡：3→2→1 列由 auto-fit 自己算（阈值 924 / 612 见规范 §七） */
+.portal-cards {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--sp-3);
+}
+.pcard {
+  display: block; text-decoration: none; color: var(--ink);
+  padding: var(--sp-4);
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md);
+  box-shadow: none;
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+.pcard:hover { background: var(--paper); border-color: var(--blue); }
+.pcard:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.pcard-main { display: flex; align-items: center; gap: var(--sp-2); height: 20px; }
+.pcard-name {
+  flex: 1; min-width: 0;
+  font-size: var(--fs-base); font-weight: 600; color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pcard-sub {
+  display: flex; align-items: center; gap: var(--sp-2);
+  /* 4px 而非 6：16+20+4+16+16(padding)+2(border) = 74，卡片高度预算见门户设计 §3.3 */
+  margin-top: var(--sp-1); height: 16px; line-height: 16px;
+  font-size: var(--fs-xs); color: var(--muted);
+}
+.pcard-code {
+  flex: none; max-width: 132px;
+  font-family: var(--mono); font-size: var(--fs-2xs); color: var(--muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pcard-dept {
+  flex: none; max-width: 120px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pcard-dept::before, .pcard-role::before {
+  content: "·"; margin-right: 4px; color: var(--line-strong);
+}
+.pcard-role { flex: none; font-size: var(--fs-2xs); font-weight: 500; color: var(--ink-soft); }
+.pcard-files {
+  margin-left: auto; flex: none; text-align: right;
+  font-family: var(--mono); font-size: var(--fs-xs); font-variant-numeric: tabular-nums;
+}
+.pcard-time {
+  flex: none; width: 88px; text-align: right;
+  font-family: var(--mono); font-size: var(--fs-xs); color: var(--muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pcard-skel { display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+.portal-err {
+  display: flex; align-items: center; gap: var(--sp-3);
+  padding: var(--sp-5) var(--sp-4);
+  border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface);
+  font-size: var(--fs-sm); color: var(--red);
+}
+.portal-retry {
+  border: 0; background: none; padding: 0;
+  font: inherit; font-size: var(--fs-xs); font-weight: 600; color: var(--blue); cursor: pointer;
+}
+.portal-retry:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* 最近更新：段 1 的脚注，单行 24 + 上距 8 = 32，不是第 4 个区块 */
+.portal-strip {
+  display: flex; align-items: center; gap: var(--sp-8);
+  margin-top: var(--sp-2); height: 24px;
+  font-size: var(--fs-xs); color: var(--muted);
+  overflow: hidden; white-space: nowrap;
+}
+.pstrip-label { flex: none; font-weight: 600; color: var(--ink-soft); }
+.pstrip-item {
+  flex: none; min-width: 0; max-width: 320px;
+  font-weight: 500; color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pstrip-t { font-weight: 400; color: var(--muted); }
+.pstrip-sep { flex: none; color: var(--line-strong); }
+
+/* 最近提问：一行 44，固定宽 = 48 + 120 + 84 + 12 + 3×12 = 300 */
+.recent-row {
+  display: flex; align-items: center; gap: var(--sp-3);
+  width: 100%; height: 44px; padding: 0;
+  border: 0; border-bottom: 1px solid var(--line); background: none;
+  font: inherit; color: var(--ink); text-align: left; cursor: pointer;
+}
+.recent-row:last-child { border-bottom: 0; }
+.recent-row:hover { background: var(--paper); }
+.recent-row:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
+.rr-q {
+  flex: 1; min-width: 0; font-size: var(--fs-sm);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.rr-round { flex: none; width: 48px; text-align: right; font-size: var(--fs-xs); color: var(--muted); }
+.rr-kb {
+  flex: none; width: 120px; font-size: var(--fs-xs); color: var(--muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.rr-time {
+  flex: none; width: 84px; text-align: right;
+  font-family: var(--mono); font-size: var(--fs-xs); color: var(--muted);
+}
+.rr-arrow { flex: none; width: 12px; text-align: right; color: var(--line-strong); }
+.recent-row:hover .rr-arrow { color: var(--blue); }
+.recent-details > summary {
+  height: 36px; line-height: 36px; cursor: pointer;
+  font-family: var(--serif); font-size: var(--fs-base); font-weight: 700; color: var(--ink);
+}
+.recent-details > summary::marker { color: var(--line-strong); }
+
+/* 常用问题：句子列表（36 行高），不是胶囊 */
+.portal-samples { display: flex; flex-direction: column; }
+.psample {
+  display: flex; align-items: baseline; gap: var(--sp-1);
+  min-height: 36px; padding: 6px 0;
+  border: 0; background: none; font: inherit;
+  font-size: var(--fs-sm); line-height: 24px; color: var(--ink);
+  text-align: left; cursor: pointer;
+}
+.psdot { flex: none; color: var(--line-strong); }
+.pstext { min-width: 0; }
+.psample:hover .pstext { color: var(--blue); text-decoration: underline; text-underline-offset: 3px; }
+.psample:hover .psdot { color: var(--line-strong); }
+.psample:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.psample:focus-visible .pstext { text-decoration: underline; text-underline-offset: 3px; }
+
+/* 从「最近提问」进来时的高亮（1.2s，JS 摘掉 class） */
+.msg-flash .bubble { box-shadow: 0 0 0 3px var(--blue-bg); }
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   v3.2 接口面板（控制台第 5 页签 #admin/api）—— 依据 docs/接口面板设计.md
+   两分栏 280 + minmax(0,1fr)；高由父级 flex 撑满，不写 calc(100vh − 常量)
+   ══════════════════════════════════════════════════════════════════════ */
+#viewAdmin.is-api { display: flex; flex-direction: column; overflow: hidden; }
+#viewAdmin.is-api > .admin-tabs { flex: none; }
+#viewAdmin.is-api > #paneApi {
+  display: flex; flex-direction: column; flex: 1; min-height: 0; width: 100%;
+  container-type: inline-size; container-name: api;
+}
+
+.api-metabar {
+  display: flex; align-items: center; gap: var(--sp-3);
+  height: 32px; margin-bottom: var(--sp-2);
+}
+.api-meta {
+  min-width: 0; font-family: var(--mono); font-size: var(--fs-xs); color: var(--muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.api-meta.err { display: flex; align-items: center; gap: var(--sp-3); color: var(--red); }
+.api-meta .api-retry { flex: none; }
+.api-metabar > .linklike { margin-left: auto; flex: none; font-size: var(--fs-xs); color: var(--blue); }
+.api-metabar > .linklike:hover { text-decoration: underline; text-underline-offset: 3px; }
+.api-pickwrap { display: none; margin-bottom: var(--sp-2); }
+.api-pick { width: 100%; height: 40px; }
+
+.api-split {
+  flex: 1; min-height: 0;
+  display: grid; grid-template-columns: 280px minmax(0, 1fr);
+  border: 1px solid var(--line); border-radius: var(--r-md);
+  background: var(--surface); overflow: hidden;
+}
+.api-left {
+  min-width: 0; min-height: 0; overflow-y: auto;
+  border-right: 1px solid var(--line); background: var(--surface);
+}
+.api-filter {
+  position: sticky; top: 0; z-index: var(--z-sticky);
+  padding: var(--sp-3); background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.api-filter .wsearch { width: 100%; flex: none; }
+.api-list { padding-bottom: var(--sp-2); }
+
+/* 组头 36（sticky 在筛选框 56 之下） */
+.api-group {
+  position: sticky; top: 56px; z-index: calc(var(--z-sticky) - 1);
+  display: flex; align-items: center; gap: 6px;
+  width: 100%; height: 36px; padding: 0 var(--sp-3);
+  border: 0; background: var(--paper); text-align: left; cursor: pointer;
+}
+.api-caret { flex: none; width: 10px; font-size: var(--fs-2xs); color: var(--line-strong); }
+.api-gname { font-size: var(--fs-xs); font-weight: 600; letter-spacing: .04em; color: var(--ink-soft); }
+.api-gcount { margin-left: auto; font-family: var(--mono); font-size: var(--fs-2xs); color: var(--muted); }
+
+/* 行 48 = 8 + 18 + 14 + 8；方法槽定宽 60（3px 线 + 8 内距 + 43 字 + 6 余量） */
+.api-row {
+  display: flex; align-items: center; gap: var(--sp-2);
+  width: 100%; padding: 8px var(--sp-3);
+  border: 0; border-bottom: 1px solid var(--line); background: var(--surface);
+  text-align: left; cursor: pointer;
+}
+.api-row:last-child { border-bottom: 0; }
+.api-row:hover { background: var(--paper); }
+.api-row.on { background: var(--blue-bg); }
+.api-row.on .api-path { font-weight: 600; }
+.api-row:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
+.api-m {
+  flex: none; width: 60px; padding-left: 8px;
+  border-left: 3px solid var(--line-strong);
+  font-family: var(--mono); font-size: var(--fs-2xs); font-weight: 600;
+  line-height: 18px; color: var(--ink-soft);
+}
+.api-m.m-post, .api-m.m-patch, .api-m.m-put { border-left-color: var(--blue); }
+.api-m.m-delete { border-left-color: var(--red); color: var(--red); }
+.api-m-lg { width: 72px; padding-left: 10px; font-size: var(--fs-xs); line-height: 22px; }
+.api-row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.api-path {
+  font-family: var(--mono); font-size: var(--fs-xs); font-weight: 500; color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.api-row-sub { display: flex; align-items: center; gap: var(--sp-2); height: 14px; }
+.api-sum {
+  min-width: 0; font-size: var(--fs-2xs); color: var(--muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.api-tag { margin-left: auto; flex: none; font-size: var(--fs-2xs); font-weight: 600; color: var(--red); white-space: nowrap; }
+
+/* 右列详情 */
+.api-detail { min-width: 0; min-height: 0; overflow-y: auto; padding: 20px 20px 24px; }
+.api-dhead { display: flex; align-items: flex-start; gap: var(--sp-3); }
+.api-dtitle { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--sp-2); }
+.api-dpath {
+  font-family: var(--mono); font-size: var(--fs-md); font-weight: 600;
+  line-height: 1.4; color: var(--ink); overflow-wrap: anywhere;
+}
+.api-dacts { flex: none; display: flex; gap: var(--sp-2); }
+.api-dsub {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+  margin-top: var(--sp-1); padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+  font-size: var(--fs-xs); color: var(--muted);
+}
+.api-dot { color: var(--line-strong); }
+.api-tier { font-weight: 600; color: var(--ink-soft); }
+.api-dbody { padding-top: var(--sp-5); }
+.api-sec + .api-sec { margin-top: var(--sp-6); }
+.api-sec-t {
+  font-size: var(--fs-xs); font-weight: 600; letter-spacing: .04em;
+  color: var(--ink-soft); margin-bottom: var(--sp-2);
+}
+
+/* 参数表：5 列定宽 200/72/96/56 + 说明，border-box，行 40，0 条竖线 */
+.api-ptable {
+  width: 100%; table-layout: fixed;
+  border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden;
+  border-collapse: separate; border-spacing: 0;
+}
+.api-ptable .ap-c1 { width: 200px; }
+.api-ptable .ap-c2 { width: 72px; }
+.api-ptable .ap-c3 { width: 96px; }
+.api-ptable .ap-c4 { width: 56px; }
+.api-ptable th {
+  height: var(--th-h); padding: 0 var(--td-px);
+  background: var(--paper-2); border-bottom: 1px solid var(--line-strong);
+  font-size: var(--fs-xs); font-weight: 600; letter-spacing: .04em;
+  color: var(--ink-soft); text-align: left; white-space: nowrap;
+}
+.api-ptable td {
+  height: var(--row-h-compact); padding: 0 var(--td-px);
+  border-bottom: 1px solid var(--line);
+  font-size: var(--fs-xs); color: var(--muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.api-ptable tbody tr:last-child td { border-bottom: 0; }
+.api-ptable .ap-name { font-family: var(--mono); color: var(--ink); }
+.api-ptable .ap-type { font-family: var(--mono); font-size: var(--fs-2xs); }
+.api-ptable .ap-desc { white-space: normal; }
+
+.api-body {
+  width: 100%; min-height: 140px; max-height: 200px;
+  padding: var(--sp-3);
+  border: 1px solid var(--line-strong); border-radius: var(--r-md);
+  background: var(--surface); color: var(--ink);
+  font-family: var(--mono); font-size: var(--fs-xs); line-height: 1.6;
+  resize: vertical;
+}
+.api-body:focus { outline: none; border-color: var(--blue); box-shadow: var(--ring); }
+
+/* 试调用：URL 预览 + 行内输入框（两处同步） */
+.api-sendrow { display: flex; align-items: center; gap: var(--sp-3); }
+.api-url {
+  flex: 1; min-width: 0;
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--line); border-radius: var(--r-md); background: var(--paper);
+  font-family: var(--mono); font-size: var(--fs-xs); color: var(--ink);
+  overflow-x: auto; white-space: nowrap;
+}
+.api-miss { color: var(--amber); }
+.api-sendacts { flex: none; display: flex; gap: var(--sp-2); }
+.api-fields { display: flex; flex-direction: column; gap: var(--sp-2); margin-top: var(--sp-3); }
+.api-field { display: flex; align-items: center; gap: var(--sp-3); }
+.api-flabel {
+  flex: none; width: 160px;
+  font-family: var(--mono); font-size: var(--fs-xs); color: var(--ink-soft);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.api-finput {
+  flex: 1; min-width: 0; height: 32px; padding: 0 var(--sp-3);
+  border: 1px solid var(--line-strong); border-radius: var(--r-md);
+  background: var(--surface); color: var(--ink);
+  font: inherit; font-size: var(--fs-sm);
+}
+.api-finput:focus { outline: none; border-color: var(--blue); box-shadow: var(--ring); }
+.api-lock {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: var(--sp-3);
+  border: 1px solid var(--amber-line); border-radius: var(--r-md);
+  background: var(--amber-bg-2);
+  font-size: var(--fs-xs); color: var(--ink-soft);
+}
+.api-lock-t { font-size: var(--fs-xs); font-weight: 600; color: var(--amber); }
+
+/* 响应区：纸底 + 行号槽 36，不用 --code-bg（深色块只给 curl） */
+.api-status { margin-bottom: var(--sp-2); font-family: var(--mono); font-size: var(--fs-xs); color: var(--muted); }
+.api-status.ok { color: var(--teal); }
+.api-status.warn { color: var(--amber); }
+.api-status.err { color: var(--red); }
+.api-json {
+  display: flex; align-items: flex-start;
+  border: 1px solid var(--line); border-radius: var(--r-sm);
+  background: var(--surface); overflow-x: auto; max-height: 460px;
+}
+.api-json.is-err { border-color: var(--red); }
+.api-gutter {
+  flex: none; width: 36px; margin: 0; padding: 12px 8px 12px 0;
+  background: var(--paper-2); text-align: right; user-select: none;
+  font-family: var(--mono); font-size: var(--fs-2xs); line-height: 1.65; color: var(--muted);
+  white-space: pre;
+}
+.api-pre {
+  flex: 1; min-width: 0; margin: 0; padding: 12px;
+  font-family: var(--mono); font-size: var(--fs-2xs); line-height: 1.65;
+  color: var(--ink-soft); white-space: pre;
+}
+.j-k { color: var(--ink); font-weight: 600; }
+.j-n { color: var(--muted); }
+.api-more { margin-top: var(--sp-2); font-size: var(--fs-xs); color: var(--blue); }
+
+.api-note { font-size: var(--fs-xs); color: var(--muted); }
+.api-note-sm { font-size: var(--fs-2xs); }
+.api-note .api-retry { margin-left: var(--sp-2); color: var(--blue); font-size: var(--fs-xs); font-weight: 600; }
+.api-skel { display: flex; flex-direction: column; gap: 10px; padding: var(--sp-3); }
+.api-blank {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 260px; height: 100%; text-align: center;
+}
+.api-glyph { font-size: 36px; line-height: 1; color: var(--line-strong); }
+.api-blank-t {
+  margin-top: var(--sp-4);
+  font-family: var(--serif); font-size: var(--fs-lg); font-weight: 700; color: var(--ink);
+}
+.api-blank-s { margin-top: var(--sp-2); font-size: var(--fs-sm); color: var(--muted); }
+
+/* 两种失败：首次失败整块（右栏），刷新失败压一条带（详情照常可读） */
+.api-errblk .api-glyph { color: var(--red); font-family: var(--mono); font-weight: 700; }
+.api-errblk .api-blank-s { max-width: 460px; line-height: 18px; }
+/* 间距归父级：可复用类不自带"只对某个父级成立"的外边距，
+   否则第三个落点还要再覆盖一次，覆盖本身会变成隐式契约 */
+.api-err-act { margin-top: 0; }
+.api-errblk .api-err-act { margin-top: var(--sp-4); }
+.api-errbar .api-err-act { flex: none; }
+.api-err-act:empty { display: none; }   /* 兜底：渲染层已保证无动作不输出容器 */
+.api-errbar {
+  display: flex; align-items: center; gap: var(--sp-3);
+  margin-bottom: var(--sp-4); padding: 8px var(--sp-3);
+  border: 1px solid var(--line); border-left: 2px solid var(--red);
+  border-radius: var(--r-md); background: var(--red-bg);
+}
+.api-errbar-t {
+  flex: 1; min-width: 0; font-size: var(--fs-xs); line-height: 18px; color: var(--ink-soft);
+}
+.api-errbar .wbtn { flex: none; }
+
+/* 容器查询（不算新增视口断点）：左列收窄 → 单列 + 原生 select */
+@container api (max-width: 859px) {
+  .api-split { grid-template-columns: 240px minmax(0, 1fr); }
+  .api-ptable .ap-c1 { width: 150px; }
+}
+@container api (max-width: 699px) {
+  .api-split { grid-template-columns: minmax(0, 1fr); }
+  .api-left { display: none; }
+  .api-pickwrap { display: block; }
+  .api-sendrow { flex-direction: column; align-items: stretch; }
+  .api-sendacts { justify-content: flex-end; }
+  .api-ptable .ap-c1 { width: 120px; }
+  .api-ptable .ap-c2 { width: 60px; }
+  .api-ptable .ap-c3 { width: 72px; }
+}
+
+/* 门户：最近提问按容器宽收行（<768 → 3 行；<612 → 2 行） */
+@container portal (max-width: 767px) {
+  #portalRecent .recent-row:nth-child(n+4) { display: none; }
+}
+@container portal (max-width: 611px) {
+  #portalRecent .recent-row:nth-child(n+3) { display: none; }
+}
+

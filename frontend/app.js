@@ -61,7 +61,11 @@
     if (!isAdmin && parseHash().module === "admin") {
       history.replaceState(null, "", "#chat");
     }
+    loadSessions();                // 本地历史必须先读回来，否则首屏会用一个空会话覆盖掉它
     if (!sessions.length) newSession();
+    else if (!current) current = sessions[0];
+    renderSessionList();
+    renderSamples();
     loadMyKbs().catch(() => {});   // 预取可见库，引用卡能直接显示库名
     applyRoute();                  // 按当前 hash 渲染首个视图
   }
@@ -79,7 +83,9 @@
       b.classList.toggle("active", b.dataset.view === name));
     $("rail").classList.remove("open");   // 移动端：切换视图收起会话栏
     // 后台页不需要会话列表，窄屏折叠 rail（状态 class，不是断点）
-    $("shell").classList.toggle("rail-collapsed", name !== "chat" && window.innerWidth < 1180);
+    // 判据必须是视图白名单（kb / admin）：门户与对话同属 chat，会话栏要一直留着
+    $("shell").classList.toggle("rail-collapsed",
+      (name === "kb" || name === "admin") && window.innerWidth < 1180);
   }
 
   function navigate(hash, replace) {
@@ -182,35 +188,76 @@
   };
 
   // ---- 会话历史（按用户隔离：key 带用户名） ----
+  // 会话结构：[{id, title, msgs: [{role, content, sources, trace, route, refused, ts}]}]
+  // 顺序语义 = 最近使用在前（appendMsg 后 touchSession 置顶）
   const SKEY = () => `kb_sessions_v3_${(me && me.username) || "anon"}`;
+  const SESSION_MAX = 30;
   let sessions = [];
 
   function loadSessions() {
     try { sessions = JSON.parse(localStorage.getItem(SKEY()) || "[]"); }
     catch (_) { sessions = []; }
-  }
-  function persistSessions() {
-    localStorage.setItem(SKEY(), JSON.stringify(sessions.slice(-30)));
+    if (!Array.isArray(sessions)) sessions = [];
   }
 
-  let current = null;   // {id, title, msgs: [{role, content, sources, trace, route, refused}]}
+  // 落盘规则（交互规范 §2.4）：
+  // ① 保留最新 30 条（新会话 unshift 到头部 → slice(0,30)，不是 slice(-30)：后者会写掉最新那条）
+  // ② 当前会话永不淘汰
+  // ③ 0 消息的会话不落盘（当前会话除外，它可能正等第一条消息）
+  function persistSessions() {
+    const keep = [];
+    for (const s of sessions) {
+      if (s !== current && (!s.msgs || !s.msgs.length)) continue;
+      if (keep.length >= SESSION_MAX && s !== current) continue;
+      keep.push(s);
+    }
+    let arr = keep;
+    for (let i = 0; i <= 5; i++) {
+      try { localStorage.setItem(SKEY(), JSON.stringify(arr)); return; }
+      catch (_) {
+        // 配额兜底：从尾部（最旧）删 1 个再试，最多 5 次
+        if (arr.length <= 1) break;
+        arr = arr.slice(0, arr.length - 1);
+        if (!arr.includes(current)) arr.push(current);
+      }
+    }
+    toast("本地历史已满，最早 5 个会话已清理", "err");
+  }
+
+  let current = null;   // {id, title, msgs: [{role, content, sources, trace, route, refused, ts}]}
   let busy = false;
+  let pendingAnchor = null;   // {sessionId, msgIndex}：从「最近提问」进来时滚到那一条，用完即清
 
   function newSession() {
     current = { id: "s_" + Date.now(), title: "", msgs: [] };
     sessions.unshift(current);
     persistSessions();
     renderSessionList();
-    renderMessages();
-    input.focus();
+    return current;
+  }
+
+  // 唯一的新会话判据（门户页发送时用）：当前会话还有内容就新开，空会话复用
+  function ensureFreshSession() {
+    if (current && current.msgs.length === 0) return current;
+    return newSession();
+  }
+
+  // 会话置顶：最近用过的排最前，rail 与「最近提问」共用这个顺序
+  function touchSession() {
+    if (!current) return;
+    const i = sessions.indexOf(current);
+    if (i > 0) { sessions.splice(i, 1); sessions.unshift(current); }
+    persistSessions();
+    renderSessionList();
   }
 
   function openSession(id) {
-    current = sessions.find((s) => s.id === id);
-    if (!current) return newSession();
+    const s = sessions.find((x) => x.id === id);
+    if (!s) return false;
+    current = s;
     renderSessionList();
-    renderMessages();
     $("rail").classList.remove("open");   // 手机端：选完会话收起抽屉
+    return true;
   }
 
   function renderSessionList() {
@@ -218,11 +265,19 @@
     list.innerHTML = "";
     for (const s of sessions) {
       const b = document.createElement("button");
-      b.className = "session-item" + (current && s.id === current.id ? " active" : "");
+      b.className = "session-item" +
+        (chatMode === "thread" && current && s.id === current.id ? " active" : "");
       b.textContent = s.title || "（未命名会话）";
-      b.onclick = () => openSession(s.id);
+      b.title = s.title || "（未命名会话）";
+      b.onclick = () => goSession(s.id);
       list.appendChild(b);
     }
+  }
+
+  // rail 里点会话：不新开（openSession），对话之间用 replace，门户进来用 push
+  function goSession(id) {
+    if (!openSession(id)) return;
+    goThread(id, chatMode === "thread");
   }
 
   // ---- 消息渲染 ----
@@ -317,13 +372,15 @@
   }
 
   function renderMessages() {
-    messages.innerHTML = "";
+    // #empty 常驻 DOM（作为 .messages 的空态），只清消息节点，别把它一起删掉
+    messages.querySelectorAll(".msg").forEach((n) => n.remove());
     const showEmpty = !current || !current.msgs.length;
     $("empty").style.display = showEmpty ? "" : "none";
     if (showEmpty) return;
 
-    for (const m of current.msgs) {
+    current.msgs.forEach((m, i) => {
       const div = document.createElement("div");
+      div.dataset.i = String(i);
       if (m.role === "user") {
         div.className = "msg msg-user";
         div.innerHTML = `<div class="bubble">${esc(m.content)}</div>`;
@@ -336,17 +393,31 @@
         bindCiteCards(div, m.sources || []);
       }
       messages.appendChild(div);
+    });
+
+    // 从「最近提问」点进来：滚到那一条并高亮 1.2s（锚点只在内存，不进 URL）
+    if (pendingAnchor && current && pendingAnchor.sessionId === current.id) {
+      const idx = pendingAnchor.msgIndex;
+      pendingAnchor = null;
+      requestAnimationFrame(() => {
+        const el = messages.querySelector(`.msg[data-i="${idx}"]`);
+        if (!el) { thread.scrollTop = thread.scrollHeight; return; }
+        el.scrollIntoView({ block: "center" });
+        el.classList.add("msg-flash");
+        setTimeout(() => el.classList.remove("msg-flash"), 1200);
+      });
+      return;
     }
     thread.scrollTop = thread.scrollHeight;
   }
 
   function appendMsg(m) {
-    current.msgs.push(m);
-    if (!current.title && m.role === "user") {
-      current.title = m.content.slice(0, 22);
-      renderSessionList();
+    const msg = Object.assign({ ts: Date.now() }, m);
+    current.msgs.push(msg);
+    if (!current.title && msg.role === "user") {
+      current.title = msg.content.slice(0, 22);
     }
-    persistSessions();
+    touchSession();
     renderMessages();
   }
 
@@ -462,15 +533,351 @@
     }
   }
 
+  // ======================================================================
+  // 门户首页 —— #chat 的 idle 态（不是第 4 个页签）
+  // 形态：docs/门户首页设计.md ｜ 行为：docs/门户首页交互.md
+  // 硬约束：门户零新增请求，三段数据源 = myKbs / localStorage 会话 / SAMPLES
+  // ======================================================================
+  let chatMode = "portal";      // "portal"（门户） | "thread"（对话）
+  let portalKbState = "idle";   // idle | loading | ready | error
+  let portalNarrow = false;     // 容器 < 420：最近提问整段收进 <details>
+  let portalScroll = 0;         // 门户滚动位置只在内存里记
+
+  // 常用问题 / 对话空态样例：全站唯一一份数据（对话页 #samples 由它渲染）
+  const SAMPLES = [
+    { q: "腾讯云对象存储怎么创建存储桶？", label: "对象存储怎么创建存储桶？" },
+    { q: "企业微信如何获取 access_token？", label: "企业微信如何获取 access_token？" },
+    { q: "腾讯会议怎么预定会议？", label: "腾讯会议怎么预定会议？" },
+    { q: "微信小程序服务器域名怎么配置？", label: "小程序服务器域名怎么配置？" },
+    { q: "腾讯云服务器如何重置密码？", label: "云服务器如何重置密码？" },
+  ];
+
+  function renderSamples() {
+    $("samples").innerHTML = SAMPLES.map((s, i) =>
+      `<button class="sample" data-i="${i}" data-q="${esc(s.q)}">${esc(s.label)}</button>`).join("");
+  }
+
+  const ROLE_W = { super: 3, kb_admin: 3, editor: 2, viewer: 1 };
+
+  function greetText() {
+    const h = new Date().getHours();
+    const w = h < 12 ? "早上好" : h < 18 ? "下午好" : "晚上好";
+    const name = (me && (me.display_name || me.username)) || "";
+    return name ? `${w}，${name}` : w;
+  }
+
+  // 「最近提问」：跨会话摊平 user 消息，ts 倒序、空白归一化后全等去重
+  function recentQuestions(limit = 5) {
+    const items = [];
+    sessions.forEach((s, si) => {
+      (s.msgs || []).forEach((m, mi) => {
+        if (m.role !== "user") return;
+        items.push({ s, m, si, mi });
+      });
+    });
+    // 旧数据没有 ts（=0）落在所有新消息之后，彼此按会话序 + 消息倒序，与补 ts 之前的观感一致
+    items.sort((a, b) =>
+      (b.m.ts || 0) - (a.m.ts || 0) || a.si - b.si || b.mi - a.mi);
+    const seen = new Set();
+    const out = [];
+    for (const it of items) {
+      const key = String(it.m.content || "").replace(/\s+/g, " ").trim();
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      out.push(it);
+      if (out.length === limit) break;
+    }
+    return out;
+  }
+
+  // 来源库：该会话最后一条 assistant 消息的 sources[0]，读不到就整段不渲染
+  function sessionKbName(s) {
+    const msgs = s.msgs || [];
+    for (let i = msgs.length - 1; i >= 0; i--) {
+      const m = msgs[i];
+      if (m.role === "assistant" && m.sources && m.sources.length) {
+        const kbId = m.sources[0].kb_id;
+        if (kbId === undefined || kbId === null || kbId === "") return "";  // 没有这个字段 → 整段不渲染
+        return kbLabel(kbId);
+      }
+    }
+    return "";
+  }
+
+  function lastAskedTs() {
+    let t = 0;
+    for (const s of sessions) for (const m of s.msgs || []) {
+      if (m.role === "user" && m.ts > t) t = m.ts;
+    }
+    return t;
+  }
+
+  function portalKbSorted() {
+    // 先按库内角色权重（能管理的在前），同权重按最后更新降序
+    return myKbs.slice().sort((a, b) =>
+      (ROLE_W[b.my_role] || 0) - (ROLE_W[a.my_role] || 0)
+      || ((b.updated_at || b.created_at || 0) - (a.updated_at || a.created_at || 0))
+      || a.id - b.id);
+  }
+
+  function renderPortalSub() {
+    const parts = [];
+    if (portalKbState === "loading" || portalKbState === "idle") parts.push("正在读取知识库…");
+    else if (portalKbState === "error") parts.push("知识库列表暂时读取失败");
+    else parts.push(`你有 ${myKbs.length} 个知识库的访问权限`);
+    const t = lastAskedTs();
+    if (t) parts.push(`上次提问 ${tsInfo(Math.floor(t / 1000)).text}`);
+    $("portalSub").textContent = parts.join(" · ");
+  }
+
+  function portalCardHTML(kb) {
+    const t = tsInfo(kb.updated_at || kb.created_at || 0);
+    const files = kb.id === 1
+      ? `<span class="dash" title="默认库是内置语料">内置语料</span>`
+      : (kb.file_count ? `<span class="pcard-num">${kb.file_count}</span>` : `<span class="dash">—</span>`);
+    const role = ROLE_CN[kb.my_role] || "";
+    return `<a class="pcard" href="#kb/${kb.id}/files"
+        title="你是这个库的${role || "成员"} · 打开该库的文件列表">
+      <span class="pcard-main">
+        <span class="pcard-name">${esc(kb.name)}</span>
+        ${levelTag(kb.level)}${statusTag(kb.status)}
+      </span>
+      <span class="pcard-sub">
+        <span class="pcard-code">${kb.code ? esc(kb.code) : "未编码"}</span>
+        <span class="pcard-dept">${kb.dept ? esc(kb.dept) : "—"}</span>
+        <span class="pcard-role">${esc(role)}</span>
+        <span class="pcard-files">${files}</span>
+        <span class="pcard-time" title="更新：${esc(t.full)}">${esc(t.text)}</span>
+      </span>
+    </a>`;
+  }
+
+  function renderPortalKbs() {
+    const cards = $("portalCards");
+    const strip = $("portalStrip");
+    const act = $("portalAllKb");
+    $("portalKbCount").textContent = "";
+    cards.setAttribute("aria-busy", portalKbState === "loading" ? "true" : "false");
+    act.hidden = true;
+
+    if (portalKbState === "loading") {
+      cards.innerHTML = `<div class="pcard pcard-skel" aria-hidden="true">
+        <span class="sk sk-w1"></span><span class="sk sk-w2 sk-mt"></span></div>`.repeat(3);
+      strip.hidden = true;
+      renderPortalSub();
+      return;
+    }
+    if (portalKbState === "error") {
+      cards.innerHTML = `<div class="portal-err">
+        <span>读取知识库列表超时（5s）</span>
+        <button class="portal-retry" id="portalRetry">重试</button></div>`;
+      strip.hidden = true;
+      renderPortalSub();
+      $("portalRetry").onclick = () => retryPortalKbs();
+      return;
+    }
+
+    const all = portalKbSorted();
+    cards.innerHTML = all.slice(0, 3).map(portalCardHTML).join("");
+    // 段头动作与卡片同一阈值：只有 >3 个库时才有「查看全部 N 个 →」
+    if (all.length > 3) {
+      act.hidden = false;
+      act.textContent = `查看全部 ${all.length} 个 →`;
+      act.onclick = () => navigate("#kb");
+    }
+    // 最近更新 strip：段 1 的脚注，与卡片行同源，随段 1 同生共死
+    const recent = all.slice().sort((a, b) =>
+      (b.updated_at || b.created_at || 0) - (a.updated_at || a.created_at || 0));
+    if (recent.length) {
+      strip.hidden = false;
+      strip.innerHTML = `<span class="pstrip-label">最近更新：</span>` +
+        recent.slice(0, 3).map((k) => {
+          const t = tsInfo(k.updated_at || k.created_at || 0);
+          return `<span class="pstrip-item">${esc(k.name)} ` +
+            `<span class="pstrip-t">${esc(t.text)}</span></span>`;
+        }).join(`<span class="pstrip-sep" aria-hidden="true">·</span>`);
+      strip.title = "最近更新：" + recent.slice(0, 3)
+        .map((k) => `${k.name} ${tsInfo(k.updated_at || k.created_at || 0).text}`).join(" · ");
+    } else {
+      strip.hidden = true;
+    }
+    renderPortalSub();
+  }
+
+  function renderPortalRecent() {
+    const box = $("portalRecent");
+    const title = $("portalRecentTitle");
+    const items = recentQuestions(5);
+    title.hidden = false;
+    if (!items.length) {
+      // 空态用 32px hint-bar，不是 64px 空态块
+      box.innerHTML = `<div class="hint-bar">还没有提问记录 · 在下面挑一个问题开始</div>`;
+      return;
+    }
+    const rows = items.slice(0, 4).map(({ s, m, mi }) => {
+      const q = String(m.content || "").replace(/\s+/g, " ").trim() || "（空问题）";
+      const rounds = (s.msgs || []).filter((x) => x.role === "user").length;
+      const kb = sessionKbName(s);
+      const t = m.ts ? tsInfo(Math.floor(m.ts / 1000)) : { text: "较早", full: "旧数据没有时间戳" };
+      return `<button class="recent-row" data-sid="${esc(s.id)}" data-idx="${mi}">
+        <span class="rr-q" title="${esc(q.slice(0, 120))}">${esc(q)}</span>
+        ${rounds > 1 ? `<span class="rr-round">· ${rounds} 轮</span>` : ""}
+        ${kb ? `<span class="rr-kb" title="${esc(kb)}">${esc(kb)}</span>` : ""}
+        <span class="rr-time" title="${esc(t.full)}">${esc(t.text)}</span>
+        <span class="rr-arrow" aria-hidden="true">›</span>
+      </button>`;
+    }).join("");
+
+    if (portalNarrow) {
+      title.hidden = true;    // 折叠时标题进 summary，避免两层标题
+      box.innerHTML = `<details class="recent-details"><summary>最近提问（${items.length}）</summary>` +
+        `<div class="recent-body">${rows}</div></details>`;
+    } else {
+      box.innerHTML = rows;
+    }
+
+    box.onclick = (e) => {
+      const b = e.target.closest(".recent-row");
+      if (!b) return;
+      const sid = b.dataset.sid;
+      if (!openSession(sid)) { goPortal(true); return; }
+      // 只回看、不重问：进原会话并滚到那一条，不发任何请求
+      pendingAnchor = { sessionId: sid, msgIndex: Number(b.dataset.idx) };
+      goThread(sid, false);
+    };
+  }
+
+  function renderPortalSamples() {
+    $("portalSamples").innerHTML = SAMPLES.map((s, i) =>
+      `<button class="psample" data-i="${i}"><span class="psdot" aria-hidden="true">·</span>` +
+      `<span class="pstext">${esc(s.label)}</span></button>`).join("");
+    $("portalSamples").onclick = (e) => {
+      const b = e.target.closest(".psample");
+      if (!b) return;
+      const s = SAMPLES[+b.dataset.i];
+      if (s) sendViaComposer(s.q);
+    };
+  }
+
+  function renderPortal() {
+    if (!me) return;
+    $("portalGreet").textContent = greetText();
+    // 权限：普通员工这里 nodes 不存在（不是 hidden）
+    const actBox = $("portalHeadAct");
+    actBox.innerHTML = isSysAdmin()
+      ? `<button class="portal-act" id="portalAdmin">控制台 ›</button>` : "";
+    if (isSysAdmin()) $("portalAdmin").onclick = () => navigate("#admin/index");
+    refreshPortalKbs();     // myKbs 命中内存 → 0 请求；否则复用 in-flight Promise
+    renderPortalRecent();
+    renderPortalSamples();
+  }
+
+  function refreshPortalKbs() {
+    if (myKbs.length) {
+      portalKbState = "ready";
+      renderPortalKbs();
+      return;
+    }
+    portalKbState = "loading";
+    renderPortalKbs();
+    loadMyKbs()
+      .then(() => {
+        portalKbState = "ready";
+        renderPortalKbs();
+        renderPortalRecent();   // 库名映射依赖 myKbs：数据晚到时补一次，否则遗留「知识库 #3」
+      })
+      .catch((e) => {
+        if (e && e.status === 401) { showAuth(); return; }   // 登录过期必须回登录页，不降级
+        portalKbState = "error";
+        renderPortalKbs();
+      });
+  }
+
+  function retryPortalKbs() {
+    portalKbState = "loading";
+    renderPortalKbs();
+    loadMyKbs(true)
+      .then(() => { portalKbState = "ready"; renderPortalKbs(); })
+      .catch((e) => {
+        if (e && e.status === 401) { showAuth(); return; }
+        portalKbState = "error";
+        renderPortalKbs();
+      });
+  }
+
+  function saveChatScroll() {
+    if (chatMode === "portal") portalScroll = thread.scrollTop;
+  }
+
+  function routePortal() {
+    chatMode = "portal";
+    $("portal").hidden = false;
+    messages.hidden = true;
+    document.title = "技术支持知识库 · 企业内部版";
+    renderSessionList();     // 门户没有"当前会话"，rail 不高亮
+    renderPortal();
+    watchPortalWidth();
+    requestAnimationFrame(() => { thread.scrollTop = portalScroll; });
+  }
+
+  function routeThread(id) {
+    const s = sessions.find((x) => x.id === id);
+    if (!s) { goPortal(true); return; }   // 静默回落到门户，不 toast（会话 id 是本机的）
+    chatMode = "thread";
+    current = s;
+    portalScroll = 0;
+    $("portal").hidden = true;
+    messages.hidden = false;
+    renderSessionList();
+    renderMessages();
+    input.focus();
+  }
+
+  function goPortal(replace) {
+    const hash = "#chat";
+    if ((location.hash || hash) !== hash) {
+      if (replace) history.replaceState(null, "", hash);
+      else history.pushState(null, "", hash);
+    }
+    routePortal();
+  }
+
+  function goThread(id, replace) {
+    const hash = `#chat/s/${id}`;
+    if ((location.hash || "") !== hash) {
+      if (replace) history.replaceState(null, "", hash);
+      else history.pushState(null, "", hash);
+    }
+    routeThread(id);
+  }
+
+  // 容器 < 420（不是视口）：最近提问整段收进 <details>，常用问题永不折叠
+  let portalRO = null;
+  function watchPortalWidth() {
+    if (portalRO || !window.ResizeObserver) return;
+    const host = document.querySelector(".portal-inner");
+    if (!host) return;
+    portalRO = new ResizeObserver((entries) => {
+      const w = entries[0].contentRect.width;
+      const narrow = w < 420;
+      if (narrow !== portalNarrow) {
+        portalNarrow = narrow;
+        if (chatMode === "portal") renderPortalRecent();
+      }
+    });
+    portalRO.observe(host);
+  }
+
   // ---- 控制台（一级视图） ----
   let userFilter = "all";
 
-  // 控制台页签：语料索引 / 用户管理 / 权限矩阵 / 审计日志（由 hash 决定）
+  // 控制台页签：语料索引 / 用户管理 / 权限矩阵 / 审计日志 / 接口（由 hash 决定）
   const ADMIN_TAB_IDS = {
     index: ["tabKb", "paneKb"],
     users: ["tabUsers", "paneUsers"],
     matrix: ["tabMatrix", "paneMatrix"],
     audit: ["tabAudit", "paneAudit"],
+    api: ["tabApi", "paneApi"],
   };
 
   function applyAdminTab(tab) {
@@ -481,10 +888,13 @@
       $(tid).setAttribute("aria-selected", k === tab ? "true" : "false");
       $(pid).hidden = k !== tab;
     }
+    // 接口面板：父级用 flex 列撑满视口（不写 calc(100vh − 常量)），仅供 api 页签
+    $("viewAdmin").classList.toggle("is-api", tab === "api");
     if (tab === "index") refreshAdmin().catch(() => {});
     if (tab === "users") refreshUsers().catch(() => {});
     if (tab === "matrix") renderMatrix().catch(() => {});
     if (tab === "audit") loadAudit().catch(() => {});
+    if (tab === "api") renderApiPanel();
   }
 
   for (const k of Object.keys(ADMIN_TAB_IDS)) {
@@ -736,13 +1146,32 @@
   }
 
   // ---- 事件绑定 ----
+  // 发送的唯一入口：门户态先按 ensureFreshSession 定会话再进 thread；thread 态追问永不新开
+  function startSend(q) {
+    const text = String(q || "").trim();
+    if (!text || busy) return;
+    if (chatMode !== "thread") {
+      ensureFreshSession();
+      goThread(current.id, false);       // 门户 → 对话，push 一条历史
+    }
+    send(text);
+  }
+
+  // 点常用问题 / 样例：先把原文写进 composer，再走同一条提交路径（不写第二个发送函数）
+  function sendViaComposer(text) {
+    input.value = text;
+    input.dispatchEvent(new Event("input"));
+    $("composer").requestSubmit();
+  }
+
   $("composer").addEventListener("submit", (e) => {
     e.preventDefault();
     const q = input.value.trim();
-    if (!q) return;
+    if (!q || busy) return;      // 没有真正发出时不清空，别把用户刚打的问题吃掉
     input.value = "";
     input.style.height = "auto";
-    send(q);
+    $("btnSend").disabled = true;
+    startSend(q);
   });
   input.addEventListener("input", () => {
     input.style.height = "auto";
@@ -757,9 +1186,8 @@
   });
   $("samples").addEventListener("click", (e) => {
     const b = e.target.closest(".sample");
-    if (b) send(b.dataset.q);
+    if (b) sendViaComposer(b.dataset.q);
   });
-  $("btnNew").onclick = () => { newSession(); $("rail").classList.remove("open"); };
   $("btnRebuild").onclick = rebuild;
 
   const dz = $("dropzone"), fi = $("fileInput");
@@ -1028,12 +1456,18 @@
       return { module: "kb", kbId: seg[1] ? Number(seg[1]) : null, section: seg[2] || "", query };
     }
     if (mod === "admin") return { module: "admin", tab: seg[1] || "index", query };
-    if (mod === "chat") return { module: "chat", query };
+    // 会话 id 进路径段（与 #kb/{id} 同一套解析）：#chat = 门户(idle)，#chat/s/{id} = 对话
+    if (mod === "chat") {
+      const sessionId = seg[1] === "s" && seg[2] ? seg[2] : null;
+      return { module: "chat", sessionId, query };
+    }
     return { module: "unknown", raw: pathPart, query };
   }
 
   function applyRoute() {
     if (!me) return;
+    // 空 hash 用 replaceState 补成 #chat：location.hash= 会压一条历史，按后退会退不出去
+    if (!location.hash) history.replaceState(null, "", "#chat");
     const rt = parseHash();
     if (rt.module === "unknown") {
       showView("chat");
@@ -1046,8 +1480,14 @@
       navigate("#chat", true);
       return;
     }
+    if (rt.module !== "chat") saveChatScroll();
     showView(rt.module);
-    if (rt.module === "chat") { document.title = "技术支持知识库 · 企业内部版"; return; }
+    if (rt.module === "chat") {
+      document.title = "技术支持知识库 · 企业内部版";
+      if (rt.sessionId) routeThread(rt.sessionId);
+      else routePortal();
+      return;
+    }
     if (rt.module === "admin") { applyAdminTab(rt.tab); return; }
     if (rt.kbId) routeKbDetail(rt);
     else routeKbList(rt);
@@ -3445,12 +3885,792 @@
     }
   }
 
-  // ===================== 事件绑定 =====================
-  async function loadMyKbs() {
+  // ======================================================================
+  // 接口面板 —— 控制台第 5 个页签（#admin/api）
+  // 形态：docs/接口面板设计.md ｜ 行为：docs/接口面板交互.md
+  // 数据：GET /api/openapi.json 运行时解析（nginx 去 /api 前缀反代到后端 /openapi.json）
+  // ======================================================================
+  const API_METHODS = ["get", "post", "put", "patch", "delete"];
+  const API_TTL = 5 * 60 * 1000;
+  let apiDoc = null, apiDocAt = 0, apiDocState = "idle", apiDocErr = "";
+  // 失败要分两类：auth（401/403，重试无效，只能重新登录）/ fail（5xx、网络、非 JSON，可重试）
+  let apiDocKind = "";
+  let apiDocPromise = null;
+  let apiSel = "", apiFilter = "", apiParams = {}, apiBody = "", apiResp = null;
+  let apiBusy = false, apiTmo = 0, apiRespExpanded = false;
+  const apiCollapsed = new Set();
+
+  // 左列 7 组：顺序按使用频率（auth → chat → kbs → admin → files → open → 系统）
+  const API_GROUPS = [
+    { id: "auth", name: "认证", test: (p) => p.startsWith("/auth") },
+    { id: "chat", name: "对话", test: (p) => p.startsWith("/chat") },
+    { id: "kbs", name: "知识库", test: (p) => p.startsWith("/kbs") },
+    { id: "admin", name: "管理", test: (p) => p.startsWith("/admin") },
+    { id: "files", name: "文件", test: (p) => p.startsWith("/files") },
+    { id: "open", name: "开放接口", test: (p) => p.startsWith("/open") },
+    { id: "system", name: "系统", test: () => true },
+  ];
+
+  // 鉴权 5 条路径规则（openapi 里没有 securitySchemes，不能照抄契约）
+  const API_AUTH_RULE = [
+    { test: (p) => p === "/" || p === "/health", tier: "public", label: "公开" },
+    { test: (p) => p === "/auth/login" || p === "/auth/register", tier: "public", label: "公开" },
+    { test: (p) => p === "/admin/search", tier: "super", label: "仅超管" },
+    { test: (p) => p.startsWith("/admin/"), tier: "admin", label: "管理员" },
+    { test: (p) => p.startsWith("/open/"), tier: "apikey", label: "API-Key" },
+    { test: () => true, tier: "jwt", label: "登录" },
+  ];
+  const apiAuthOf = (path) => API_AUTH_RULE.find((r) => r.test(path));
+
+  function apiOps() {
+    const ops = [];
+    const paths = (apiDoc && apiDoc.paths) || {};
+    for (const [path, item] of Object.entries(paths)) {
+      for (const m of API_METHODS) {
+        if (!item || !item[m]) continue;
+        ops.push({ method: m.toUpperCase(), path, op: item[m], key: `${m.toUpperCase()}:${path}` });
+      }
+    }
+    return ops;
+  }
+  function apiOpOf(key) { return apiOps().find((o) => o.key === key) || null; }
+
+  // 路径 / query / header 三类参数（严格按契约的 in 渲染，不许把 role 塞进 body）
+  function apiParamsOf(o) {
+    return ((o && o.op && o.op.parameters) || [])
+      .filter((p) => p && ["path", "query", "header"].includes(p.in))
+      .map((p) => ({ ...p, schema: deref(p.schema || {}) }));
+  }
+  function deref(schema, depth) {
+    let s = schema || {};
+    let d = depth || 0;
+    while (s && s.$ref && d < 3) {
+      const name = String(s.$ref).split("/").pop();
+      s = (apiDoc && apiDoc.components && apiDoc.components.schemas && apiDoc.components.schemas[name]) || {};
+      d += 1;
+    }
+    return s || {};
+  }
+
+  // 试调用禁用 4 类（禁用 ≠ 不可读：参数与 schema 照常展示，只把发送区换成原因条）
+  function apiDisabled(op) {
+    if (op.path === "/chat/stream") {
+      return "流式接口（text/event-stream）不在面板里试调用。请到问答页验证；面板只发一次性请求，收不到 token 增量，只会让你以为「流式坏了」。";
+    }
+    if (op.path.endsWith("/download")) {
+      return "该接口返回文件流，试调用会直接触发浏览器下载。请在知识库详情的文件表里下载。";
+    }
+    if (op.path.endsWith("/upload")) {
+      return "该接口需要 multipart 文件上传，面板无法选择文件。请在知识库详情页（或语料索引页）上传。";
+    }
+    if (op.path.startsWith("/open/")) {
+      return "该接口需要 X-API-Key（服务端 ADMIN_API_KEY），浏览器不持有此密钥，故不能在线试调用。请用 curl 或调用方系统验证；密钥只配置在服务端 .env。";
+    }
+    return "";
+  }
+
+  // 危险分四档（本页没有强度 1：任何非 GET 至少 2 级），按"能否一次反向请求还原"分档
+  function apiRisk(op) {
+    if (op.method === "GET") return 1;
+    if (op.method === "DELETE") {
+      if (/\/members\/\{[^}]+\}$/.test(op.path)) return 2;   // POST members 可恢复
+      if (/\/groups\/\{[^}]+\}$/.test(op.path)) return 3;    // 一次影响一批人
+      return 4;                                             // 库 / 文件 / 文档 / 账号：不可恢复
+    }
+    if (op.method === "POST") {
+      if (op.path.endsWith("/approve")) return 3;
+      if (op.path.endsWith("/role")) return 3;
+      if (op.path === "/admin/rebuild") return 3;
+      if (op.path.endsWith("/groups")) return 3;
+    }
+    return 2;
+  }
+
+  // 行内危险标签（查表，不按方法猜"计费 / 重建 / 批量"）
+  function apiTag(op) {
+    if (op.method === "DELETE") return "不可逆";
+    if (op.path.startsWith("/chat") || op.path === "/open/v1/chat") return "计费";
+    if (op.path === "/admin/rebuild") return "重建";
+    if (op.path.endsWith("/approve")) return "入库";
+    if (op.method === "POST" && /^\/open\/v1\/(users|groups)/.test(op.path)) return "批量";
+    return "";
+  }
+
+  // requestBody 的 mini resolver：$ref 解引用、深度上限 3、循环检测；占位一律类型零值
+  function exampleOf(schema, root, depth, seen) {
+    const d = depth || 0;
+    const vis = seen || new Set();
+    if (!schema || d > 3) return null;
+    if (schema.$ref) {
+      const ref = String(schema.$ref);
+      if (vis.has(ref)) return null;
+      const name = ref.split("/").pop();
+      const target = (root && root.components && root.components.schemas && root.components.schemas[name]);
+      return exampleOf(target, root, d + 1, new Set(vis).add(ref));
+    }
+    if (schema.anyOf || schema.oneOf) return exampleOf((schema.anyOf || schema.oneOf)[0], root, d + 1, vis);
+    if (schema.allOf && schema.allOf.length) {
+      const merged = { type: "object", properties: {} };
+      for (const part of schema.allOf) {
+        const v = exampleOf(part, root, d + 1, vis);
+        if (v && typeof v === "object") Object.assign(merged.properties, v);
+      }
+      return Object.keys(merged.properties).length
+        ? Object.fromEntries(Object.entries(merged.properties)) : {};
+    }
+    if (schema.type === "object" || schema.properties) {
+      return Object.fromEntries(Object.entries(schema.properties || {})
+        .map(([k, v]) => [k, exampleOf(v, root, d + 1, vis)]));
+    }
+    if (schema.type === "array") {
+      const one = exampleOf(schema.items, root, d + 1, vis);
+      return one === null ? [] : [one];
+    }
+    if (schema.type === "integer" || schema.type === "number") return 0;
+    if (schema.type === "boolean") return false;
+    return "";
+  }
+
+  function apiBodySchema(op) {
+    const rb = op.op && op.op.requestBody;
+    if (!rb || !rb.content) return null;
+    const first = Object.values(rb.content)[0];
+    return first ? (first.schema || null) : null;
+  }
+
+  async function loadOpenApi(force) {
+    if (!force && apiDoc && Date.now() - apiDocAt < API_TTL) { renderApiPanel(); return; }
+    if (apiDocPromise) return apiDocPromise;
+    apiDocState = "loading"; apiDocErr = ""; apiDocKind = "";
+    renderApiChrome(); renderApiList(); renderApiDetail();
+
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 10000);
+    apiDocPromise = (async () => {
+      let r;
+      try {
+        r = await fetch(`${API_BASE}/openapi.json`, { headers: authHeaders(false), signal: ctl.signal });
+      } catch (_) {
+        throw new Error(`无法连接后端（${API_BASE}）。请确认服务已启动，或检查网络。`);
+      }
+      // 后端 gate_schema 给 /openapi.json 上了登录校验：JWT 过期就是 401。
+      // 401 不做静默登出（会丢掉当前页上下文），改为四态里的"无权限"，由面板给「重新登录」；
+      // 重试对 401 无效，所以这条分支不能落到通用失败（那个才配「重试」）；
+      // 403 更不是"少张票"的问题——给「重新登录」只会让人反复登录、反复 403。
+      if (r.status === 401 || r.status === 403) {
+        const e = new Error(r.status === 401
+          ? "登录已过期，读取接口清单被拒绝（401）。请重新登录后再看接口面板。"
+          : "当前账号无权查看接口清单（403），请联系系统管理员开通权限。");
+        e.auth = true;
+        e.denied = r.status === 403;
+        throw e;
+      }
+      if (!r.ok) throw new Error(`读取接口清单失败（HTTP ${r.status}），接口清单暂不可用。`);
+      // 只判 r.ok 会得到空白面板：nginx 的 try_files 会把未命中路径回成 200 + index.html
+      const ct = (r.headers.get("content-type") || "").toLowerCase();
+      if (!ct.includes("json")) {
+        throw new Error("返回的不是 JSON。反代可能把 /api/openapi.json 交给了前端页面（返回了 HTML），请检查 nginx 的 location /api/ 配置。");
+      }
+      let doc;
+      try { doc = await r.json(); }
+      catch (_) { throw new Error("返回的不是 JSON：解析失败，反代可能回的是前端页面。"); }
+      if (!doc || !doc.paths || !Object.keys(doc.paths).length) {
+        throw new Error("契约文件是空的：openapi.json 里没有 paths，后端可能一个路由都没注册。");
+      }
+      apiDoc = doc;
+      apiDocAt = Date.now();
+      apiDocState = "ready";
+    })();
+    try { await apiDocPromise; }
+    catch (e) {
+      apiDocState = "error";
+      apiDocKind = (e && e.auth) ? (e.denied ? "denied" : "auth") : "fail";
+      apiDocErr = (e && e.message) || "接口清单暂不可用";
+    }
+    finally { clearTimeout(timer); apiDocPromise = null; }
+    if (apiDocState === "ready") renderApiPanel();
+    else { renderApiChrome(); renderApiList(); renderApiDetail(); }
+  }
+
+  function renderApiPanel() {
+    if (!apiDoc) {
+      if (apiDocState === "idle") { loadOpenApi(false); return; }
+      renderApiChrome(); renderApiList(); renderApiDetail();
+      return;
+    }
+    const rt = parseHash();
+    const ep = (rt.query && rt.query.ep) || "";
+    if (ep) apiSel = ep;
+    const ops = apiOps();
+    if (!ops.some((o) => o.key === apiSel)) apiSel = ops.length ? ops[0].key : "";
+    renderApiChrome();
+    renderApiList();
+    renderApiDetail();
+  }
+
+  function renderApiChrome() {
+    const meta = $("apiMeta");
+    if (apiDocState === "loading") { meta.textContent = "FastAPI 契约 · 正在解析接口清单…"; return; }
+    if (apiDocState === "error") {
+      // 动作按钮只放右侧错误条：meta 行高 32 且 nowrap，塞长文案会挤掉版本号
+      meta.className = "api-meta err";
+      meta.textContent = apiDoc
+        ? "FastAPI 契约 · 刷新失败，左列保留的是上次读到的清单"
+        : (apiDocKind === "auth"
+          ? "FastAPI 契约 · 登录已过期，请重新登录"
+          : apiDocKind === "denied"
+            ? "FastAPI 契约 · 当前账号无权查看清单"
+            : "FastAPI 契约 · 接口清单暂不可用");
+      return;
+    }
+    meta.className = "api-meta";
+    const ver = (apiDoc && apiDoc.info && apiDoc.info.version) || "—";
+    const ops = apiOps().length;
+    const paths = Object.keys((apiDoc && apiDoc.paths) || {}).length;
+    meta.textContent = `FastAPI 契约 · v${ver} · ${ops} 个操作 / ${paths} 个路径 · 缓存 5 分钟`;
+  }
+
+  function apiRowHTML(o) {
+    const sum = (o.op && o.op.summary) || "";
+    const tag = apiTag(o);
+    return `<button class="api-row${o.key === apiSel ? " on" : ""}" data-k="${esc(o.key)}" tabindex="-1">
+      <span class="api-m m-${o.method.toLowerCase()}">${o.method}</span>
+      <span class="api-row-main">
+        <span class="api-path" title="${esc(o.path)}">${esc(o.path)}</span>
+        <span class="api-row-sub"><span class="api-sum">${esc(sum)}</span>` +
+        `${tag ? `<span class="api-tag">${tag}</span>` : ""}</span>
+      </span>
+    </button>`;
+  }
+
+  function apiSkelHTML() {
+    return `<div class="api-skel" aria-hidden="true">${`<span class="sk sk-w1"></span><span class="sk sk-w2 sk-mt"></span>`.repeat(6)}</div>`;
+  }
+
+  function renderApiList() {
+    const box = $("apiList");
+    const pick = $("apiPick");
+    if (!apiDoc) {
+      // 读不到 ≠ 0 个接口。左列保留骨架/上次结果，结论与动作都放右侧错误条
+      if (!box.querySelector(".api-skel")) box.innerHTML = apiSkelHTML();
+      pick.innerHTML = "";
+      return;
+    }
+    const q = apiFilter.trim().toLowerCase();
+    const bins = API_GROUPS.map((g) => ({ ...g, hit: [], total: [] }));
+    const all = apiOps();
+    for (const o of all) {
+      const g = bins.find((x) => x.test(o.path)) || bins[bins.length - 1];
+      g.total.push(o);
+      const sum = (o.op && o.op.summary) || "";
+      if (!q || o.path.toLowerCase().includes(q) || sum.toLowerCase().includes(q)) g.hit.push(o);
+    }
+    let html = "";
+    let hitTotal = 0;
+    for (const g of bins) {
+      if (!g.total.length) continue;
+      const rows = g.hit.slice().sort((a, b) =>
+        a.path.localeCompare(b.path) || a.method.localeCompare(b.method));
+      hitTotal += rows.length;
+      const collapsed = apiCollapsed.has(g.id);
+      html += `<button class="api-group" data-g="${g.id}" aria-expanded="${collapsed ? "false" : "true"}">
+        <span class="api-caret" aria-hidden="true">${collapsed ? "▸" : "▾"}</span>
+        <span class="api-gname">${esc(g.name)}</span>
+        <span class="api-gcount">${q ? `${rows.length}/${g.total.length}` : g.total.length}</span>
+      </button>`;
+      if (collapsed) continue;
+      if (!rows.length) {
+        html += `<div class="api-note api-note-sm">本组无匹配</div>`;
+        continue;
+      }
+      html += rows.map(apiRowHTML).join("");
+    }
+    if (q && !hitTotal) {
+      html = `<div class="api-note">没有匹配的接口
+        <button class="linklike api-retry" id="apiClearFilter">清除</button></div>`;
+    }
+    box.innerHTML = html;
+    const clear = $("apiClearFilter");
+    if (clear) clear.onclick = () => { apiFilter = ""; $("apiSearch").value = ""; renderApiList(); };
+
+    // 窄屏（<700）用原生 select 代替列表
+    pick.innerHTML = bins.filter((g) => g.hit.length).map((g) =>
+      `<optgroup label="${esc(g.name)}">` + g.hit.map((o) =>
+        `<option value="${esc(o.key)}">${o.method} ${esc(o.path)}</option>`).join("") +
+      `</optgroup>`).join("");
+    pick.value = apiSel;
+  }
+
+  function apiMethodBadge(o, big) {
+    return `<span class="api-m${big ? " api-m-lg" : ""} m-${o.method.toLowerCase()}">${o.method}</span>`;
+  }
+
+  // ---- 四态里的两种失败（loading / empty / fail / auth / denied）----
+  // 判据（三档互斥，别再合并）：
+  //   用户自己再点一次会不会变好？ 会 → 「重试」；不会 → 换动作（401 → 重新登录）；
+  //   换动作也没用（403 角色不够）→ **不给按钮**，只写该找谁。
+  // 403 给「重新登录」的后果很具体：管理员反复登录、反复 403，然后报"面板登不进去"。
+  function apiErrTitle() {
+    if (apiDocKind === "auth") return "登录已过期，请重新登录";
+    if (apiDocKind === "denied") return "当前账号无权查看接口清单，请联系系统管理员";
+    return "接口清单读取失败";
+  }
+
+  // 返回空串 = 这个状态没有用户能做的动作（403）。调用处据此连容器一起不输出。
+  function apiErrActionHTML() {
+    if (apiDocKind === "denied") return "";
+    return apiDocKind === "auth"
+      ? `<button class="wbtn sm pri" id="apiRelogin">重新登录</button>`
+      : `<button class="wbtn sm" id="apiRetry">重试</button>`;
+  }
+
+  // 无动作时不输出容器：空壳会在 flex 的 gap 里白占一格，错误带右侧多 12px
+  function apiErrActBoxHTML() {
+    const acts = apiErrActionHTML();
+    return acts ? `<div class="api-err-act">${acts}</div>` : "";
+  }
+
+  function bindApiErr() {
+    const rl = $("apiRelogin");
+    if (rl) rl.onclick = () => {
+      // 复用登出流程（同 #btnLogout）：清 token/用户回登录页；清单状态一并清掉，重登后重新取
+      store.token = ""; store.user = null;
+      apiDoc = null; apiDocState = "idle"; apiDocErr = ""; apiDocKind = "";
+      activeView = "chat";
+      showAuth();
+    };
+    const rt = $("apiRetry");
+    if (rt) rt.onclick = () => loadOpenApi(true);
+  }
+
+  // 首次就失败：右栏整体换成错误块（左栏此时是骨架，不写"0 个接口"）
+  function apiErrDetailHTML() {
+    return `<div class="api-blank api-errblk">
+      <span class="api-glyph" aria-hidden="true">!</span>
+      <div class="api-blank-t">${esc(apiErrTitle())}</div>
+      <div class="api-blank-s">${esc(apiDocErr)}</div>
+      ${apiErrActBoxHTML()}
+    </div>`;
+  }
+
+  // 刷新失败但手里还有上次的清单：只在右栏顶部压一条错误带，详情照常可读
+  function apiErrBarHTML() {
+    return `<div class="api-errbar" role="status">
+      <span class="api-errbar-t">${esc(apiErrTitle())}：${esc(apiDocErr)}</span>
+      ${apiErrActBoxHTML()}
+    </div>`;
+  }
+
+  function apiEmptyDetail() {
+    return `<div class="api-blank">
+      <span class="api-glyph" aria-hidden="true">▤</span>
+      <div class="api-blank-t">从左边选一个接口</div>
+      <div class="api-blank-s">共 ${apiOps().length} 个操作，按路径前缀分组</div>
+    </div>`;
+  }
+
+  function apiParamRows(op, params) {
+    if (!params.length) return `<div class="api-note">该接口无参数</div>`;
+    const rows = params.map((p) => {
+      const name = p.name;
+      const inPath = p.in === "path";
+      const required = inPath || p.required;
+      const ty = (p.schema && p.schema.type) || "—";
+      const desc = p.description || (p.schema && p.schema.description) || "";
+      return `<tr>
+        <td class="ap-name" title="${esc(name)}">${esc(name)}</td>
+        <td class="ap-in">${esc(p.in)}</td>
+        <td class="ap-type" title="${esc(ty)}">${esc(ty)}</td>
+        <td class="ap-req">${required ? "必填" : "—"}</td>
+        <td class="ap-desc">${desc ? esc(desc) : '<span class="dash">—</span>'}</td>
+      </tr>`;
+    }).join("");
+    return `<table class="api-ptable">
+      <colgroup><col class="ap-c1"><col class="ap-c2"><col class="ap-c3"><col class="ap-c4"><col></colgroup>
+      <thead><tr><th scope="col">参数名</th><th scope="col">位置</th><th scope="col">类型</th>
+        <th scope="col">必填</th><th scope="col">说明</th></tr></thead>
+      <tbody>${rows}</tbody></table>`;
+  }
+
+  // 拼 URL：path 占位符照抄输入值（未填保留 {name}），query 按参数表顺序追加
+  function apiPlainUrl(op) {
+    const path = op.path.replace(/\{([^}]+)\}/g, (m, name) => {
+      const v = String(apiParams[name] == null ? "" : apiParams[name]).trim();
+      return v ? encodeURIComponent(v) : m;
+    });
+    const qs = [];
+    for (const p of apiParamsOf(op)) {
+      if (p.in !== "query") continue;
+      const v = String(apiParams[p.name] == null ? "" : apiParams[p.name]).trim();
+      if (v) qs.push(`${encodeURIComponent(p.name)}=${encodeURIComponent(v)}`);
+    }
+    return `${API_BASE}${path}` + (qs.length ? `?${qs.join("&")}` : "");
+  }
+
+  function apiUrlPreviewHTML(op) {
+    const url = apiPlainUrl(op);
+    const missing = (url.match(/\{[^}]+\}/g) || []).length;
+    const html = esc(url).replace(/\{[^}]+\}/g, (m) => `<span class="api-miss">${m}</span>`);
+    return { html, url, missing };
+  }
+
+  function renderApiDetail() {
+    const box = $("apiDetail");
+    if (apiDocState === "error" && !apiDoc) {
+      apiParams = {}; apiResp = null; apiBody = "";
+      box.innerHTML = apiErrDetailHTML();
+      bindApiErr();
+      return;
+    }
+    const op = apiOpOf(apiSel);
+    apiParams = {};           // 切换接口：参数与 body 一律清空（不回填上一个接口的残值）
+    apiResp = null;
+    apiBody = "";
+    const errBar = apiDocState === "error" ? apiErrBarHTML() : "";
+    if (!op) { box.innerHTML = errBar + apiEmptyDetail(); bindApiErr(); return; }
+
+    const params = apiParamsOf(op);
+    const tier = apiAuthOf(op.path);
+    const dis = apiDisabled(op);
+    const tag = apiTag(op);
+    const sum = (op.op && op.op.summary) || "—";
+    const rbSchema = apiBodySchema(op);
+    if (rbSchema) {
+      apiBody = JSON.stringify(exampleOf(rbSchema, apiDoc, 0, new Set()), null, 2);
+    }
+
+    const pathParams = params.filter((p) => p.in === "path");
+    const queryParams = params.filter((p) => p.in === "query");
+    const fieldRows = [...pathParams, ...queryParams].map((p) =>
+      `<label class="api-field">
+        <span class="api-flabel" title="${esc(p.name)}">${esc(p.name)}</span>
+        <input class="api-finput" data-pname="${esc(p.name)}" data-pin="${esc(p.in)}"
+          autocomplete="off" spellcheck="false"
+          placeholder="${esc(p.in === "path" ? "path 参数" : "留空 = 不发送")}">
+      </label>`).join("");
+
+    const bodyBlock = rbSchema
+      ? `<div class="api-sec">
+           <h3 class="api-sec-t">请求体示例</h3>
+           <textarea class="api-body" id="apiBodyText" spellcheck="false"
+             aria-label="请求体 JSON">${esc(apiBody)}</textarea>
+           <div class="api-note api-note-sm">占位一律类型零值（"" / 0 / false / []），改完再发。
+             切接口会清空，不记忆上次的请求体。</div>
+         </div>`
+      : `<div class="api-sec">
+           <h3 class="api-sec-t">请求体示例</h3>
+           <div class="api-note">该接口无请求体</div>
+         </div>`;
+
+    const sendArea = dis
+      ? `<div class="api-lock"><span class="api-lock-t">不可在线试调用</span>
+           <span>${esc(dis)}</span></div>`
+      : `<div class="api-sendrow">
+           <div class="api-url" id="apiUrl"></div>
+           <div class="api-sendacts">
+             <button class="wbtn sm" id="apiResetParams">重置参数</button>
+             <button class="wbtn sm${op.method === "DELETE" ? "" : " pri"}" id="apiSendBtn">试调用</button>
+           </div>
+         </div>
+         <div class="api-fields">${fieldRows || `<span class="api-note api-note-sm">该接口没有 path / query 参数，直接用 URL</span>`}</div>`;
+
+    box.innerHTML = `${errBar}
+      <div class="api-dhead">
+        <div class="api-dtitle">
+          ${apiMethodBadge(op, true)}
+          <h2 class="api-dpath">${esc(op.path)}</h2>
+        </div>
+        <div class="api-dacts">
+          <button class="wbtn sm" id="apiCurl">复制 curl</button>
+          ${dis ? "" : `<button class="wbtn sm pri" id="apiGoSend">试调用</button>`}
+        </div>
+      </div>
+      <div class="api-dsub">
+        <span>${esc(sum)}</span>
+        <span class="api-dot" aria-hidden="true">·</span>
+        <span>${tier.tier === "apikey" ? "需要 X-API-Key" : "需要 Bearer"}</span>
+        <span class="api-dot" aria-hidden="true">·</span>
+        <span>${params.length} 个参数</span>
+        <span class="api-dot" aria-hidden="true">·</span>
+        <span class="api-tier">${esc(tier.label)}</span>
+        ${tag ? `<span class="api-tag">${tag}</span>` : ""}
+      </div>
+      <div class="api-dbody">
+        <div class="api-sec">
+          <h3 class="api-sec-t">参数</h3>
+          ${apiParamRows(op, params)}
+        </div>
+        ${bodyBlock}
+        <div class="api-sec">
+          <h3 class="api-sec-t">试调用</h3>
+          ${sendArea}
+        </div>
+        <div class="api-sec">
+          <h3 class="api-sec-t">响应</h3>
+          <div id="apiResp"></div>
+        </div>
+      </div>`;
+
+    // 绑定：URL 预览与输入框两处同步
+    const syncUrl = () => {
+      const { html } = apiUrlPreviewHTML(op);
+      const el = $("apiUrl");
+      if (el) el.innerHTML = `${op.method} ${html}`;
+    };
+    box.querySelectorAll(".api-finput").forEach((inp) => {
+      inp.addEventListener("input", () => {
+        apiParams[inp.dataset.pname] = inp.value;
+        syncUrl();
+      });
+      inp.addEventListener("keydown", (e) => {
+        // Enter 绝不发送：焦点移到下一个参数（最后一个交给按钮）
+        if (e.key === "Enter") {
+          e.preventDefault();
+          const list = [...box.querySelectorAll(".api-finput")];
+          const i = list.indexOf(inp);
+          if (list[i + 1]) list[i + 1].focus();
+          else box.querySelector("#apiSendBtn")?.focus();
+        }
+      });
+    });
+    syncUrl();
+
+    const bodyEl = $("apiBodyText");
+    if (bodyEl) bodyEl.addEventListener("input", () => {
+      apiBody = bodyEl.value;
+      const b = $("apiSendBtn");
+      if (b) b.title = apiBodyOK() ? "" : "请求体不是合法 JSON";
+    });
+    const rb = $("apiResetParams");
+    if (rb) rb.onclick = () => { renderApiDetail(); };
+    const send = $("apiSendBtn");
+    if (send) send.onclick = () => apiSend();
+    const go = $("apiGoSend");
+    if (go) go.onclick = () => {
+      const s = $("apiSendBtn");
+      if (s && !s.disabled) s.click();
+      else toast("该接口暂不能试调用，原因见下方说明", "err");
+    };
+    const curl = $("apiCurl");
+    if (curl) curl.onclick = () => copyText(apiCurlOf(op));
+    bindApiErr();
+    renderApiResponse();
+  }
+
+  function apiBodyOK() {
+    const t = (apiBody || "").trim();
+    if (!t) return true;
+    try { JSON.parse(t); return true; } catch (_) { return false; }
+  }
+
+  function apiCurlOf(op) {
+    const url = apiPlainUrl(op);
+    const lines = [`curl -X ${op.method} '${url}'`];
+    if (apiAuthOf(op.path).tier !== "public") lines.push(`  -H 'Authorization: Bearer $KB_JWT'`);
+    const body = (apiBody || "").trim();
+    if (body) {
+      lines.push(`  -H 'Content-Type: application/json'`);
+      lines.push(`  -d '${body.replace(/\s*\n\s*/g, "")}'`);
+    }
+    return lines.join(" \\\n");
+  }
+
+  function apiConfirmBody(op, url) {
+    const risk = apiRisk(op);
+    const body = (apiBody || "").trim();
+    const parts = [];
+    parts.push(`<p>将要发出的请求（线路层确认，不是业务确认）：</p>`);
+    parts.push(`<div class="cf-band api-cf-url">${esc(op.method)} ${esc(url)}</div>`);
+    if (body) parts.push(`<div class="cf-band api-cf-body">${esc(body.slice(0, 400))}${body.length > 400 ? "…" : ""}</div>`);
+    if (op.path.endsWith("/approve")) {
+      parts.push(`<p>批准后该文档立即<b>增量入库</b>，所有有权限的人都能检索到；此状态不可退回。</p>`);
+      parts.push(`<p class="cf-warn">面板内看不到文件内容，请先在知识库详情页核对这份文件。</p>`);
+    } else if (op.method === "DELETE" && op.path.startsWith("/admin/documents/")) {
+      parts.push(`<p>删除后会立即触发索引重建，问答不再引用这份文档；内置语料不可删除。</p>`);
+      parts.push(`<p class="cf-warn">此操作不可撤销，需要重新上传。</p>`);
+    } else if (risk >= 4) {
+      parts.push(`<p class="cf-warn">此操作不可撤销，界面内无法恢复。</p>`);
+    } else if (op.path === "/chat") {
+      parts.push(`<p>将调用一次完整 RAG 链路（路由→检索→生成），产生 LLM 费用并写入会话历史。</p>`);
+    } else if (op.path === "/admin/rebuild") {
+      parts.push(`<p>全量重建期间检索结果可能抖动，问答侧表现为「暂时答不上来」。</p>`);
+    } else if (risk === 3) {
+      parts.push(`<p>这次调用会影响一批数据或权限，请确认对象无误。</p>`);
+    } else {
+      parts.push(`<p>面板里没有列表页的上下文（只有一个参数值），所以每次非 GET 都要确认一次。</p>`);
+    }
+    return parts.join("");
+  }
+
+  async function apiSend() {
+    const op = apiOpOf(apiSel);
+    if (!op || apiBusy) return;
+    if (apiDisabled(op)) return;
+    if (!apiBodyOK()) { toast("请求体不是合法 JSON，先改好再发", "err"); return; }
+    const { url, missing } = apiUrlPreviewHTML(op);
+    if (missing) { toast(`还有 ${missing} 个路径参数未填`, "err"); return; }
+    const risk = apiRisk(op);
+
+    if (risk >= 2) {
+      const ok = await confirmDialog({
+        title: `${op.method} ${op.path}`,
+        body: apiConfirmBody(op, url),
+        danger: risk >= 3,
+        requireText: risk >= 4 ? "DELETE" : "",
+        inputLabel: risk >= 4 ? "此操作不可撤销，请输入 DELETE 以确认" : "",
+        okText: risk >= 4 ? "确认执行" : "确认发送",
+        cancelText: "取消",
+      });
+      if (!ok) return;
+    }
+
+    const btn = $("apiSendBtn");
+    if (btn) { btn.disabled = true; btn.textContent = "调用中…"; }
+    apiBusy = true;
+    apiResp = { pending: true };
+    renderApiResponse();
+
+    const ctl = new AbortController();
+    const limit = op.path.startsWith("/chat") ? 90000 : op.path === "/admin/rebuild" ? 30000 : 20000;
+    apiTmo = setTimeout(() => ctl.abort(), limit);
+    const headers = apiAuthOf(op.path).tier === "public" ? {} : authHeaders(false);
+    const body = (apiBody || "").trim();
+    if (body) headers["Content-Type"] = "application/json";
+
+    const t0 = performance.now();
     try {
-      const list = await api("/kbs");
+      let r;
+      try {
+        r = await fetch(url, { method: op.method, headers, body: body || undefined, signal: ctl.signal });
+      } catch (e) {
+        const aborted = e && e.name === "AbortError";
+        apiResp = {
+          status: 0,
+          ms: Math.round(performance.now() - t0),
+          size: 0,
+          text: aborted
+            ? `请求超时（${Math.round(limit / 1000)}s）。接口可能仍在服务端执行，写操作不要立刻重试，先去对应页面确认结果。`
+            : "请求未送达（网络错误），接口没有被调用",
+          err: true,
+        };
+        return;
+      }
+      const text = await r.text();
+      if (r.status === 401) { store.token = ""; store.user = null; showAuth(); return; }
+      apiResp = {
+        status: r.status,
+        ms: Math.round(performance.now() - t0),
+        size: new Blob([text]).size,
+        text,
+        ct: r.headers.get("content-type") || "",
+        err: !r.ok,
+      };
+    } finally {
+      clearTimeout(apiTmo);
+      apiBusy = false;
+      if (btn) { btn.disabled = false; btn.textContent = "试调用"; }
+      apiRespExpanded = false;
+      renderApiResponse();
+    }
+  }
+
+  function apiRespHTML() {
+    if (!apiResp) {
+      return `<div class="hint-bar">还没有调用记录 · 点右上「试调用」</div>`;
+    }
+    if (apiResp.pending) return `<div class="api-status">调用中…</div>`;
+    const st = apiResp.status;
+    // 设计 §4.6：非 2xx 一律红（状态行 + 块边），不整块红底；4xx 不用琥珀，否则会被读成"提示"
+    const cls = st >= 200 && st < 300 ? "ok" : "err";
+    const head = `${st || "—"} · ${apiResp.ms}ms · ${fmtSize(apiResp.size)}`;
+    const raw = String(apiResp.text || "");
+    let pretty = raw;
+    let isJSON = false;
+    try { pretty = JSON.stringify(JSON.parse(raw), null, 2); isJSON = true; } catch (_) { }
+    const lines = pretty.split("\n");
+    const folded = !apiRespExpanded && lines.length > 40;
+    const shown = folded ? lines.slice(0, 20) : lines;
+    const gutter = shown.map((_, i) => i + 1).join("\n") + (folded ? "\n…" : "");
+    const codeHTML = isJSON
+      ? shown.map((line) => {
+        const m = line.match(/^(\s*)(".*?")(\s*:\s*)([\s\S]*)$/);
+        if (!m) return esc(line);
+        const tail = m[4] === "null" ? `<span class="j-n">null</span>`
+          : m[4] === "" ? "" : esc(m[4]);
+        return `${esc(m[1])}<span class="j-k">${esc(m[2])}</span>${esc(m[3])}${tail}`;
+      }).join("\n")
+      : esc(pretty);
+    return `<div class="api-status ${cls}">${esc(head)}` +
+      `${isJSON ? "" : ` · 响应不是 JSON（content-type: ${esc(apiResp.ct || "未知")}）`}</div>` +
+      `<div class="api-json${cls === "err" ? " is-err" : ""}">` +
+      `<pre class="api-gutter" aria-hidden="true">${gutter}</pre>` +
+      `<pre class="api-pre">${codeHTML}</pre></div>` +
+      (folded ? `<button class="linklike api-more" id="apiMore">展开全部（${lines.length} 行）</button>` : "");
+  }
+
+  function renderApiResponse() {
+    const el = $("apiResp");
+    if (!el) return;
+    el.innerHTML = apiRespHTML();
+    const more = $("apiMore");
+    if (more) more.onclick = () => { apiRespExpanded = true; renderApiResponse(); };
+  }
+
+  // ---- 接口面板：工具条事件（绑定一次，内容重绘不重复绑） ----
+  let apiSearchTimer = 0;
+  $("apiSearch").oninput = () => {
+    clearTimeout(apiSearchTimer);
+    apiSearchTimer = setTimeout(() => {
+      apiFilter = $("apiSearch").value;
+      renderApiList();
+    }, 200);
+  };
+  $("apiSearch").onkeydown = (e) => {
+    if (e.key === "Escape" && $("apiSearch").value) {
+      e.stopPropagation();
+      apiFilter = ""; $("apiSearch").value = "";
+      renderApiList();
+    }
+  };
+  $("apiRefresh").onclick = () => {
+    // 不清 apiDoc：刷新失败时左列必须留着上次读到的清单，而不是变成空白/骨架
+    loadOpenApi(true);
+  };
+  $("apiPick").onchange = () => {
+    if ($("apiPick").value) selectApi($("apiPick").value);
+  };
+  function selectApi(key) {
+    if (!apiOpOf(key)) return;
+    apiSel = key;
+    history.replaceState(null, "", `#admin/api?ep=${encodeURIComponent(key)}`);
+    renderApiList();
+    renderApiDetail();
+  }
+  $("apiList").onclick = (e) => {
+    const g = e.target.closest(".api-group");
+    if (g) {
+      const id = g.dataset.g;
+      if (apiCollapsed.has(id)) apiCollapsed.delete(id); else apiCollapsed.add(id);
+      renderApiList();
+      return;
+    }
+    const r = e.target.closest(".api-row");
+    if (r) selectApi(r.dataset.k);
+  };
+
+  // ===================== 事件绑定 =====================
+  // 可见库：门户、引用卡、列表页筛选共用同一个 in-flight Promise（门户只发一次 GET /kbs）
+  let myKbsPromise = null;
+  function loadMyKbs(force) {
+    if (myKbsPromise && !force) return myKbsPromise;
+    myKbsPromise = api("/kbs").then((list) => {
       myKbs = Array.isArray(list) ? list : [];
-    } catch (_) { /* 预取失败不打扰用户，列表页会自己报错 */ }
+      return myKbs;
+    }).catch((e) => {
+      myKbsPromise = null;   // 失败不缓存，下次进页面/点重试可以再来一次
+      throw e;
+    });
+    return myKbsPromise;
   }
 
   // ---- 列表页工具条 ----
