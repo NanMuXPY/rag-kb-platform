@@ -762,3 +762,200 @@ body {
   background: var(--teal-bg); color: var(--teal); font-size: 11px; margin-right: 6px;
 }
 .xsrc { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+
+/* ═══════════ v2.7 一级视图重构 ═══════════ */
+.view[hidden] { display: none !important; }
+
+#viewChat {
+  flex: 1; display: flex; flex-direction: column;
+  min-height: 0; min-width: 0;
+}
+
+/* 非问答视图：整页滚动 + 版心 */
+.view-pad {
+  flex: 1; overflow-y: auto; min-height: 0;
+  padding: 22px 28px 40px;
+}
+.kb-layout, #viewAdmin > div { max-width: 880px; margin: 0 auto; }
+
+/* 顶部导航 */
+.view-nav {
+  display: flex; gap: 4px;
+  margin-left: 18px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 3px;
+}
+.vnav {
+  border: 0; background: none;
+  font: inherit; font-size: 14px; font-weight: 500;
+  color: var(--muted);
+  padding: 5px 16px; border-radius: 7px;
+  cursor: pointer;
+  transition: background .18s var(--ease), color .18s var(--ease);
+}
+.vnav:hover { color: var(--ink); }
+.vnav.active {
+  background: var(--surface);
+  color: var(--blue); font-weight: 600;
+  box-shadow: 0 1px 3px rgba(30, 78, 140, .14);
+}
+
+/* 控制台页签（原抽屉页签提为一级） */
+.admin-tabs {
+  border-bottom: 2px solid var(--line);
+  margin-bottom: 18px;
+}
+
+/* ═══ 引用档案卡 ═══ */
+.cites { margin-top: 14px; }
+.cites-title {
+  font-size: 12px; letter-spacing: .08em;
+  color: var(--muted);
+  margin-bottom: 7px;
+  display: flex; align-items: center; gap: 8px;
+}
+.cites-title::before {
+  content: ""; width: 14px; height: 2px;
+  background: var(--red); flex: none;
+}
+.cite-cards { display: flex; flex-direction: column; gap: 6px; }
+.cite-card {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; text-align: left;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--red);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 8px 12px;
+  font: inherit; cursor: pointer;
+  transition: background .18s var(--ease), border-color .18s var(--ease),
+    transform .18s var(--ease), box-shadow .18s var(--ease);
+}
+.cite-card:hover {
+  background: var(--red-bg);
+  border-left-color: var(--red);
+  transform: translateX(2px);
+  box-shadow: 0 2px 6px rgba(181, 64, 42, .12);
+}
+.cite-no {
+  font-family: var(--serif);
+  color: var(--red); font-weight: 700; font-size: 13px;
+  flex: none;
+}
+.cite-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.cite-name {
+  font-weight: 600; font-size: 13.5px; color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cite-sub {
+  font-size: 12px; color: var(--muted);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cite-open { flex: none; font-size: 12px; color: var(--blue); }
+.cite-card:hover .cite-open { text-decoration: underline; }
+
+/* ═══ 文档预览弹窗 ═══ */
+.doc-dialog {
+  border: 1px solid var(--line-strong);
+  border-radius: 14px;
+  padding: 0;
+  width: min(680px, 92vw); max-height: 80vh;
+  box-shadow: 0 18px 50px rgba(40, 30, 20, .25);
+  background: var(--surface);
+}
+.doc-dialog::backdrop { background: rgba(40, 30, 20, .38); }
+.doc-dialog-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+}
+.doc-dialog-head h3 {
+  flex: 1; min-width: 0;
+  font-family: var(--serif); font-size: 16px; font-weight: 700;
+  margin: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.doc-dialog-body {
+  padding: 16px 18px 20px;
+  overflow-y: auto; max-height: calc(80vh - 60px);
+}
+.dd-kb { font-size: 13px; color: var(--muted); margin: 0 0 10px; }
+.dd-quote {
+  margin: 0 0 10px;
+  border-left: 3px solid var(--red);
+  background: var(--paper);
+  padding: 12px 14px;
+  font-size: 14px; line-height: 1.75; color: var(--ink);
+  white-space: pre-wrap; word-break: break-word;
+}
+.dd-path { font-size: 12px; color: var(--muted); word-break: break-all; margin: 0; }
+.doc-preview { font-size: 14.5px; }
+
+/* ═══ Markdown 正文排版 ═══ */
+.answer-text.md { line-height: 1.75; }
+.md > :first-child { margin-top: 0; }
+.md > :last-child { margin-bottom: 0; }
+.md h1, .md h2, .md h3, .md h4 {
+  font-family: var(--serif);
+  color: var(--ink);
+  margin: 1.1em 0 .45em; line-height: 1.4;
+}
+.md h1 { font-size: 1.35em; }
+.md h2 { font-size: 1.22em; }
+.md h3 { font-size: 1.1em; }
+.md h4 { font-size: 1em; }
+.md p { margin: .5em 0; }
+.md ul, .md ol { margin: .5em 0; padding-left: 1.5em; }
+.md li { margin: .25em 0; }
+.md li::marker { color: var(--red); }
+.md strong { color: var(--ink); font-weight: 700; }
+.md a { color: var(--blue); text-decoration: underline; text-underline-offset: 2px; }
+.md code {
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: .88em;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: .1em .4em;
+  color: var(--red);
+}
+.md pre {
+  background: #2B2B26;
+  color: #F3F0E8;
+  border-radius: 10px;
+  padding: 12px 14px;
+  overflow-x: auto;
+  margin: .7em 0;
+  font-size: 13px; line-height: 1.6;
+}
+.md pre code {
+  background: none; border: 0; padding: 0; color: inherit; font-size: inherit;
+}
+.md blockquote {
+  margin: .6em 0; padding: .2em 0 .2em 12px;
+  border-left: 3px solid var(--red);
+  color: var(--muted);
+}
+.md table {
+  border-collapse: collapse; margin: .7em 0;
+  font-size: 13.5px; width: 100%;
+}
+.md th, .md td {
+  border: 1px solid var(--line-strong);
+  padding: 6px 10px; text-align: left;
+}
+.md th { background: var(--paper); font-weight: 600; }
+.md tr:nth-child(even) td { background: var(--paper); }
+.md hr { border: 0; border-top: 1px dashed var(--line-strong); margin: 1em 0; }
+
+/* ═══ 视图重构的响应式 ═══ */
+@media (max-width: 720px) {
+  .view-pad { padding: 14px 14px 32px; }
+  .view-nav { margin-left: 8px; }
+  .vnav { padding: 5px 10px; font-size: 13px; }
+  .scope-note { display: none; }
+  .cite-card { padding: 7px 10px; }
+  .cite-open { display: none; }
+}

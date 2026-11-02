@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>技术支持知识库 · 企业内部版</title>
 <link rel="stylesheet" href="app.css">
 </head>
@@ -74,164 +74,173 @@
         <span class="who-dot" id="whoRole"></span>
         <span class="who-name" id="whoName">—</span>
       </div>
-      <button class="linklike" id="btnFiles">文件中心</button>
-      <button class="linklike" id="btnAdmin" hidden>管理面板</button>
       <button class="linklike" id="btnLogout">退出登录</button>
     </div>
   </aside>
 
-  <!-- 主区 -->
+  <!-- 主区：三个一级视图，由顶部导航切换 -->
   <main class="main">
     <header class="topbar">
+      <button class="rail-toggle" id="railToggle" aria-label="会话列表">☰</button>
       <h1 class="page-title">腾讯云产品技术支持</h1>
-      <span class="scope-note">覆盖 企业微信 · 腾讯会议 · 云服务器 · 对象存储 · 微信小程序</span>
+      <nav class="view-nav" id="viewNav" aria-label="视图切换">
+        <button class="vnav active" data-view="chat">问答</button>
+        <button class="vnav" data-view="kb">知识库</button>
+        <button class="vnav" data-view="admin" id="navAdmin" hidden>控制台</button>
+      </nav>
+      <span class="scope-note">企业微信 · 腾讯会议 · 云服务器 · 对象存储 · 小程序</span>
     </header>
 
-    <section class="thread" id="thread">
-      <div class="empty" id="empty">
-        <p class="empty-lead">回答都会标注来源文档，无法确定时会明确告知。</p>
-        <p class="empty-hint">试试这些真实问题：</p>
-        <div class="samples" id="samples">
-          <button class="sample" data-q="腾讯云对象存储怎么创建存储桶？">对象存储怎么创建存储桶？</button>
-          <button class="sample" data-q="企业微信如何获取 access_token？">企业微信如何获取 access_token？</button>
-          <button class="sample" data-q="腾讯会议怎么预定会议？">腾讯会议怎么预定会议？</button>
-          <button class="sample" data-q="微信小程序服务器域名怎么配置？">小程序服务器域名怎么配置？</button>
-          <button class="sample" data-q="腾讯云服务器如何重置密码？">云服务器如何重置密码？</button>
+    <!-- ═══ 视图一：问答 ═══ -->
+    <section class="view" id="viewChat">
+      <div class="thread" id="thread">
+        <div class="empty" id="empty">
+          <p class="empty-lead">回答都会标注来源文档，无法确定时会明确告知。</p>
+          <p class="empty-hint">试试这些真实问题：</p>
+          <div class="samples" id="samples">
+            <button class="sample" data-q="腾讯云对象存储怎么创建存储桶？">对象存储怎么创建存储桶？</button>
+            <button class="sample" data-q="企业微信如何获取 access_token？">企业微信如何获取 access_token？</button>
+            <button class="sample" data-q="腾讯会议怎么预定会议？">腾讯会议怎么预定会议？</button>
+            <button class="sample" data-q="微信小程序服务器域名怎么配置？">小程序服务器域名怎么配置？</button>
+            <button class="sample" data-q="腾讯云服务器如何重置密码？">云服务器如何重置密码？</button>
+          </div>
         </div>
+        <div class="messages" id="messages"></div>
       </div>
-      <div class="messages" id="messages"></div>
+      <footer class="composer-wrap">
+        <form class="composer" id="composer">
+          <textarea id="input" rows="1" placeholder="输入问题，Enter 发送"
+            autocomplete="off"></textarea>
+          <button type="submit" class="btn-send" id="btnSend" disabled>发送</button>
+        </form>
+        <p class="composer-note">回答仅基于知识库文档，无法确定时会明确告知并建议转人工。</p>
+      </footer>
     </section>
 
-    <footer class="composer-wrap">
-      <form class="composer" id="composer">
-        <textarea id="input" rows="1" placeholder="输入问题，Enter 发送"
-          autocomplete="off"></textarea>
-        <button type="submit" class="btn-send" id="btnSend" disabled>发送</button>
-      </form>
-      <p class="composer-note">回答仅基于知识库文档，无法确定时会明确告知并建议转人工。</p>
-    </footer>
+    <!-- ═══ 视图二：知识库（全员，原「文件中心」） ═══ -->
+    <section class="view view-pad" id="viewKb" hidden>
+      <div class="kb-layout">
+        <section class="admin-sec">
+          <h3>我的知识库</h3>
+          <div class="kb-chips" id="kbChips">加载中…</div>
+          <div id="kbCreateWrap" hidden>
+            <div class="kb-create">
+              <input id="kbName" placeholder="新知识库名称" maxlength="50">
+              <button class="btn-ghost" id="btnCreateKb">创建</button>
+            </div>
+            <p class="admin-hint">创建者自动成为该库管理员（kb_admin），可授权成员与审批文件。新建库默认隔离，仅成员可见。</p>
+          </div>
+          <div id="crossSearchWrap" hidden>
+            <div class="kb-create">
+              <input id="crossQ" placeholder="跨库搜索全部知识库内容…">
+              <button class="btn-ghost" id="btnCrossSearch">搜索</button>
+            </div>
+            <div id="crossResults"></div>
+          </div>
+        </section>
+        <section class="admin-sec" id="fileSec">
+          <h3 id="fileSecTitle">文件</h3>
+          <p class="admin-hint" id="fileSecHint"></p>
+          <div class="dropzone" id="fileDropzone" tabindex="0" hidden>
+            <input type="file" id="kbFileInput" accept=".md,.txt,.pdf,.docx,.xlsx,.pptx" hidden>
+            <span>上传到当前知识库：拖到此处，或 <em>点击选择</em>（≤20MB）</span>
+          </div>
+          <div class="upload-result" id="kbUploadResult"></div>
+          <div id="fileList" class="file-list"></div>
+        </section>
+        <section class="admin-sec" id="memberSec" hidden>
+          <h3>成员与权限</h3>
+          <div class="kb-create">
+            <input id="memberUser" placeholder="用户名" maxlength="32" style="flex:0 0 110px">
+            <select id="memberRole" class="role-select">
+              <option value="viewer">只读 viewer</option>
+              <option value="editor">可上传 editor</option>
+              <option value="kb_admin">库管理员 kb_admin</option>
+            </select>
+            <button class="btn-ghost" id="btnAddMember">授权</button>
+          </div>
+          <div id="memberList" class="user-list"></div>
+        </section>
+      </div>
+    </section>
+
+    <!-- ═══ 视图三：控制台（仅管理员，原「管理面板」抽屉） ═══ -->
+    <section class="view view-pad" id="viewAdmin" hidden>
+      <div class="drawer-tabs admin-tabs" role="tablist">
+        <button class="drawer-tab active" id="tabKb" role="tab">语料索引</button>
+        <button class="drawer-tab" id="tabUsers" role="tab">用户管理 <span class="tab-badge" id="pendingBadge" hidden></span></button>
+        <button class="drawer-tab" id="tabAudit" role="tab">审计日志</button>
+      </div>
+
+      <!-- 知识库页 -->
+      <div id="paneKb">
+        <section class="admin-sec">
+          <h3>索引状态</h3>
+          <div class="index-state" id="indexState">加载中…</div>
+          <button class="btn-ghost" id="btnRebuild">重建索引</button>
+        </section>
+        <section class="admin-sec">
+          <h3>上传文档（默认库）</h3>
+          <p class="admin-hint">支持 .md / .txt / .pdf / .docx / .xlsx / .pptx，20MB 以内。上传后自动重建索引，期间问答不中断。</p>
+          <div class="dropzone" id="dropzone" tabindex="0">
+            <input type="file" id="fileInput" accept=".md,.txt,.pdf,.docx,.xlsx,.pptx" hidden>
+            <span>拖到此处，或 <em>点击选择文件</em></span>
+          </div>
+          <div class="upload-result" id="uploadResult"></div>
+        </section>
+        <section class="admin-sec">
+          <h3>文档清单</h3>
+          <div id="docList" class="doc-list">加载中…</div>
+        </section>
+      </div>
+
+      <!-- 用户页 -->
+      <div id="paneUsers" hidden>
+        <section class="admin-sec">
+          <h3>注册审批与账号管理</h3>
+          <p class="admin-hint">新注册账号为「待审批」，批准后才能登录；停用后立即失效（JWT 服务端校验）。</p>
+          <div class="user-filter" id="userFilter">
+            <button class="ufilter active" data-f="all">全部</button>
+            <button class="ufilter" data-f="pending">待审批</button>
+            <button class="ufilter" data-f="active">已激活</button>
+            <button class="ufilter" data-f="disabled">已停用</button>
+          </div>
+          <div id="userList" class="user-list">加载中…</div>
+        </section>
+      </div>
+
+      <!-- 审计日志页 -->
+      <div id="paneAudit" hidden>
+        <section class="admin-sec">
+          <h3>操作审计流水</h3>
+          <p class="admin-hint">记录谁在何时对哪个知识库的哪个文件做了什么：上传/审批/删除/下载/授权/登录。</p>
+          <div class="user-filter" id="auditFilter">
+            <button class="ufilter active" data-f="">全部</button>
+            <button class="ufilter" data-f="file.upload">上传</button>
+            <button class="ufilter" data-f="file.approve">审批</button>
+            <button class="ufilter" data-f="file.download">下载</button>
+            <button class="ufilter" data-f="member.set">授权</button>
+            <button class="ufilter" data-f="auth.">登录</button>
+          </div>
+          <div id="auditList" class="audit-list">加载中…</div>
+        </section>
+      </div>
+    </section>
   </main>
 </div>
 
-<!-- 管理抽屉 -->
-<div class="drawer-mask" id="drawerMask" hidden></div>
-<aside class="drawer" id="adminDrawer" hidden aria-label="管理面板">
-  <header class="drawer-head">
-    <div class="drawer-tabs" role="tablist">
-      <button class="drawer-tab active" id="tabKb" role="tab">语料索引</button>
-      <button class="drawer-tab" id="tabUsers" role="tab">用户管理 <span class="tab-badge" id="pendingBadge" hidden></span></button>
-      <button class="drawer-tab" id="tabAudit" role="tab">审计日志</button>
-    </div>
-    <button class="icon-btn" id="btnCloseAdmin" aria-label="关闭">✕</button>
+<!-- 引用片段 / 文档预览 弹窗 -->
+<dialog class="doc-dialog" id="docDialog">
+  <header class="doc-dialog-head">
+    <span class="cite-no" id="ddKind">来源</span>
+    <h3 id="ddTitle">文档</h3>
+    <button class="icon-btn" id="ddClose" aria-label="关闭">✕</button>
   </header>
+  <div class="doc-dialog-body" id="ddBody"></div>
+</dialog>
 
-  <!-- 知识库页 -->
-  <div class="drawer-body" id="paneKb">
-    <section class="admin-sec">
-      <h3>索引状态</h3>
-      <div class="index-state" id="indexState">加载中…</div>
-      <button class="btn-ghost" id="btnRebuild">重建索引</button>
-    </section>
-    <section class="admin-sec">
-      <h3>上传文档</h3>
-      <p class="admin-hint">支持 .md / .txt / .pdf / .docx / .xlsx / .pptx，20MB 以内。上传后自动重建索引，期间问答不中断。</p>
-      <div class="dropzone" id="dropzone" tabindex="0">
-        <input type="file" id="fileInput" accept=".md,.txt,.pdf,.docx,.xlsx,.pptx" hidden>
-        <span>拖到此处，或 <em>点击选择文件</em></span>
-      </div>
-      <div class="upload-result" id="uploadResult"></div>
-    </section>
-    <section class="admin-sec">
-      <h3>文档清单</h3>
-      <div id="docList" class="doc-list">加载中…</div>
-    </section>
-  </div>
-
-  <!-- 用户页 -->
-  <div class="drawer-body" id="paneUsers" hidden>
-    <section class="admin-sec">
-      <h3>注册审批与账号管理</h3>
-      <p class="admin-hint">新注册账号为「待审批」，批准后才能登录；停用后立即失效（JWT 服务端校验）。</p>
-      <div class="user-filter" id="userFilter">
-        <button class="ufilter active" data-f="all">全部</button>
-        <button class="ufilter" data-f="pending">待审批</button>
-        <button class="ufilter" data-f="active">已激活</button>
-        <button class="ufilter" data-f="disabled">已停用</button>
-      </div>
-      <div id="userList" class="user-list">加载中…</div>
-    </section>
-  </div>
-
-  <!-- 审计日志页 -->
-  <div class="drawer-body" id="paneAudit" hidden>
-    <section class="admin-sec">
-      <h3>操作审计流水</h3>
-      <p class="admin-hint">记录谁在何时对哪个知识库的哪个文件做了什么：上传/审批/删除/下载/授权/登录。</p>
-      <div class="user-filter" id="auditFilter">
-        <button class="ufilter active" data-f="">全部</button>
-        <button class="ufilter" data-f="file.upload">上传</button>
-        <button class="ufilter" data-f="file.approve">审批</button>
-        <button class="ufilter" data-f="file.download">下载</button>
-        <button class="ufilter" data-f="member.set">授权</button>
-        <button class="ufilter" data-f="auth.">登录</button>
-      </div>
-      <div id="auditList" class="audit-list">加载中…</div>
-    </section>
-  </div>
-</aside>
-
-<!-- 文件中心抽屉（全员可用） -->
-<div class="drawer-mask" id="filesMask" hidden></div>
-<aside class="drawer" id="filesDrawer" hidden aria-label="文件中心">
-  <header class="drawer-head">
-    <h2 style="font-size:16px">文件中心</h2>
-    <button class="icon-btn" id="btnCloseFiles" aria-label="关闭">✕</button>
-  </header>
-  <div class="drawer-body">
-    <section class="admin-sec">
-      <h3>知识库</h3>
-      <div class="kb-chips" id="kbChips">加载中…</div>
-      <div id="kbCreateWrap" hidden>
-        <div class="kb-create">
-          <input id="kbName" placeholder="新知识库名称" maxlength="50">
-          <button class="btn-ghost" id="btnCreateKb">创建</button>
-        </div>
-        <p class="admin-hint">创建者自动成为该库管理员（kb_admin），可授权成员与审批文件。新建库默认隔离，仅成员可见。</p>
-      </div>
-      <div id="crossSearchWrap" hidden>
-        <div class="kb-create">
-          <input id="crossQ" placeholder="跨库搜索全部知识库内容…">
-          <button class="btn-ghost" id="btnCrossSearch">搜索</button>
-        </div>
-        <div id="crossResults"></div>
-      </div>
-    </section>
-    <section class="admin-sec" id="fileSec">
-      <h3 id="fileSecTitle">文件</h3>
-      <p class="admin-hint" id="fileSecHint"></p>
-      <div class="dropzone" id="fileDropzone" tabindex="0" hidden>
-        <input type="file" id="kbFileInput" accept=".md,.txt,.pdf,.docx,.xlsx,.pptx" hidden>
-        <span>上传到当前知识库：拖到此处，或 <em>点击选择</em>（≤20MB）</span>
-      </div>
-      <div class="upload-result" id="kbUploadResult"></div>
-      <div id="fileList" class="file-list"></div>
-    </section>
-    <section class="admin-sec" id="memberSec" hidden>
-      <h3>成员与权限</h3>
-      <div class="kb-create">
-        <input id="memberUser" placeholder="用户名" maxlength="32" style="flex:0 0 110px">
-        <select id="memberRole" class="role-select">
-          <option value="viewer">只读 viewer</option>
-          <option value="editor">可上传 editor</option>
-          <option value="kb_admin">库管理员 kb_admin</option>
-        </select>
-        <button class="btn-ghost" id="btnAddMember">授权</button>
-      </div>
-      <div id="memberList" class="user-list"></div>
-    </section>
-  </div>
-</aside>
-
+<script src="vendor/marked.min.js"></script>
+<script src="vendor/purify.min.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

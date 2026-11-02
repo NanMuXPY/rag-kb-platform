@@ -57,9 +57,33 @@
     const roleEl = $("whoRole");
     roleEl.className = "who-dot" + (isAdmin ? " admin" : "");
     roleEl.title = isAdmin ? (me.role === "superadmin" ? "超级管理员" : "管理员") : "员工";
-    $("btnAdmin").hidden = !isAdmin;
+    $("navAdmin").hidden = !isAdmin;
+    if (!isAdmin && activeView === "admin") switchView("chat");
     if (!sessions.length) newSession();
+    loadMyKbs().catch(() => {});   // 预取可见库，引用卡能直接显示库名
   }
+
+  // ---- 一级视图切换：问答 / 知识库 / 控制台 ----
+  let activeView = "chat";
+
+  function switchView(name) {
+    if (name === "admin" && !(me.role === "admin" || me.role === "superadmin")) return;
+    activeView = name;
+    for (const v of ["chat", "kb", "admin"]) {
+      $(`view${v[0].toUpperCase()}${v.slice(1)}`).hidden = v !== name;
+    }
+    document.querySelectorAll(".vnav").forEach((b) =>
+      b.classList.toggle("active", b.dataset.view === name));
+    $("rail").classList.remove("open");   // 移动端：切换视图收起会话栏
+    if (name === "kb") openFiles().catch(() => {});
+    if (name === "admin") {
+      Promise.all([refreshAdmin(), refreshUsers()]).catch(() => {});
+    }
+  }
+
+  document.querySelectorAll(".vnav").forEach((b) => {
+    b.onclick = () => switchView(b.dataset.view);
+  });
 
   async function boot() {
     await detectBase();
@@ -138,6 +162,7 @@
 
   $("btnLogout").onclick = () => {
     store.token = ""; store.user = null;
+    activeView = "chat";
     showAuth();
   };
 
@@ -204,16 +229,73 @@
       `<div class="trace-steps">${steps}</div></div>`;
   }
 
+  function kbLabel(kbId) {
+    if (!kbId || kbId === "default") return "默认库";
+    const kb = myKbs.find((k) => String(k.id) === String(kbId));
+    return kb ? kb.name : `知识库 #${kbId}`;
+  }
+  // 引用展示名：去掉入库时加的 8 位哈希前缀
+  function docDisplay(name) {
+    return String(name || "").replace(/^[0-9a-f]{8}_/, "");
+  }
+
   function citesHTML(sources) {
     if (!sources || !sources.length) return "";
-    const chips = sources.map((s) =>
-      `<span class="cite" title="${esc(s.path || s.source)}">${esc(s.source)}</span>`).join("");
-    return `<div class="cites">${chips}</div>`;
+    const cards = sources.map((s, i) =>
+      `<button class="cite-card" data-i="${i}" title="点击查看原文片段">` +
+      `<span class="cite-no">[${i + 1}]</span>` +
+      `<span class="cite-main"><span class="cite-name">${esc(docDisplay(s.source))}</span>` +
+      `<span class="cite-sub">${esc(kbLabel(s.kb_id))} · ${esc((s.preview || "").slice(0, 42))}…</span></span>` +
+      `<span class="cite-open">查看片段 ›</span></button>`).join("");
+    return `<div class="cites"><div class="cites-title">来源依据（${sources.length} 条，点击查看片段）</div>` +
+      `<div class="cite-cards">${cards}</div></div>`;
+  }
+
+  // ---- 引用/预览弹窗 ----
+  const dd = $("docDialog");
+  function openDocDialog({ kind, title, bodyHTML }) {
+    $("ddKind").textContent = kind || "来源";
+    $("ddTitle").textContent = title || "";
+    $("ddBody").innerHTML = bodyHTML;
+    if (typeof dd.showModal === "function") dd.showModal();
+    else window.alert(`${title}\n\n${$("ddBody").textContent}`);
+  }
+  $("ddClose").onclick = () => dd.close();
+  dd.addEventListener("click", (e) => { if (e.target === dd) dd.close(); });
+
+  function bindCiteCards(rootEl, sources) {
+    rootEl.querySelectorAll(".cite-card").forEach((c) => {
+      c.onclick = () => {
+        const s = sources[+c.dataset.i];
+        if (!s) return;
+        openDocDialog({
+          kind: `依据 [${+c.dataset.i + 1}]`,
+          title: docDisplay(s.source),
+          bodyHTML: `<p class="dd-kb">所属：${esc(kbLabel(s.kb_id))}</p>` +
+            `<blockquote class="dd-quote">${esc(s.preview || "（无片段预览）")}</blockquote>` +
+            `<p class="dd-path">文件路径：${esc(s.path || "-")}</p>`,
+        });
+      };
+    });
   }
 
   function esc(s) {
     return String(s).replace(/[&<>"']/g, (c) =>
       ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  // ---- Markdown 渲染（本地 marked + DOMPurify，缺失时降级纯文本） ----
+  let _mdReady = false;
+  if (window.marked) {
+    try { marked.setOptions({ gfm: true, breaks: true }); _mdReady = true; } catch (_) {}
+  }
+  function mdRender(text) {
+    if (_mdReady && window.DOMPurify) {
+      try {
+        return DOMPurify.sanitize(marked.parse(String(text ?? "")));
+      } catch (_) { /* fallthrough */ }
+    }
+    return `<p>${esc(text).replace(/\n/g, "<br>")}</p>`;
   }
 
   function renderMessages() {
@@ -231,8 +313,9 @@
         div.className = "msg msg-bot" + (m.refused ? " refused" : "");
         const badge = m.refused ? `<span class="refuse-badge">知识库无依据 · 已拒答</span>` : "";
         div.innerHTML = `<div class="bubble">${badge}` +
-          `<div class="answer-text">${esc(m.content)}</div>` +
+          `<div class="answer-text md">${mdRender(m.content)}</div>` +
           `${citesHTML(m.sources)}${traceHTML(m.trace)}</div>`;
+        bindCiteCards(div, m.sources || []);
       }
       messages.appendChild(div);
     }
@@ -280,7 +363,7 @@
     const ensureLive = () => {
       if (live) return live;
       pdiv.className = "msg msg-bot";
-      pdiv.innerHTML = `<div class="bubble"><div class="answer-text"></div></div>`;
+      pdiv.innerHTML = `<div class="bubble"><div class="answer-text md"></div></div>`;
       live = pdiv.querySelector(".answer-text");
       return live;
     };
@@ -317,7 +400,7 @@
             if (stageEl) stageEl.textContent = STAGE_LABEL[ev.node] || "处理中…";
           } else if (ev.type === "token") {
             streamed += ev.text;
-            ensureLive().textContent = streamed;
+            ensureLive().innerHTML = mdRender(streamed);
             thread.scrollTop = thread.scrollHeight;
           } else if (ev.type === "reset") {
             // 质检没过、要重新生成：清空并明确告知，否则用户会以为卡住了
@@ -361,18 +444,8 @@
     }
   }
 
-  // ---- 管理抽屉 ----
+  // ---- 控制台（一级视图） ----
   let userFilter = "all";
-
-  async function openAdmin() {
-    $("drawerMask").hidden = false;
-    $("adminDrawer").hidden = false;
-    await Promise.all([refreshAdmin(), refreshUsers()]);
-  }
-  function closeAdmin() {
-    $("drawerMask").hidden = true;
-    $("adminDrawer").hidden = true;
-  }
 
   $("tabKb").onclick = () => switchDrawerTab(true);
   $("tabUsers").onclick = () => switchDrawerTab(false);
@@ -605,9 +678,6 @@
     if (b) send(b.dataset.q);
   });
   $("btnNew").onclick = () => { newSession(); $("rail").classList.remove("open"); };
-  $("btnAdmin").onclick = openAdmin;
-  $("btnCloseAdmin").onclick = closeAdmin;
-  $("drawerMask").onclick = closeAdmin;
   $("btnRebuild").onclick = rebuild;
 
   const dz = $("dropzone"), fi = $("fileInput");
@@ -620,32 +690,24 @@
     if (e.dataTransfer.files[0]) uploadFile(e.dataTransfer.files[0]);
   });
 
-  // 移动端会话栏开关
-  const toggle = document.createElement("button");
-  toggle.className = "rail-toggle";
-  toggle.textContent = "☰";
-  toggle.setAttribute("aria-label", "会话列表");
-  document.querySelector(".topbar").prepend(toggle);
-  toggle.onclick = () => $("rail").classList.toggle("open");
+  // 移动端会话栏开关（按钮在 index.html 顶栏内）
+  $("railToggle").onclick = (e) => {
+    e.stopPropagation();
+    $("rail").classList.toggle("open");
+  };
   document.addEventListener("click", (e) => {
-    if (!$("rail").contains(e.target) && !toggle.contains(e.target)) {
+    if (!$("rail").contains(e.target) && !$("railToggle").contains(e.target)) {
       $("rail").classList.remove("open");
     }
   });
 
-  // ---- 文件中心（全员） ----
+  // ---- 知识库（一级视图） ----
   let myKbs = [], currentKb = null, currentKbRole = null;
 
-  async function openFiles() {
-    $("filesMask").hidden = false;
-    $("filesDrawer").hidden = false;
+  function openFiles() {
     $("kbCreateWrap").hidden = !(me.role === "superadmin");
     $("crossSearchWrap").hidden = !(me.role === "superadmin");
-    await loadMyKbs();
-  }
-  function closeFiles() {
-    $("filesMask").hidden = true;
-    $("filesDrawer").hidden = true;
+    return loadMyKbs();
   }
 
   async function loadMyKbs() {
@@ -700,6 +762,10 @@
         const row = document.createElement("div");
         row.className = "file-row" + (f.status === "pending" ? " pending" : "");
         const acts = [];
+        const previewable = /\.(md|txt)$/i.test(f.name);
+        if (f.status === "approved" && previewable) {
+          acts.push(`<button class="uact" data-a="pv" data-id="${f.id}">预览</button>`);
+        }
         if (f.status === "approved" || currentKbRole === "kb_admin" || currentKbRole === "super" || f.uploader === me.username) {
           acts.push(`<button class="uact" data-a="dl" data-id="${f.id}">下载</button>`);
         }
@@ -728,6 +794,7 @@
 
   async function fileAction(action, fid) {
     if (action === "dl") return downloadFile(fid);
+    if (action === "pv") return previewFile(fid);
     const label = { ok: "批准入库", no: "拒绝", del: "删除（移入回收站，可恢复）" }[action];
     if (!confirm(`确认${label}？`)) return;
     const url = action === "del" ? `/files/${fid}`
@@ -757,6 +824,25 @@
       a.click();
       URL.revokeObjectURL(a.href);
     } catch (err) { alert(`下载失败：${err.message}`); }
+  }
+
+  // 预览 .md/.txt 原文（Markdown 渲染后弹窗展示）
+  async function previewFile(fid) {
+    try {
+      const r = await fetch(`${API_BASE}/kbs/${currentKb}/files/${fid}/download`, {
+        headers: authHeaders(false),
+      });
+      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);
+      const dispo = r.headers.get("Content-Disposition") || "";
+      const m = dispo.match(/filename\*=UTF-8''([^;]+)/);
+      const name = m ? decodeURIComponent(m[1]) : `file_${fid}`;
+      const text = await r.text();
+      openDocDialog({
+        kind: "原文预览",
+        title: name,
+        bodyHTML: `<div class="md doc-preview">${mdRender(text.slice(0, 50000))}</div>`,
+      });
+    } catch (err) { alert(`预览失败：${err.message}`); }
   }
 
   async function uploadKbFile(file) {
@@ -814,9 +900,6 @@
     }
   }
 
-  $("btnFiles").onclick = openFiles;
-  $("btnCloseFiles").onclick = closeFiles;
-  $("filesMask").onclick = closeFiles;
   $("btnCreateKb").onclick = async () => {
     const name = $("kbName").value.trim();
     if (!name) return;
