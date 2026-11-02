@@ -432,10 +432,14 @@ def kb_files(kb_id: int, user: dict = Depends(get_current_user)):
     role = workspace.kb_role(user, kb_id)
     if not role:
         raise HTTPException(status_code=403, detail="无权访问该知识库")
-    include_pending = role in {"kb_admin", "super"}
-    files = workspace.list_files(kb_id, include_pending)
-    if role == "viewer":
-        files = [f for f in files if f["status"] == "approved"]
+    # 可见性规则（与 kb_download 的放行规则一一对应）：
+    #   库管理员/super —— 全部，含别人的待审批（否则没法审批）
+    #   其他人        —— 已入库的 + 自己上传的（含自己那份待审批/已驳回）
+    # 只给 approved 会让「编辑传完文件，列表里查无此件」，与「上传者可下载自己未入库文件」互相矛盾。
+    files = workspace.list_files(kb_id, include_pending=True)
+    if role not in {"kb_admin", "super"}:
+        me = user["username"]
+        files = [f for f in files if f["status"] == "approved" or f["uploader"] == me]
     return {"my_role": role, "files": files}
 
 

@@ -1868,12 +1868,15 @@
     const out = [];
     const b = (act, label, cls, title) =>
       `<button class="rop${cls ? ` ${cls}` : ""}" data-fa="${act}" data-id="${f.id}"` +
+      ` aria-label="${esc(label + " " + f.name)}"` +
       `${title ? ` title="${esc(title)}"` : ""}>${label}</button>`;
     if (pending && approve) out.push(b("rv", "审批"));
-    if (!pending && md) out.push(b("pv", "预览"));
-    if (!pending || approve || mine) {
-      out.push(b("dl", "下载", "", md ? "" : "该类型无法在线预览，下载后查看"));
-    }
+    // 预览与下载走同一个后端口子（previewFile 就是去拉 /download），所以判据必须一致，
+    // 否则「已驳回」的行会渲染出点了必 403 的按钮。approve 对 pending 行不额外给预览：
+    // 审批弹窗里本来就能看内容，多一个按钮会把 124px 的操作列撑破。
+    const canRead = f.status === "approved" || approve || mine;
+    if (!pending && md && canRead) out.push(b("pv", "预览"));
+    if (canRead) out.push(b("dl", "下载", "", md ? "" : "该类型无法在线预览，下载后查看"));
     if (approve) out.push(b("del", "删除", "danger"));
     return out.join("");
   }

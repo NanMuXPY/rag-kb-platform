@@ -1910,7 +1910,7 @@ select.wfilter { appearance: none; padding-right: 26px;
   .f-time { display: none; }
   .f-name .cell-sub-time { display: inline; }
 }
-@container ftable (max-width: 599px) {
+@container ftable (max-width: 519px) {
   .ftable, .ftable-foot { display: none; }
   .f-cards { display: grid; }
 }
