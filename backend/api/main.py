@@ -9,7 +9,7 @@ from uuid import uuid4
 
 from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 from typing import Optional
 
@@ -19,7 +19,10 @@ from app.engine import get_engine
 from app.knowledge import index_status, start_rebuild
 from app.security import demo_guard, get_current_user, require_admin_user, require_super_user
 
-app = FastAPI(title="Adaptive RAG Knowledge Base", version="2.1.0")
+app = FastAPI(title="Adaptive RAG Knowledge Base", version="2.1.0",
+              # 自带 Swagger/Redoc 关闭：接口目录由前端「控制台 → 接口」面板消费 /openapi.json，
+              # 两个入口并存会出现两份不同步的真相。
+              docs_url=None, redoc_url=None)
 
 _allowed = settings.allowed_origins
 app.add_middleware(
@@ -30,6 +33,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.middleware("http")(demo_guard)
+
+
+@app.middleware("http")
+async def gate_schema(request: Request, call_next):
+    """接口清单（openapi.json）要求登录后可见。
+
+    未登录就能枚举全部端点，等于把后台的功能地图交给任何能访问到 8080 的人；
+    前端接口面板本来就带 JWT 取，加这一层不影响它。
+    """
+    # 预检请求不带 Authorization，必须放行给 CORSMiddleware：
+    # 若在这里回 401，浏览器会判定 CORS 预检失败，前端永远读不到接口清单。
+    if request.method == "OPTIONS":
+        return await call_next(request)
+    if request.url.path.rstrip("/") in ("/openapi.json", "/docs", "/redoc"):
+        try:
+            get_current_user(request)
+        except HTTPException as exc:
+            return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+    return await call_next(request)
 
 
 class ChatRequest(BaseModel):
