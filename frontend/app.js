@@ -898,7 +898,56 @@
     } catch (err) {
       $("memberList").innerHTML = `<div class="admin-hint err">${esc(err.message)}</div>`;
     }
+    loadGroupGrants();
   }
+
+  // 分组授权列表 + 授权/收回
+  async function loadGroupGrants() {
+    const el = $("groupGrantList");
+    try {
+      const r = await fetch(`${API_BASE}/kbs/${currentKb}/groups`, { headers: authHeaders(false) });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const list = await r.json();
+      el.innerHTML = "";
+      if (!list.length) {
+        el.innerHTML = '<div class="admin-hint">尚未授权任何分组（该库仅对个人成员与默认库读者可见）</div>';
+        return;
+      }
+      const roleCN = { viewer: "只读", editor: "可上传", kb_admin: "库管理员" };
+      for (const g of list) {
+        const div = document.createElement("div");
+        div.className = "user-row";
+        div.innerHTML =
+          `<div class="uinfo"><span class="uname">${esc(g.grp)}</span>` +
+          `<span class="uacct">整组授权 · 操作人 ${esc(g.granted_by || "-")}</span></div>` +
+          `<span class="ustatus s-active">${roleCN[g.role] || g.role}</span>` +
+          `<div class="uacts"><button class="uact danger">收回</button></div>`;
+        div.querySelector(".uact.danger").onclick = async () => {
+          if (!confirm(`收回分组「${g.grp}」的访问权？该组将无法再检索本库。`)) return;
+          await fetch(`${API_BASE}/kbs/${currentKb}/groups/${encodeURIComponent(g.grp)}`,
+            { method: "DELETE", headers: authHeaders(false) });
+          loadGroupGrants();
+        };
+        el.appendChild(div);
+      }
+    } catch (err) {
+      el.innerHTML = `<div class="admin-hint err">${esc(err.message)}</div>`;
+    }
+  }
+
+  $("btnGrantGroup").onclick = async () => {
+    const grp = $("grantGroup").value.trim(), role = $("grantGroupRole").value;
+    if (!grp) return alert("请填写分组名（需与用户管理中的分组一致）");
+    try {
+      const r = await fetch(`${API_BASE}/kbs/${currentKb}/groups`, {
+        method: "POST", headers: authHeaders(),
+        body: JSON.stringify({ group: grp, role }),
+      });
+      if (!r.ok) throw new Error((await r.json().catch(() => ({}))).detail || `HTTP ${r.status}`);
+      $("grantGroup").value = "";
+      loadGroupGrants();
+    } catch (err) { alert(`授权失败：${err.message}`); }
+  };
 
   $("btnCreateKb").onclick = async () => {
     const name = $("kbName").value.trim();

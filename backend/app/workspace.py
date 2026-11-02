@@ -43,6 +43,14 @@ def init_workspace() -> None:
                 granted_at REAL,
                 PRIMARY KEY (kb_id, username)
             );
+            CREATE TABLE IF NOT EXISTS kb_groups (
+                kb_id    INTEGER NOT NULL,
+                grp      TEXT NOT NULL,
+                role     TEXT NOT NULL,
+                granted_by TEXT,
+                granted_at REAL,
+                PRIMARY KEY (kb_id, grp)
+            );
             CREATE TABLE IF NOT EXISTS kb_files (
                 id         INTEGER PRIMARY KEY AUTOINCREMENT,
                 kb_id      INTEGER NOT NULL,
@@ -114,7 +122,8 @@ def is_super(user: dict) -> bool:
 
 
 def kb_role(user: dict, kb_id: int) -> str | None:
-    """返回用户在某库的生效角色；无权限返回 None。默认库对全体 active 用户可读。"""
+    """返回用户在某库的生效角色；无权限返回 None。默认库对全体 active 用户可读。
+    生效优先级：平台管理员 > 个人成员授权 > 分组授权 > 默认库可读。"""
     if is_super(user):
         return "super"
     with _connect() as conn:
@@ -123,14 +132,22 @@ def kb_role(user: dict, kb_id: int) -> str | None:
             (kb_id, user["username"])).fetchone()
     if row:
         return row["role"]
+    grp = (user.get("group") or "").strip()
+    if grp:
+        with _connect() as conn:
+            row = conn.execute(
+                "SELECT role FROM kb_groups WHERE kb_id=? AND grp=?",
+                (kb_id, grp)).fetchone()
+        if row:
+            return row["role"]
     if kb_id == DEFAULT_KB_ID:
         return "viewer"
     return None
 
 
 def readable_kb_ids(user: dict) -> list[str]:
-    """检索范围（向量库 kb_id 字符串）：默认库 + 我是成员的库（超管为全部库）。
-    默认库的向量标记是 'default'（历史迁移约定），其余库用数字 id。"""
+    """检索范围（向量库 kb_id 字符串）：默认库 + 我是成员的库 + 我所在分组被授权的库
+    （超管为全部库）。默认库的向量标记是 'default'（历史迁移约定），其余库用数字 id。"""
     with _connect() as conn:
         ids = [r["id"] for r in conn.execute("SELECT id FROM kbs").fetchall()]
     if is_super(user):
@@ -140,6 +157,11 @@ def readable_kb_ids(user: dict) -> list[str]:
             mine = {r["kb_id"] for r in conn.execute(
                 "SELECT kb_id FROM kb_members WHERE username=?",
                 (user["username"],)).fetchall()}
+            grp = (user.get("group") or "").strip()
+            if grp:
+                mine |= {r["kb_id"] for r in conn.execute(
+                    "SELECT kb_id FROM kb_groups WHERE grp=?",
+                    (grp,)).fetchall()}
         raw = sorted({DEFAULT_KB_ID} | mine)
     return [str(DEFAULT_KB) if i == DEFAULT_KB_ID else str(i) for i in raw]
 
@@ -182,6 +204,7 @@ def delete_kb(kb_id: int, actor: str) -> bool:
     with _db_lock, _connect() as conn:
         cur = conn.execute("DELETE FROM kbs WHERE id=?", (kb_id,))
         conn.execute("DELETE FROM kb_members WHERE kb_id=?", (kb_id,))
+        conn.execute("DELETE FROM kb_groups WHERE kb_id=?", (kb_id,))
         conn.execute("UPDATE kb_files SET status='deleted' WHERE kb_id=?", (kb_id,))
     if cur.rowcount:
         audit(actor, "kb.delete", kb_id, "", "级联隐藏文件")
@@ -221,6 +244,45 @@ def list_members(kb_id: int) -> list[dict]:
         rows = conn.execute(
             "SELECT username, role, granted_by, granted_at FROM kb_members"
             " WHERE kb_id=? ORDER BY role, username", (kb_id,)).fetchall()
+        return [dict(r) for r in rows]
+
+
+# ---------------------------------------------------------------------------
+# 分组授权：知识库 → 部门/团队（该分组内所有用户自动获得访问权）
+# ---------------------------------------------------------------------------
+def set_group_grant(kb_id: int, grp: str, role: str, actor: str) -> dict:
+    assert role in KB_ROLES
+    grp = (grp or "").strip()[:32]
+    if not grp:
+        raise ValueError("分组名不能为空")
+    with _db_lock, _connect() as conn:
+        if not conn.execute("SELECT 1 FROM kbs WHERE id=?", (kb_id,)).fetchone():
+            raise ValueError("知识库不存在")
+        conn.execute(
+            "INSERT INTO kb_groups(kb_id, grp, role, granted_by, granted_at)"
+            " VALUES(?,?,?,?,?) ON CONFLICT(kb_id, grp)"
+            " DO UPDATE SET role=excluded.role, granted_by=excluded.granted_by,"
+            " granted_at=excluded.granted_at",
+            (kb_id, grp, role, actor, time.time()))
+    audit(actor, "group.grant", kb_id, grp, role)
+    return {"kb_id": kb_id, "group": grp, "role": role}
+
+
+def remove_group_grant(kb_id: int, grp: str, actor: str) -> bool:
+    with _db_lock, _connect() as conn:
+        cur = conn.execute(
+            "DELETE FROM kb_groups WHERE kb_id=? AND grp=?",
+            (kb_id, (grp or "").strip()))
+    if cur.rowcount:
+        audit(actor, "group.revoke", kb_id, grp)
+    return bool(cur.rowcount)
+
+
+def list_group_grants(kb_id: int) -> list[dict]:
+    with _connect() as conn:
+        rows = conn.execute(
+            "SELECT grp, role, granted_by, granted_at FROM kb_groups"
+            " WHERE kb_id=? ORDER BY grp", (kb_id,)).fetchall()
         return [dict(r) for r in rows]
 
 

@@ -475,6 +475,44 @@ def kb_remove_member(kb_id: int, username: str,
     return {"ok": True}
 
 
+# ---- 分组授权：整个部门/团队一次性拿到访问权 ----
+@app.get("/kbs/{kb_id}/groups")
+def kb_groups(kb_id: int, user: dict = Depends(get_current_user)):
+    role = workspace.kb_role(user, kb_id)
+    if role not in {"kb_admin", "super"}:
+        raise HTTPException(status_code=403, detail="需要知识库管理员权限")
+    return workspace.list_group_grants(kb_id)
+
+
+class GroupGrantRequest(BaseModel):
+    group: str
+    role: str
+
+
+@app.post("/kbs/{kb_id}/groups")
+def kb_grant_group(kb_id: int, req: GroupGrantRequest,
+                   user: dict = Depends(get_current_user)):
+    role = workspace.kb_role(user, kb_id)
+    if role not in {"kb_admin", "super"}:
+        raise HTTPException(status_code=403, detail="需要知识库管理员权限")
+    try:
+        return workspace.set_group_grant(kb_id, req.group, req.role,
+                                         user["username"])
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.delete("/kbs/{kb_id}/groups/{group}")
+def kb_revoke_group(kb_id: int, group: str,
+                    user: dict = Depends(get_current_user)):
+    role = workspace.kb_role(user, kb_id)
+    if role not in {"kb_admin", "super"}:
+        raise HTTPException(status_code=403, detail="需要知识库管理员权限")
+    if not workspace.remove_group_grant(kb_id, group, user["username"]):
+        raise HTTPException(status_code=404, detail="该分组未被授权")
+    return {"ok": True}
+
+
 @app.get("/admin/audit")
 def admin_audit(limit: int = 200, action: str = "", username: str = "",
                 _: dict = Depends(require_admin_user)):

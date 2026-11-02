@@ -160,6 +160,18 @@
             <button class="btn-ghost" id="btnAddMember">授权</button>
           </div>
           <div id="memberList" class="user-list"></div>
+          <h3 style="margin-top:18px">按分组授权（整组生效）</h3>
+          <div class="kb-create">
+            <input id="grantGroup" placeholder="分组名，如：财务组" maxlength="32" style="flex:1">
+            <select id="grantGroupRole" class="role-select">
+              <option value="viewer">只读 viewer</option>
+              <option value="editor">可上传 editor</option>
+              <option value="kb_admin">库管理员 kb_admin</option>
+            </select>
+            <button class="btn-ghost" id="btnGrantGroup">整组授权</button>
+          </div>
+          <div id="groupGrantList" class="user-list"></div>
+          <p class="admin-hint">分组授权对该组全部成员生效（含之后新加入该组的账号）；个人授权优先于分组授权。分组在「控制台 → 用户管理 → 设分组」维护。</p>
         </section>
       </div>
     </section>
