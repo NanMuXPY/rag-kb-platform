@@ -1,67 +1,60 @@
 <Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, flexDirection: 'column' }}>
     <Box style={{ height: 68, background: '#1E4FA8', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 60, paddingRight: 60 }}>
-        <Text style={{ fontSize: 34, color: '#FFFFFF', fontWeight: 'bold' }}>三个结论，都跟最初的直觉相反</Text>
-        <Text style={{ fontSize: 15, color: '#FFFFFF', opacity: 0.72 }}>03 · Findings</Text>
+        <Text style={{ fontSize: 34, color: '#FFFFFF', fontWeight: 'bold' }}>先造尺子：40 题、两轮重复、归一化复核</Text>
+        <Text style={{ fontSize: 15, color: '#FFFFFF', opacity: 0.72 }}>03 · Method</Text>
     </Box>
-    <Box style={{ flex: 1, flexDirection: 'column', paddingLeft: 60, paddingRight: 60, paddingTop: 22, paddingBottom: 8, gap: 18 }}>
-        <Box style={{ flexDirection: 'row', alignItems: 'center', background: '#E8EFF8', borderLeft: '4px solid #1E4FA8', paddingTop: 11, paddingBottom: 11, paddingLeft: 20, paddingRight: 20 }}>
-            <Text style={{ fontSize: 18, color: '#1A2230', lineHeight: 1.4 }}>
-                <span style={{ fontWeight: 'bold' }}>判读原则　</span>只采信“两轮都能复现 + 逐条看过命中项”的差异；单轮差 1 题的，一律按噪声处理。
+    <Box style={{ flex: 1, flexDirection: 'column', paddingLeft: 60, paddingRight: 60, paddingTop: 24, paddingBottom: 10, gap: 20 }}>
+        <Box style={{ flexDirection: 'row', alignItems: 'center', background: '#E8EFF8', borderLeft: '4px solid #1E4FA8', paddingTop: 12, paddingBottom: 12, paddingLeft: 20, paddingRight: 20 }}>
+            <Text style={{ fontSize: 19, color: '#1A2230', lineHeight: 1.4 }}>
+                <span style={{ fontWeight: 'bold' }}>方法论　</span>没有可复现的评测，任何“效果提升”都只是印象。四件工具先做出来，再做优化。
             </Text>
         </Box>
-        <Box style={{ flexDirection: 'row', gap: 28, height: 400 }}>
-            <Box style={{ width: 484, border: '1px solid #D6DCE5', borderTop: '3px solid #1E4FA8', padding: 22, flexDirection: 'column' }}>
-                <Text style={{ fontSize: 18, color: '#3D7BD9', fontWeight: 'bold' }}>E2 · 切块对比</Text>
-                <Text style={{ fontSize: 26, color: '#1A2230', fontWeight: 'bold', marginTop: 8, lineHeight: 1.3 }}>切块大小不是瓶颈</Text>
-                <Text style={{ fontSize: 16, color: '#4A5568', marginTop: 14, lineHeight: 1.5 }}>
-                    500 / 800 / 1000 三档，265 / 184 / 149 chunks
-                </Text>
-                <Box style={{ flexDirection: 'row', alignItems: 'flex-end', marginTop: 8 }}>
-                    <Text style={{ fontSize: 48, color: '#1E4FA8', fontWeight: 'bold', lineHeight: 1 }}>100%</Text>
-                    <Text style={{ fontSize: 17, color: '#4A5568', marginBottom: 6, marginLeft: 10 }}>三档 recall@4 全部相同</Text>
+        <Box style={{ flexDirection: 'column' }}>
+            <Box style={{ flexDirection: 'row', alignItems: 'center', height: 88, borderBottom: '1px solid #E5E7EB' }}>
+                <Text style={{ fontSize: 22, color: '#1E4FA8', fontWeight: 'bold', width: 52 }}>01</Text>
+                <Box style={{ width: 210 }}>
+                    <Text style={{ fontSize: 22, color: '#1A2230', fontWeight: 'bold' }}>评测集</Text>
                 </Box>
-                <Text style={{ fontSize: 16, color: '#4A5568', marginTop: 12, lineHeight: 1.5 }}>
-                    事实命中同一道题卡住；细粒度反而把 P95 从 34.6s 拖到 59.5s——块更碎，判不相关，触发更多重试。
-                </Text>
-                <Box style={{ flex: 1 }} />
-                <Box style={{ height: 1, background: '#E5E7EB', marginBottom: 12 }} />
-                <Text style={{ fontSize: 17, color: '#1A2230', lineHeight: 1.45 }}>
-                    判断：维持 800/120。<span style={{ fontWeight: 'bold', color: '#1E4FA8' }}>这是“动了也没收益”的调参</span>。
+                <Text style={{ fontSize: 17, color: '#4A5568', flex: 1, lineHeight: 1.45 }}>
+                    30 题标准集（事实 / 操作 / 多跳 / 该拒答 8 类）+ 10 题困难集（口语化、简称、错别字），共 40 题
                 </Text>
             </Box>
-            <Box style={{ flex: 1, flexDirection: 'column', gap: 24 }}>
-                <Box style={{ flex: 1, border: '1px solid #D6DCE5', borderLeft: '3px solid #D9534F', padding: 20, flexDirection: 'column' }}>
-                    <Box style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
-                        <Text style={{ fontSize: 24, color: '#1A2230', fontWeight: 'bold' }}>MMR 多样性是减分项</Text>
-                        <Text style={{ fontSize: 17, color: '#D9534F', fontWeight: 'bold' }}>幻觉 6 vs 2</Text>
-                    </Box>
-                    <Text style={{ fontSize: 17, color: '#4A5568', marginTop: 10, lineHeight: 1.5 }}>
-                        它用相关性换覆盖面。内部文档的问题是“该不该答”，不是“答得够不够广”。
-                    </Text>
-                    <Box style={{ flex: 1 }} />
-                    <Text style={{ fontSize: 16, color: '#1A2230' }}>判断：MMR 出局，默认走同文档去重 + 混合检索。</Text>
+            <Box style={{ flexDirection: 'row', alignItems: 'center', height: 88, borderBottom: '1px solid #E5E7EB' }}>
+                <Text style={{ fontSize: 22, color: '#1E4FA8', fontWeight: 'bold', width: 52 }}>02</Text>
+                <Box style={{ width: 210 }}>
+                    <Text style={{ fontSize: 22, color: '#1A2230', fontWeight: 'bold' }}>两轮重复</Text>
                 </Box>
-                <Box style={{ flex: 1, border: '1px solid #D6DCE5', borderLeft: '3px solid #1E4FA8', padding: 20, flexDirection: 'column' }}>
-                    <Box style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
-                        <Text style={{ fontSize: 24, color: '#1A2230', fontWeight: 'bold' }}>混合检索救的是“人话”</Text>
-                        <Text style={{ fontSize: 17, color: '#1E4FA8', fontWeight: 'bold' }}>80% → 100%</Text>
-                    </Box>
-                    <Text style={{ fontSize: 17, color: '#4A5568', marginTop: 10, lineHeight: 1.5 }}>
-                        困难集（口语、简称、错别字）recall 由 80% 提到 100%，MRR 0.80 → 1.00。
-                    </Text>
-                    <Box style={{ flex: 1 }} />
-                    <Text style={{ fontSize: 16, color: '#1A2230' }}>判断：真实用户不按文档措辞提问，关键词通道必须有。</Text>
+                <Text style={{ fontSize: 17, color: '#4A5568', flex: 1, lineHeight: 1.45 }}>
+                    关键配置各跑两遍再看结论——拒答指标一轮 80%、一轮 93.3%，1 题就差 6.7 个百分点
+                </Text>
+            </Box>
+            <Box style={{ flexDirection: 'row', alignItems: 'center', height: 88, borderBottom: '1px solid #E5E7EB' }}>
+                <Text style={{ fontSize: 22, color: '#1E4FA8', fontWeight: 'bold', width: 52 }}>03</Text>
+                <Box style={{ width: 210 }}>
+                    <Text style={{ fontSize: 22, color: '#1A2230', fontWeight: 'bold' }}>归一化复核</Text>
                 </Box>
+                <Text style={{ fontSize: 17, color: '#4A5568', flex: 1, lineHeight: 1.45 }}>
+                    零 API 成本的重算脚本：答案写「5 GB」而关键字是「5GB」，严格子串比对会误判成缺事实
+                </Text>
+            </Box>
+            <Box style={{ flexDirection: 'row', alignItems: 'center', height: 88 }}>
+                <Text style={{ fontSize: 22, color: '#1E4FA8', fontWeight: 'bold', width: 52 }}>04</Text>
+                <Box style={{ width: 210 }}>
+                    <Text style={{ fontSize: 22, color: '#1A2230', fontWeight: 'bold' }}>幻觉代理校验</Text>
+                </Box>
+                <Text style={{ fontSize: 17, color: '#4A5568', flex: 1, lineHeight: 1.45 }}>
+                    答案里的产品标识与错误码必须全库可查，查不到计入幻觉——但通用词会误报，需逐条看
+                </Text>
             </Box>
         </Box>
-        <Box style={{ background: '#F7F9FC', borderLeft: '4px solid #3D7BD9', paddingTop: 11, paddingBottom: 11, paddingLeft: 20, paddingRight: 20 }}>
-            <Text style={{ fontSize: 17, color: '#1A2230', lineHeight: 1.45 }}>
-                三个结论指向同一件事：<span style={{ fontWeight: 'bold', color: '#1E4FA8' }}>真正的提升来自“边界”与“召回通道”，不来自参数微调</span>。
+        <Box style={{ background: '#F7F9FC', borderLeft: '4px solid #D9534F', paddingTop: 12, paddingBottom: 12, paddingLeft: 20, paddingRight: 20 }}>
+            <Text style={{ fontSize: 18, color: '#1A2230', lineHeight: 1.45 }}>
+                尺子造好后立刻抓到 <span style={{ color: '#D9534F', fontWeight: 'bold' }}>3 处评分器自身误判</span>：空格、拒答话术没被识别、禁词覆盖不全——问题不在模型，在量具。
             </Text>
         </Box>
     </Box>
     <Box style={{ height: 50, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 8, paddingLeft: 60, paddingRight: 60 }}>
         <Text style={{ fontSize: 14, color: '#8B97A8' }}>企业内部技术支持知识库 · 课程作业汇报</Text>
-        <Text style={{ fontSize: 14, color: '#8B97A8' }}>13 / 18</Text>
+        <Text style={{ fontSize: 14, color: '#8B97A8' }}>13 / 20</Text>
     </Box>
 </Slide>

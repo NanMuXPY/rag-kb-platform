@@ -1,76 +1,62 @@
 <Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, flexDirection: 'column' }}>
     <Box style={{ height: 68, background: '#1E4FA8', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 60, paddingRight: 60 }}>
-        <Text style={{ fontSize: 34, color: '#FFFFFF', fontWeight: 'bold' }}>下一步：先补解析，最后才谈规模</Text>
-        <Text style={{ fontSize: 15, color: '#FFFFFF', opacity: 0.72 }}>04 · Roadmap</Text>
+        <Text style={{ fontSize: 34, color: '#FFFFFF', fontWeight: 'bold' }}>三个排障故事：现象 / 根因 / 一句话结论</Text>
+        <Text style={{ fontSize: 15, color: '#FFFFFF', opacity: 0.72 }}>04 · Debugging</Text>
     </Box>
     <Box style={{ flex: 1, flexDirection: 'column', paddingLeft: 60, paddingRight: 60, paddingTop: 22, paddingBottom: 8, gap: 18 }}>
         <Box style={{ flexDirection: 'row', alignItems: 'center', background: '#E8EFF8', borderLeft: '4px solid #1E4FA8', paddingTop: 11, paddingBottom: 11, paddingLeft: 20, paddingRight: 20 }}>
             <Text style={{ fontSize: 18, color: '#1A2230', lineHeight: 1.4 }}>
-                <span style={{ fontWeight: 'bold' }}>排序依据　</span>先解决“进不去场景”的问题，再解决“用得更好”的问题；规模与高可用放在最后。
+                <span style={{ fontWeight: 'bold' }}>共同特征　</span>三个坑都是“静默失败”：没有异常栈，只有看起来正常的结果——所以排查必须靠打印中间态，不能靠读代码。
             </Text>
         </Box>
-        <Box style={{ flexDirection: 'row', gap: 44, height: 404 }}>
-            <Box style={{ width: 596, flexDirection: 'column' }}>
-                <Text style={{ fontSize: 20, color: '#1A2230', fontWeight: 'bold' }}>演进路线</Text>
-                <Box style={{ height: 1, background: '#D6DCE5', marginTop: 10, marginBottom: 6 }} />
-                <Box style={{ flexDirection: 'row', alignItems: 'center', height: 78, borderBottom: '1px solid #E5E7EB' }}>
-                    <Text style={{ fontSize: 20, color: '#D9534F', fontWeight: 'bold', width: 56 }}>P0</Text>
-                    <Text style={{ fontSize: 17, color: '#1A2230', flex: 1, lineHeight: 1.4 }}>PDF / Word 解析入库；评测集瑕疵复核（q018 禁词、q020 标注）</Text>
-                    <Text style={{ fontSize: 16, color: '#4A5568' }}>1–2 天</Text>
-                </Box>
-                <Box style={{ flexDirection: 'row', alignItems: 'center', height: 78, borderBottom: '1px solid #E5E7EB' }}>
-                    <Text style={{ fontSize: 20, color: '#3D7BD9', fontWeight: 'bold', width: 56 }}>P1</Text>
-                    <Text style={{ fontSize: 17, color: '#1A2230', flex: 1, lineHeight: 1.4 }}>企微 OAuth + 组织架构同步；bge-reranker 接入</Text>
-                    <Text style={{ fontSize: 16, color: '#4A5568' }}>约 3 天</Text>
-                </Box>
-                <Box style={{ flexDirection: 'row', alignItems: 'center', height: 78, borderBottom: '1px solid #E5E7EB' }}>
-                    <Text style={{ fontSize: 20, color: '#3D7BD9', fontWeight: 'bold', width: 56 }}>P2</Text>
-                    <Text style={{ fontSize: 17, color: '#1A2230', flex: 1, lineHeight: 1.4 }}>答不出 → 生成待办并通知；企微 H5 / 侧边栏</Text>
-                    <Text style={{ fontSize: 16, color: '#4A5568' }}>约 5 天</Text>
-                </Box>
-                <Box style={{ flexDirection: 'row', alignItems: 'center', height: 78 }}>
-                    <Text style={{ fontSize: 20, color: '#8B97A8', fontWeight: 'bold', width: 56 }}>P3</Text>
-                    <Text style={{ fontSize: 17, color: '#4A5568', flex: 1, lineHeight: 1.4 }}>万级文档压测；高可用与多活</Text>
-                    <Text style={{ fontSize: 16, color: '#8B97A8' }}>暂不排</Text>
-                </Box>
+        <Table
+            style={{ width: '100%', height: 342 }}
+            defaultTextStyle={{ fontSize: 16, textAlign: 'left', color: '#1A2230' }}
+            defaultCellStyle={{ border: { bottom: { width: 1, color: '#D6DCE5' } } }}
+            cells={[
+                [
+                    { text: '坑', textStyle: { bold: true, color: '#FFFFFF', fontSize: 16 }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                    { text: '现象', textStyle: { bold: true, color: '#FFFFFF', fontSize: 16 }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                    { text: '根因', textStyle: { bold: true, color: '#FFFFFF', fontSize: 16 }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                    { text: '结论', textStyle: { bold: true, color: '#FFFFFF', fontSize: 16 }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                ],
+                [
+                    { text: '01　Chroma 只读', textStyle: { bold: true, color: '#1A2230' } },
+                    { text: '重建索引直接抛 readonly database，服务起不来', textStyle: { color: '#4A5568' } },
+                    { text: '容器内进程与宿主挂载的权限不一致，库文件被只读打开', textStyle: { color: '#4A5568' } },
+                    { text: '旁路重建：新库建在临时目录，原子改名后进程自愈重启，服务不中断', textStyle: { color: '#1E4FA8' } },
+                ],
+                [
+                    { text: '02　glob 静默失效', textStyle: { bold: true, color: '#1A2230' } },
+                    { text: '服务器重建报“未在 data 下找到 .md 文档”，但文件明明在', textStyle: { color: '#4A5568' } },
+                    { text: 'v2 重写时 glob 从 **/*.md 改成 *.md，不再递归，而语料全在子目录', textStyle: { color: '#4A5568' } },
+                    { text: '默认参数改动后必须用真实数据跑一次冒烟——静默失败最贵', textStyle: { color: '#1E4FA8' } },
+                ],
+                [
+                    { text: '03　引用校验误杀', textStyle: { bold: true, color: '#1A2230' } },
+                    { text: '线上稳定返回 52 字符拒答，本地同一问题 10/10 正常', textStyle: { color: '#4A5568' } },
+                    { text: '模型三种合法引用写法解析器都不认：照抄占位符、一行列多篇、用标题代替文件名', textStyle: { color: '#4A5568' } },
+                    { text: '安全闸要有灰度：占位符只裁引用行、多文档拆开比对、标题宽松匹配，伪造仍降级', textStyle: { color: '#1E4FA8' } },
+                ],
+            ]}
+        />
+        <Box style={{ flexDirection: 'row', gap: 32 }}>
+            <Box style={{ flexDirection: 'row', alignItems: 'flex-start', flex: 1 }}>
+                <Text style={{ fontSize: 17, color: '#1E4FA8', fontWeight: 'bold', marginRight: 10 }}>①</Text>
+                <Text style={{ fontSize: 16, color: '#4A5568', lineHeight: 1.45 }}>打印每轮生成原文，而不是只看最终返回值</Text>
             </Box>
-            <Box style={{ flex: 1, flexDirection: 'column' }}>
-                <Text style={{ fontSize: 20, color: '#1A2230', fontWeight: 'bold' }}>成本对照（100 人 / 一年）</Text>
-                <Box style={{ height: 1, background: '#D6DCE5', marginTop: 10, marginBottom: 6 }} />
-                <Box style={{ flexDirection: 'row', alignItems: 'center', height: 50, borderBottom: '1px solid #E5E7EB' }}>
-                    <Text style={{ fontSize: 17, color: '#1E4FA8', fontWeight: 'bold', flex: 1 }}>本项目（自建）</Text>
-                    <Text style={{ fontSize: 18, color: '#1E4FA8', fontWeight: 'bold' }}>1.5–3 千元</Text>
-                </Box>
-                <Box style={{ flexDirection: 'row', alignItems: 'center', height: 50, borderBottom: '1px solid #E5E7EB' }}>
-                    <Text style={{ fontSize: 17, color: '#4A5568', flex: 1 }}>Dify 自部署</Text>
-                    <Text style={{ fontSize: 16, color: '#4A5568' }}>5–8 千元</Text>
-                </Box>
-                <Box style={{ flexDirection: 'row', alignItems: 'center', height: 50, borderBottom: '1px solid #E5E7EB' }}>
-                    <Text style={{ fontSize: 17, color: '#4A5568', flex: 1 }}>RAGFlow 自部署</Text>
-                    <Text style={{ fontSize: 16, color: '#4A5568' }}>1–1.7 万元</Text>
-                </Box>
-                <Box style={{ flexDirection: 'row', alignItems: 'center', height: 50, borderBottom: '1px solid #E5E7EB' }}>
-                    <Text style={{ fontSize: 17, color: '#4A5568', flex: 1 }}>百炼知识库标准版</Text>
-                    <Text style={{ fontSize: 16, color: '#4A5568' }}>300 元起 + token</Text>
-                </Box>
-                <Box style={{ flexDirection: 'row', alignItems: 'center', height: 50, borderBottom: '1px solid #E5E7EB' }}>
-                    <Text style={{ fontSize: 17, color: '#4A5568', flex: 1 }}>腾讯乐享（按人头）</Text>
-                    <Text style={{ fontSize: 16, color: '#4A5568' }}>万元级起</Text>
-                </Box>
-                <Box style={{ flexDirection: 'row', alignItems: 'center', height: 50 }}>
-                    <Text style={{ fontSize: 17, color: '#4A5568', flex: 1 }}>ServiceNow</Text>
-                    <Text style={{ fontSize: 16, color: '#4A5568' }}>10 万美元级</Text>
-                </Box>
+            <Box style={{ flexDirection: 'row', alignItems: 'flex-start', flex: 1 }}>
+                <Text style={{ fontSize: 17, color: '#1E4FA8', fontWeight: 'bold', marginRight: 10 }}>②</Text>
+                <Text style={{ fontSize: 16, color: '#4A5568', lineHeight: 1.45 }}>把探针脚本拷进容器跑，隔离环境差异</Text>
             </Box>
-        </Box>
-        <Box style={{ background: '#F7F9FC', borderLeft: '4px solid #3D7BD9', paddingTop: 11, paddingBottom: 11, paddingLeft: 20, paddingRight: 20 }}>
-            <Text style={{ fontSize: 17, color: '#1A2230', lineHeight: 1.45 }}>
-                在「100 人、内网、结构化文档、要审计」这个交集里，<span style={{ fontWeight: 'bold', color: '#1E4FA8' }}>自建的成本优势是 3–10 倍</span>，代价是自己承担解析与运维。
-            </Text>
+            <Box style={{ flexDirection: 'row', alignItems: 'flex-start', flex: 1 }}>
+                <Text style={{ fontSize: 17, color: '#1E4FA8', fontWeight: 'bold', marginRight: 10 }}>③</Text>
+                <Text style={{ fontSize: 16, color: '#4A5568', lineHeight: 1.45 }}>逐项对比本地与线上的配置与语料，不看代码猜</Text>
+            </Box>
         </Box>
     </Box>
     <Box style={{ height: 50, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 8, paddingLeft: 60, paddingRight: 60 }}>
         <Text style={{ fontSize: 14, color: '#8B97A8' }}>企业内部技术支持知识库 · 课程作业汇报</Text>
-        <Text style={{ fontSize: 14, color: '#8B97A8' }}>17 / 18</Text>
+        <Text style={{ fontSize: 14, color: '#8B97A8' }}>17 / 20</Text>
     </Box>
 </Slide>

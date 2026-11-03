@@ -1,60 +1,59 @@
 <Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, flexDirection: 'column' }}>
     <Box style={{ height: 68, background: '#1E4FA8', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 60, paddingRight: 60 }}>
-        <Text style={{ fontSize: 34, color: '#FFFFFF', fontWeight: 'bold' }}>先造尺子：40 题、两轮重复、归一化复核</Text>
-        <Text style={{ fontSize: 15, color: '#FFFFFF', opacity: 0.72 }}>03 · Method</Text>
+        <Text style={{ fontSize: 34, color: '#FFFFFF', fontWeight: 'bold' }}>42 个接口，做成一页能读的目录</Text>
+        <Text style={{ fontSize: 15, color: '#FFFFFF', opacity: 0.72 }}>02 · Portal &amp; API</Text>
     </Box>
-    <Box style={{ flex: 1, flexDirection: 'column', paddingLeft: 60, paddingRight: 60, paddingTop: 24, paddingBottom: 10, gap: 20 }}>
+    <Box style={{ flex: 1, flexDirection: 'column', paddingLeft: 60, paddingRight: 60, paddingTop: 24, paddingBottom: 10, gap: 18 }}>
         <Box style={{ flexDirection: 'row', alignItems: 'center', background: '#E8EFF8', borderLeft: '4px solid #1E4FA8', paddingTop: 12, paddingBottom: 12, paddingLeft: 20, paddingRight: 20 }}>
             <Text style={{ fontSize: 19, color: '#1A2230', lineHeight: 1.4 }}>
-                <span style={{ fontWeight: 'bold' }}>方法论　</span>没有可复现的评测，任何“效果提升”都只是印象。四件工具先做出来，再做优化。
+                <span style={{ fontWeight: 'bold' }}>结论先行　</span>入口不做成功能菜单，做成「你现在最可能要做的那件事」；开发者的入口，则是一份可检索、可试调的接口目录。
             </Text>
         </Box>
-        <Box style={{ flexDirection: 'column' }}>
-            <Box style={{ flexDirection: 'row', alignItems: 'center', height: 88, borderBottom: '1px solid #E5E7EB' }}>
-                <Text style={{ fontSize: 22, color: '#1E4FA8', fontWeight: 'bold', width: 52 }}>01</Text>
-                <Box style={{ width: 210 }}>
-                    <Text style={{ fontSize: 22, color: '#1A2230', fontWeight: 'bold' }}>评测集</Text>
+        <Box style={{ flexDirection: 'row', gap: 40, flex: 1 }}>
+            <Box style={{ width: 496, flexDirection: 'column' }}>
+                <Text style={{ fontSize: 20, color: '#1A2230', fontWeight: 'bold' }}>门户：先概览，再对话</Text>
+                <Box style={{ height: 1, background: '#D6DCE5', marginTop: 10, marginBottom: 4 }} />
+                <Box style={{ flexDirection: 'column' }}>
+                    <Box style={{ flexDirection: 'row', alignItems: 'center', height: 92, borderBottom: '1px solid #E5E7EB' }}>
+                        <Text style={{ fontSize: 18, color: '#1E4FA8', fontWeight: 'bold', width: 108 }}>概览三卡</Text>
+                        <Text style={{ fontSize: 16, color: '#4A5568', flex: 1, lineHeight: 1.45 }}>知识库 · 文件 · 待办，各给一句「现在什么状态」，不让用户先跑一遍后台</Text>
+                    </Box>
+                    <Box style={{ flexDirection: 'row', alignItems: 'center', height: 92, borderBottom: '1px solid #E5E7EB' }}>
+                        <Text style={{ fontSize: 18, color: '#1E4FA8', fontWeight: 'bold', width: 108 }}>最近提问</Text>
+                        <Text style={{ fontSize: 16, color: '#4A5568', flex: 1, lineHeight: 1.45 }}>点一条回到原会话继续追问，不新开会话——会话的连续性比「干净的新页」值钱</Text>
+                    </Box>
+                    <Box style={{ flexDirection: 'row', alignItems: 'center', height: 92, borderBottom: '1px solid #E5E7EB' }}>
+                        <Text style={{ fontSize: 18, color: '#1E4FA8', fontWeight: 'bold', width: 108 }}>自动建会话</Text>
+                        <Text style={{ fontSize: 16, color: '#4A5568', flex: 1, lineHeight: 1.45 }}>判据只有一条：当前会话消息数为 0；追问、重试、点历史都不会新建</Text>
+                    </Box>
                 </Box>
-                <Text style={{ fontSize: 17, color: '#4A5568', flex: 1, lineHeight: 1.45 }}>
-                    30 题标准集（事实 / 操作 / 多跳 / 该拒答 8 类）+ 10 题困难集（口语化、简称、错别字），共 40 题
-                </Text>
+                <Text style={{ fontSize: 15, color: '#8B97A8', marginTop: 12, lineHeight: 1.5 }}>「新建会话」按钮被删掉了：用户要的是接着问，不是从零开始。</Text>
             </Box>
-            <Box style={{ flexDirection: 'row', alignItems: 'center', height: 88, borderBottom: '1px solid #E5E7EB' }}>
-                <Text style={{ fontSize: 22, color: '#1E4FA8', fontWeight: 'bold', width: 52 }}>02</Text>
-                <Box style={{ width: 210 }}>
-                    <Text style={{ fontSize: 22, color: '#1A2230', fontWeight: 'bold' }}>两轮重复</Text>
-                </Box>
-                <Text style={{ fontSize: 17, color: '#4A5568', flex: 1, lineHeight: 1.45 }}>
-                    关键配置各跑两遍再看结论——拒答指标一轮 80%、一轮 93.3%，1 题就差 6.7 个百分点
-                </Text>
+            <Box style={{ flex: 1, flexDirection: 'column' }}>
+                <Text style={{ fontSize: 20, color: '#1A2230', fontWeight: 'bold' }}>接口面板：契约即界面</Text>
+                <Box style={{ height: 1, background: '#D6DCE5', marginTop: 10, marginBottom: 12 }} />
+                <Table
+                    style={{ width: '100%', height: 300 }}
+                    defaultTextStyle={{ fontSize: 16, textAlign: 'left', color: '#1A2230' }}
+                    defaultCellStyle={{ border: { bottom: { width: 1, color: '#E5E7EB' } } }}
+                    cells={[
+                        [
+                            { text: '维度', textStyle: { bold: true, color: '#FFFFFF', width: 120 }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                            { text: '取值', textStyle: { bold: true, color: '#FFFFFF' }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                        ],
+                        [{ text: '数据源', textStyle: { bold: true, color: '#1E4FA8' } }, { text: 'GET /api/openapi.json，代码即文档，不手抄' }],
+                        [{ text: '规模', textStyle: { bold: true, color: '#1E4FA8' } }, { text: '42 个路径 / 46 个操作 / 7 个分组' }],
+                        [{ text: '布局', textStyle: { bold: true, color: '#1E4FA8' } }, { text: '左目录 280 ｜ 右详情 854，两栏各自滚动' }],
+                        [{ text: '错误三档', textStyle: { bold: true, color: '#1E4FA8' } }, { text: '网络错→重试；401→重新登录；403→零按钮' }],
+                        [{ text: '危险四档', textStyle: { bold: true, color: '#1E4FA8' } }, { text: '4 个不可恢复 DELETE 需手输 DELETE 才执行' }],
+                    ]}
+                />
+                <Text style={{ fontSize: 15, color: '#8B97A8', marginTop: 12, lineHeight: 1.5 }}>深链 #admin/api?ep=GET:/kbs 可直接定位到一个接口；读取失败保留骨架，不白屏。</Text>
             </Box>
-            <Box style={{ flexDirection: 'row', alignItems: 'center', height: 88, borderBottom: '1px solid #E5E7EB' }}>
-                <Text style={{ fontSize: 22, color: '#1E4FA8', fontWeight: 'bold', width: 52 }}>03</Text>
-                <Box style={{ width: 210 }}>
-                    <Text style={{ fontSize: 22, color: '#1A2230', fontWeight: 'bold' }}>归一化复核</Text>
-                </Box>
-                <Text style={{ fontSize: 17, color: '#4A5568', flex: 1, lineHeight: 1.45 }}>
-                    零 API 成本的重算脚本：答案写「5 GB」而关键字是「5GB」，严格子串比对会误判成缺事实
-                </Text>
-            </Box>
-            <Box style={{ flexDirection: 'row', alignItems: 'center', height: 88 }}>
-                <Text style={{ fontSize: 22, color: '#1E4FA8', fontWeight: 'bold', width: 52 }}>04</Text>
-                <Box style={{ width: 210 }}>
-                    <Text style={{ fontSize: 22, color: '#1A2230', fontWeight: 'bold' }}>幻觉代理校验</Text>
-                </Box>
-                <Text style={{ fontSize: 17, color: '#4A5568', flex: 1, lineHeight: 1.45 }}>
-                    答案里的产品标识与错误码必须全库可查，查不到计入幻觉——但通用词会误报，需逐条看
-                </Text>
-            </Box>
-        </Box>
-        <Box style={{ background: '#F7F9FC', borderLeft: '4px solid #D9534F', paddingTop: 12, paddingBottom: 12, paddingLeft: 20, paddingRight: 20 }}>
-            <Text style={{ fontSize: 18, color: '#1A2230', lineHeight: 1.45 }}>
-                尺子造好后立刻抓到 <span style={{ color: '#D9534F', fontWeight: 'bold' }}>3 处评分器自身误判</span>：空格、拒答话术没被识别、禁词覆盖不全——问题不在模型，在量具。
-            </Text>
         </Box>
     </Box>
     <Box style={{ height: 50, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 8, paddingLeft: 60, paddingRight: 60 }}>
         <Text style={{ fontSize: 14, color: '#8B97A8' }}>企业内部技术支持知识库 · 课程作业汇报</Text>
-        <Text style={{ fontSize: 14, color: '#8B97A8' }}>11 / 18</Text>
+        <Text style={{ fontSize: 14, color: '#8B97A8' }}>11 / 20</Text>
     </Box>
 </Slide>

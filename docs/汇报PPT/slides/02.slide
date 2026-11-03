@@ -21,13 +21,13 @@
             <Text style={{ fontSize: 34, color: '#1E4FA8', fontWeight: 'bold', width: 84 }}>03</Text>
             <Text style={{ fontSize: 30, color: '#1A2230', flex: 1 }}>实验与结果</Text>
             <Text style={{ fontSize: 15, color: '#8B97A8', marginRight: 40 }}>Experiments</Text>
-            <Text style={{ fontSize: 20, color: '#1E4FA8' }}>10</Text>
+            <Text style={{ fontSize: 20, color: '#1E4FA8' }}>12</Text>
         </Box>
         <Box style={{ flexDirection: 'row', alignItems: 'center', height: 116, borderBottom: '1px solid #D6DCE5' }}>
             <Text style={{ fontSize: 34, color: '#1E4FA8', fontWeight: 'bold', width: 84 }}>04</Text>
             <Text style={{ fontSize: 30, color: '#1A2230', flex: 1 }}>讨论与展望</Text>
             <Text style={{ fontSize: 15, color: '#8B97A8', marginRight: 40 }}>Discussion</Text>
-            <Text style={{ fontSize: 20, color: '#1E4FA8' }}>14</Text>
+            <Text style={{ fontSize: 20, color: '#1E4FA8' }}>16</Text>
         </Box>
     </Box>
 </Slide>

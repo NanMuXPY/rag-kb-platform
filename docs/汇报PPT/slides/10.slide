@@ -1,11 +1,65 @@
-<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, flexDirection: 'row' }}>
-    <Box style={{ width: 430, height: '100%', background: '#1E4FA8', flexDirection: 'column', justifyContent: 'center', paddingLeft: 84 }}>
-        <Text style={{ fontSize: 136, color: '#FFFFFF', fontWeight: 'bold', lineHeight: 1 }}>03</Text>
-        <Text style={{ fontSize: 13, color: '#FFFFFF', opacity: 0.72, letterSpacing: 4, marginTop: 14 }}>SECTION</Text>
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, flexDirection: 'column' }}>
+    <Box style={{ height: 68, background: '#1E4FA8', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 60, paddingRight: 60 }}>
+        <Text style={{ fontSize: 34, color: '#FFFFFF', fontWeight: 'bold' }}>后台不是表单堆，是「列表页 → 详情页」两层</Text>
+        <Text style={{ fontSize: 15, color: '#FFFFFF', opacity: 0.72 }}>02 · Console</Text>
     </Box>
-    <Box style={{ flex: 1, flexDirection: 'column', justifyContent: 'center', paddingLeft: 78 }}>
-        <Text style={{ fontSize: 56, color: '#1A2230', fontWeight: 'bold', lineHeight: 1.2 }}>实验与结果</Text>
-        <Box style={{ width: 72, height: 4, background: '#1E4FA8', marginTop: 26, marginBottom: 24 }} />
-        <Text style={{ fontSize: 18, color: '#8B97A8' }}>Experiments</Text>
+    <Box style={{ flex: 1, flexDirection: 'column', paddingLeft: 60, paddingRight: 60, paddingTop: 24, paddingBottom: 10, gap: 18 }}>
+        <Box style={{ flexDirection: 'row', alignItems: 'center', background: '#E8EFF8', borderLeft: '4px solid #1E4FA8', paddingTop: 12, paddingBottom: 12, paddingLeft: 20, paddingRight: 20 }}>
+            <Text style={{ fontSize: 19, color: '#1A2230', lineHeight: 1.4 }}>
+                <span style={{ fontWeight: 'bold' }}>结论先行　</span>治理做得好不好，先看列表页能不能一屏扫完；详情页再谈配置，因为配置是低频动作。
+            </Text>
+        </Box>
+        <Box style={{ flexDirection: 'row', gap: 40, flex: 1 }}>
+            <Box style={{ width: 508, flexDirection: 'column' }}>
+                <Text style={{ fontSize: 20, color: '#1A2230', fontWeight: 'bold' }}>两层视图，各司其职</Text>
+                <Box style={{ height: 1, background: '#D6DCE5', marginTop: 10, marginBottom: 12 }} />
+                <Table
+                    style={{ width: '100%', height: 268 }}
+                    defaultTextStyle={{ fontSize: 16, textAlign: 'left', color: '#1A2230' }}
+                    defaultCellStyle={{ border: { bottom: { width: 1, color: '#E5E7EB' } } }}
+                    cells={[
+                        [
+                            { text: '层级', textStyle: { bold: true, color: '#FFFFFF' }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                            { text: '地址', textStyle: { bold: true, color: '#FFFFFF' }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                            { text: '职责', textStyle: { bold: true, color: '#FFFFFF' }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                        ],
+                        [{ text: '列表页', textStyle: { bold: true, color: '#1E4FA8' } }, { text: '#kb', textStyle: { color: '#4A5568' } }, { text: '9 列一屏扫完，页头最多 3 个控件' }],
+                        [{ text: '详情页', textStyle: { bold: true, color: '#1E4FA8' } }, { text: '#kb/42', textStyle: { color: '#4A5568' } }, { text: '概览 / 文件 / 成员 / 设置 四个分区' }],
+                        [{ text: '返回', textStyle: { color: '#4A5568' } }, { text: '面包屑', textStyle: { color: '#4A5568' } }, { text: '筛选词、页码、滚动位置全部还原' }],
+                    ]}
+                />
+                <Text style={{ fontSize: 15, color: '#8B97A8', marginTop: 12, lineHeight: 1.5 }}>主操作只有一个且恒定：列表页 = 新建知识库，详情页 = 上传文件。</Text>
+            </Box>
+            <Box style={{ flex: 1, flexDirection: 'column' }}>
+                <Text style={{ fontSize: 20, color: '#1A2230', fontWeight: 'bold' }}>审批四态：按钮随状态收敛，位置不变</Text>
+                <Box style={{ height: 1, background: '#D6DCE5', marginTop: 10, marginBottom: 12 }} />
+                <Table
+                    style={{ width: '100%', height: 268 }}
+                    defaultTextStyle={{ fontSize: 16, textAlign: 'center', color: '#1A2230' }}
+                    defaultCellStyle={{ border: { bottom: { width: 1, color: '#E5E7EB' } } }}
+                    cells={[
+                        [
+                            { text: '文件状态', textStyle: { bold: true, color: '#FFFFFF', textAlign: 'left' }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                            { text: '行内按钮', textStyle: { bold: true, color: '#FFFFFF' }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                            { text: '说明', textStyle: { bold: true, color: '#FFFFFF', textAlign: 'left' }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                        ],
+                        [{ text: 'pending 待审批', textStyle: { textAlign: 'left', bold: true, color: '#1E4FA8' } }, { text: '通过 · 驳回', textStyle: { color: '#4A5568' } }, { text: '库管可见，编辑者零按钮', textStyle: { textAlign: 'left', color: '#4A5568' } }],
+                        [{ text: 'indexing 入库中', textStyle: { textAlign: 'left', color: '#4A5568' } }, { text: '—', textStyle: { color: '#8B97A8' } }, { text: '由徽标表达进度，不占按钮', textStyle: { textAlign: 'left', color: '#4A5568' } }],
+                        [{ text: 'ready 已入库', textStyle: { textAlign: 'left', color: '#4A5568' } }, { text: '预览 · 删除', textStyle: { color: '#4A5568' } }, { text: '删除是危险操作，位置恒定', textStyle: { textAlign: 'left', color: '#4A5568' } }],
+                        [{ text: 'rejected 已驳回', textStyle: { textAlign: 'left', color: '#4A5568' } }, { text: '—', textStyle: { color: '#8B97A8' } }, { text: '零按钮，且不写灰占位', textStyle: { textAlign: 'left', color: '#4A5568' } }],
+                    ]}
+                />
+                <Text style={{ fontSize: 15, color: '#8B97A8', marginTop: 12, lineHeight: 1.5 }}>标「可撤销」必须写得出撤销接口；审批、驳回、删除都不可撤销，所以不标。</Text>
+            </Box>
+        </Box>
+        <Box style={{ flexDirection: 'row', alignItems: 'center', background: '#F7F9FC', paddingTop: 12, paddingBottom: 12, paddingLeft: 20, paddingRight: 20 }}>
+            <Text style={{ fontSize: 16, color: '#4A5568' }}>
+                上传后 <span style={{ fontWeight: 'bold', color: '#1E4FA8' }}>10s</span> 撤销窗口　·　全操作写 audit_log：<span style={{ fontWeight: 'bold', color: '#1A2230' }}>谁 · 何时 · 哪个库 · 哪个文件</span>　·　权限矩阵 6 个角色，前端按权重重排而非字符串序
+            </Text>
+        </Box>
+    </Box>
+    <Box style={{ height: 50, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 8, paddingLeft: 60, paddingRight: 60 }}>
+        <Text style={{ fontSize: 14, color: '#8B97A8' }}>企业内部技术支持知识库 · 课程作业汇报</Text>
+        <Text style={{ fontSize: 14, color: '#8B97A8' }}>10 / 20</Text>
     </Box>
 </Slide>

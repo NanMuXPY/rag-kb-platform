@@ -1,0 +1,17 @@
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, flexDirection: 'row' }}>
+    <Box style={{ width: 14, height: '100%', background: '#1E4FA8' }} />
+    <Box style={{ flex: 1, flexDirection: 'column', justifyContent: 'center', paddingLeft: 88, paddingRight: 150 }}>
+        <Text style={{ fontSize: 13, color: '#8B97A8', letterSpacing: 4 }}>ENDING</Text>
+        <Text style={{ fontSize: 52, color: '#1A2230', fontWeight: 'bold', lineHeight: 1.32, marginTop: 26 }}>
+            一个知识库好不好用，<br />
+            取决于它敢不敢说<span style={{ color: '#1E4FA8' }}>「资料里没有」</span>。
+        </Text>
+        <Box style={{ width: 96, height: 4, background: '#1E4FA8', marginTop: 36, marginBottom: 26 }} />
+        <Text style={{ fontSize: 18, color: '#4A5568', lineHeight: 1.6 }}>
+            三道闸、七轮实验、二十六条踩坑记录——都在同一个仓库里，可以逐条复现。
+        </Text>
+        <Text style={{ fontSize: 15, color: '#8B97A8', marginTop: 30 }}>
+            汇报人　卞琪翔　·　深圳职业技术大学　·　2026-11-10
+        </Text>
+    </Box>
+</Slide>

@@ -1,64 +1,11 @@
-<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, flexDirection: 'column' }}>
-    <Box style={{ height: 68, background: '#1E4FA8', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 60, paddingRight: 60 }}>
-        <Text style={{ fontSize: 34, color: '#FFFFFF', fontWeight: 'bold' }}>七项差距，自己先说</Text>
-        <Text style={{ fontSize: 15, color: '#FFFFFF', opacity: 0.72 }}>04 · Limitations</Text>
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, flexDirection: 'row' }}>
+    <Box style={{ width: 430, height: '100%', background: '#1E4FA8', flexDirection: 'column', justifyContent: 'center', paddingLeft: 84 }}>
+        <Text style={{ fontSize: 136, color: '#FFFFFF', fontWeight: 'bold', lineHeight: 1 }}>04</Text>
+        <Text style={{ fontSize: 13, color: '#FFFFFF', opacity: 0.72, letterSpacing: 4, marginTop: 14 }}>SECTION</Text>
     </Box>
-    <Box style={{ flex: 1, flexDirection: 'column', paddingLeft: 60, paddingRight: 60, paddingTop: 22, paddingBottom: 8, gap: 18 }}>
-        <Box style={{ flexDirection: 'row', alignItems: 'center', background: '#E8EFF8', borderLeft: '4px solid #1E4FA8', paddingTop: 11, paddingBottom: 11, paddingLeft: 20, paddingRight: 20 }}>
-            <Text style={{ fontSize: 18, color: '#1A2230', lineHeight: 1.4 }}>
-                <span style={{ fontWeight: 'bold' }}>自我评估　</span>这些不是设计缺陷，是工程排期；但第 1 条会直接决定这个产品能不能进真实场景。
-            </Text>
-        </Box>
-        <Table
-            style={{ width: '100%', height: 396 }}
-            defaultTextStyle={{ fontSize: 16, textAlign: 'left', color: '#1A2230' }}
-            defaultCellStyle={{ border: { bottom: { width: 1, color: '#E5E7EB' } } }}
-            cells={[
-                [
-                    { text: '差距', textStyle: { bold: true, color: '#FFFFFF' }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
-                    { text: '影响', textStyle: { bold: true, color: '#FFFFFF' }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
-                    { text: '补齐方式与成本', textStyle: { bold: true, color: '#FFFFFF' }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
-                ],
-                [
-                    { text: '① 只支持 .md', textStyle: { bold: true, color: '#D9534F' } },
-                    { text: '用户手上 90% 是 PDF / Word / 扫描件，最可能被一句话否掉' },
-                    { text: '中：接 MinerU 或 RAGFlow 做解析前置，1–2 天', textStyle: { color: '#4A5568' } },
-                ],
-                [
-                    { text: '② 无 SSO 与组织架构同步', textStyle: { color: '#4A5568' } },
-                    { text: '企业采购的第一道门槛：能不能用企微 / AD 登录' },
-                    { text: '中：企微 OAuth + 部门表映射，约 2 天', textStyle: { color: '#4A5568' } },
-                ],
-                [
-                    { text: '③ 规模仅百级文档', textStyle: { color: '#4A5568' } },
-                    { text: '185 chunks 无法证明万级文档下的检索质量' },
-                    { text: '低：造数据压测，但要花时间', textStyle: { color: '#4A5568' } },
-                ],
-                [
-                    { text: '④ 无工单闭环', textStyle: { color: '#4A5568' } },
-                    { text: '答不出的问题无处可去，运营链条断开' },
-                    { text: '高：不做全套 ITSM，先做“一键生成待办”', textStyle: { color: '#4A5568' } },
-                ],
-                [
-                    { text: '⑤ 无 rerank 模型', textStyle: { color: '#4A5568' } },
-                    { text: '混合检索的融合权重靠手调，精度仍有空间' },
-                    { text: '低：接 bge-reranker，1 天跑分验证', textStyle: { color: '#4A5568' } },
-                ],
-                [
-                    { text: '⑥ 无移动端 / 企微侧边栏', textStyle: { color: '#4A5568' } },
-                    { text: '一线员工（跑现场、修设备）不会打开浏览器' },
-                    { text: '中：企微 H5 直接复用现有前端', textStyle: { color: '#4A5568' } },
-                ],
-                [
-                    { text: '⑦ 单机单点', textStyle: { color: '#4A5568' } },
-                    { text: '没有高可用，一台机器挂掉就全停' },
-                    { text: '高：归入 P3，当前场景不需要', textStyle: { color: '#4A5568' } },
-                ],
-            ]}
-        />
-    </Box>
-    <Box style={{ height: 50, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 8, paddingLeft: 60, paddingRight: 60 }}>
-        <Text style={{ fontSize: 14, color: '#8B97A8' }}>企业内部技术支持知识库 · 课程作业汇报</Text>
-        <Text style={{ fontSize: 14, color: '#8B97A8' }}>16 / 18</Text>
+    <Box style={{ flex: 1, flexDirection: 'column', justifyContent: 'center', paddingLeft: 78 }}>
+        <Text style={{ fontSize: 56, color: '#1A2230', fontWeight: 'bold', lineHeight: 1.2 }}>讨论与展望</Text>
+        <Box style={{ width: 72, height: 4, background: '#1E4FA8', marginTop: 26, marginBottom: 24 }} />
+        <Text style={{ fontSize: 18, color: '#8B97A8' }}>Discussion</Text>
     </Box>
 </Slide>

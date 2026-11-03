@@ -1,106 +1,11 @@
-<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, flexDirection: 'column' }}>
-    <Box style={{ height: 68, background: '#1E4FA8', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 60, paddingRight: 60 }}>
-        <Text style={{ fontSize: 34, color: '#FFFFFF', fontWeight: 'bold' }}>拒答 80%→93.3%，幻觉 17→2，P95 58→17s</Text>
-        <Text style={{ fontSize: 15, color: '#FFFFFF', opacity: 0.72 }}>03 · Results</Text>
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, flexDirection: 'row' }}>
+    <Box style={{ width: 430, height: '100%', background: '#1E4FA8', flexDirection: 'column', justifyContent: 'center', paddingLeft: 84 }}>
+        <Text style={{ fontSize: 136, color: '#FFFFFF', fontWeight: 'bold', lineHeight: 1 }}>03</Text>
+        <Text style={{ fontSize: 13, color: '#FFFFFF', opacity: 0.72, letterSpacing: 4, marginTop: 14 }}>SECTION</Text>
     </Box>
-    <Box style={{ flex: 1, flexDirection: 'column', paddingLeft: 60, paddingRight: 60, paddingTop: 22, paddingBottom: 8, gap: 18 }}>
-        <Box style={{ flexDirection: 'row', height: 140, gap: 34 }}>
-            <Box style={{ flex: 1, flexDirection: 'column', justifyContent: 'flex-end' }}>
-                <Text style={{ fontSize: 15, color: '#8B97A8' }}>拒答准确率（15 道该拒答题）</Text>
-                <Box style={{ flexDirection: 'row', alignItems: 'flex-end', marginTop: 4 }}>
-                    <Text style={{ fontSize: 70, color: '#1E4FA8', fontWeight: 'bold', lineHeight: 1 }}>93.3</Text>
-                    <Text style={{ fontSize: 22, color: '#1E4FA8', marginBottom: 9, marginLeft: 4 }}>%</Text>
-                </Box>
-                <Text style={{ fontSize: 15, color: '#4A5568', marginTop: 8 }}>14/15，起点为 v1 的 80%</Text>
-            </Box>
-            <Box style={{ width: 1, background: '#D6DCE5' }} />
-            <Box style={{ flex: 1, flexDirection: 'column', justifyContent: 'flex-end' }}>
-                <Text style={{ fontSize: 15, color: '#8B97A8' }}>幻觉次数（30 题累计）</Text>
-                <Box style={{ flexDirection: 'row', alignItems: 'flex-end', marginTop: 4 }}>
-                    <Text style={{ fontSize: 70, color: '#1E4FA8', fontWeight: 'bold', lineHeight: 1 }}>2</Text>
-                    <Text style={{ fontSize: 22, color: '#1E4FA8', marginBottom: 9, marginLeft: 6 }}>次</Text>
-                </Box>
-                <Text style={{ fontSize: 15, color: '#4A5568', marginTop: 8 }}>两轮 2 / 3，起点 17 次</Text>
-            </Box>
-            <Box style={{ width: 1, background: '#D6DCE5' }} />
-            <Box style={{ flex: 1, flexDirection: 'column', justifyContent: 'flex-end' }}>
-                <Text style={{ fontSize: 15, color: '#8B97A8' }}>端到端 P95 延迟</Text>
-                <Box style={{ flexDirection: 'row', alignItems: 'flex-end', marginTop: 4 }}>
-                    <Text style={{ fontSize: 70, color: '#1E4FA8', fontWeight: 'bold', lineHeight: 1 }}>17.3</Text>
-                    <Text style={{ fontSize: 22, color: '#1E4FA8', marginBottom: 9, marginLeft: 4 }}>s</Text>
-                </Box>
-                <Text style={{ fontSize: 15, color: '#4A5568', marginTop: 8 }}>起点 58.4s，降 70%</Text>
-            </Box>
-        </Box>
-        <Box style={{ height: 1, background: '#D6DCE5' }} />
-        <Table
-            style={{ width: '100%', height: 268 }}
-            defaultTextStyle={{ fontSize: 16, textAlign: 'center', color: '#1A2230' }}
-            defaultCellStyle={{ border: { bottom: { width: 1, color: '#E5E7EB' } } }}
-            cells={[
-                [
-                    { text: '阶段', textStyle: { bold: true, color: '#FFFFFF', textAlign: 'left' }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
-                    { text: '关键改动', textStyle: { bold: true, color: '#FFFFFF', textAlign: 'left' }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
-                    { text: 'recall@4', textStyle: { bold: true, color: '#FFFFFF' }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
-                    { text: '事实命中', textStyle: { bold: true, color: '#FFFFFF' }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
-                    { text: '拒答', textStyle: { bold: true, color: '#FFFFFF' }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
-                    { text: '幻觉', textStyle: { bold: true, color: '#FFFFFF' }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
-                    { text: 'P95', textStyle: { bold: true, color: '#FFFFFF' }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
-                ],
-                [
-                    { text: 'E0　v1 初版', textStyle: { textAlign: 'left', color: '#4A5568' }, cellStyle: { background: { color: '#F7F9FC' } } },
-                    { text: '无质量闸，500/75 切块', textStyle: { textAlign: 'left', color: '#4A5568' }, cellStyle: { background: { color: '#F7F9FC' } } },
-                    { text: '100%', cellStyle: { background: { color: '#F7F9FC' } } },
-                    { text: '—', textStyle: { color: '#8B97A8' }, cellStyle: { background: { color: '#F7F9FC' } } },
-                    { text: '80%', cellStyle: { background: { color: '#F7F9FC' } } },
-                    { text: '17', textStyle: { color: '#D9534F' }, cellStyle: { background: { color: '#F7F9FC' } } },
-                    { text: '58.4s', cellStyle: { background: { color: '#F7F9FC' } } },
-                ],
-                [
-                    { text: 'E1　v1 双闸', textStyle: { textAlign: 'left', color: '#4A5568' } },
-                    { text: '加 G1 硬闸 + G2 引用校验', textStyle: { textAlign: 'left', color: '#4A5568' } },
-                    { text: '100%' },
-                    { text: '—', textStyle: { color: '#8B97A8' } },
-                    { text: '100%' },
-                    { text: '2', textStyle: { color: '#1E4FA8', bold: true } },
-                    { text: '—', textStyle: { color: '#8B97A8' } },
-                ],
-                [
-                    { text: 'E2　v2 基线', textStyle: { textAlign: 'left', color: '#4A5568' }, cellStyle: { background: { color: '#F7F9FC' } } },
-                    { text: '重写 v2，800/120 切块', textStyle: { textAlign: 'left', color: '#4A5568' }, cellStyle: { background: { color: '#F7F9FC' } } },
-                    { text: '100%', cellStyle: { background: { color: '#F7F9FC' } } },
-                    { text: '93.3%', cellStyle: { background: { color: '#F7F9FC' } } },
-                    { text: '80–93%', cellStyle: { background: { color: '#F7F9FC' } } },
-                    { text: '13', textStyle: { color: '#D9534F' }, cellStyle: { background: { color: '#F7F9FC' } } },
-                    { text: '34.6s', cellStyle: { background: { color: '#F7F9FC' } } },
-                ],
-                [
-                    { text: 'E6　操作步骤硬约束', textStyle: { textAlign: 'left', color: '#4A5568' } },
-                    { text: '禁用资料外的菜单 / 按钮名', textStyle: { textAlign: 'left', color: '#4A5568' } },
-                    { text: '100%' },
-                    { text: '93.3%' },
-                    { text: '93.3%' },
-                    { text: '2–3', textStyle: { color: '#1E4FA8', bold: true } },
-                    { text: '19.2s' },
-                ],
-                [
-                    { text: 'E7　最终基线', textStyle: { textAlign: 'left', color: '#1E4FA8', bold: true }, cellStyle: { background: { color: '#E8EFF8' } } },
-                    { text: '代为执行边界 + 引用三处误杀修复', textStyle: { textAlign: 'left', color: '#1A2230', bold: true }, cellStyle: { background: { color: '#E8EFF8' } } },
-                    { text: '100%', textStyle: { bold: true }, cellStyle: { background: { color: '#E8EFF8' } } },
-                    { text: '100%', textStyle: { bold: true }, cellStyle: { background: { color: '#E8EFF8' } } },
-                    { text: '93.3%', textStyle: { bold: true }, cellStyle: { background: { color: '#E8EFF8' } } },
-                    { text: '2', textStyle: { color: '#1E4FA8', bold: true }, cellStyle: { background: { color: '#E8EFF8' } } },
-                    { text: '17.3s', textStyle: { bold: true }, cellStyle: { background: { color: '#E8EFF8' } } },
-                ],
-            ]}
-        />
-        <Box style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text style={{ fontSize: 15, color: '#8B97A8' }}>可答题指标零下降：recall 与事实命中不因“更爱拒答”而变差；困难集（口语/简称）recall 由 80% 提到 100%</Text>
-            <Text style={{ fontSize: 15, color: '#8B97A8' }}>38 篇语料 · 185 chunks</Text>
-        </Box>
-    </Box>
-    <Box style={{ height: 50, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 8, paddingLeft: 60, paddingRight: 60 }}>
-        <Text style={{ fontSize: 14, color: '#8B97A8' }}>企业内部技术支持知识库 · 课程作业汇报</Text>
-        <Text style={{ fontSize: 14, color: '#8B97A8' }}>12 / 18</Text>
+    <Box style={{ flex: 1, flexDirection: 'column', justifyContent: 'center', paddingLeft: 78 }}>
+        <Text style={{ fontSize: 56, color: '#1A2230', fontWeight: 'bold', lineHeight: 1.2 }}>实验与结果</Text>
+        <Box style={{ width: 72, height: 4, background: '#1E4FA8', marginTop: 26, marginBottom: 24 }} />
+        <Text style={{ fontSize: 18, color: '#8B97A8' }}>Experiments</Text>
     </Box>
 </Slide>

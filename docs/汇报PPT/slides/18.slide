@@ -1,17 +1,64 @@
-<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, flexDirection: 'row' }}>
-    <Box style={{ width: 14, height: '100%', background: '#1E4FA8' }} />
-    <Box style={{ flex: 1, flexDirection: 'column', justifyContent: 'center', paddingLeft: 88, paddingRight: 150 }}>
-        <Text style={{ fontSize: 13, color: '#8B97A8', letterSpacing: 4 }}>ENDING</Text>
-        <Text style={{ fontSize: 52, color: '#1A2230', fontWeight: 'bold', lineHeight: 1.32, marginTop: 26 }}>
-            一个知识库好不好用，<br />
-            取决于它敢不敢说<span style={{ color: '#1E4FA8' }}>「资料里没有」</span>。
-        </Text>
-        <Box style={{ width: 96, height: 4, background: '#1E4FA8', marginTop: 36, marginBottom: 26 }} />
-        <Text style={{ fontSize: 18, color: '#4A5568', lineHeight: 1.6 }}>
-            三道闸、七轮实验、二十六条踩坑记录——都在同一个仓库里，可以逐条复现。
-        </Text>
-        <Text style={{ fontSize: 15, color: '#8B97A8', marginTop: 30 }}>
-            汇报人　卞琪翔　·　深圳职业技术大学　·　2026-11-10
-        </Text>
+<Slide style={{ width: 1280, height: 720, background: '#FFFFFF', padding: 0, flexDirection: 'column' }}>
+    <Box style={{ height: 68, background: '#1E4FA8', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingLeft: 60, paddingRight: 60 }}>
+        <Text style={{ fontSize: 34, color: '#FFFFFF', fontWeight: 'bold' }}>七项差距，自己先说</Text>
+        <Text style={{ fontSize: 15, color: '#FFFFFF', opacity: 0.72 }}>04 · Limitations</Text>
+    </Box>
+    <Box style={{ flex: 1, flexDirection: 'column', paddingLeft: 60, paddingRight: 60, paddingTop: 22, paddingBottom: 8, gap: 18 }}>
+        <Box style={{ flexDirection: 'row', alignItems: 'center', background: '#E8EFF8', borderLeft: '4px solid #1E4FA8', paddingTop: 11, paddingBottom: 11, paddingLeft: 20, paddingRight: 20 }}>
+            <Text style={{ fontSize: 18, color: '#1A2230', lineHeight: 1.4 }}>
+                <span style={{ fontWeight: 'bold' }}>自我评估　</span>这些不是设计缺陷，是工程排期；但第 1 条会直接决定这个产品能不能进真实场景。
+            </Text>
+        </Box>
+        <Table
+            style={{ width: '100%', height: 396 }}
+            defaultTextStyle={{ fontSize: 16, textAlign: 'left', color: '#1A2230' }}
+            defaultCellStyle={{ border: { bottom: { width: 1, color: '#E5E7EB' } } }}
+            cells={[
+                [
+                    { text: '差距', textStyle: { bold: true, color: '#FFFFFF' }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                    { text: '影响', textStyle: { bold: true, color: '#FFFFFF' }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                    { text: '补齐方式与成本', textStyle: { bold: true, color: '#FFFFFF' }, cellStyle: { background: { color: '#1E4FA8' }, border: { bottom: { width: 1, color: '#1E4FA8' } } } },
+                ],
+                [
+                    { text: '① 扫描件 OCR 靠外部引擎', textStyle: { bold: true, color: '#D9534F' } },
+                    { text: '六种格式已通，但扫描件识别错字会直接进向量库' },
+                    { text: '中：接商用 OCR 或加人工校对环节', textStyle: { color: '#4A5568' } },
+                ],
+                [
+                    { text: '② 无 SSO 与组织架构同步', textStyle: { color: '#4A5568' } },
+                    { text: '企业采购的第一道门槛：能不能用企微 / AD 登录' },
+                    { text: '中：企微 OAuth + 部门表映射，约 2 天', textStyle: { color: '#4A5568' } },
+                ],
+                [
+                    { text: '③ 规模仅百级文档', textStyle: { color: '#4A5568' } },
+                    { text: '185 chunks 无法证明万级文档下的检索质量' },
+                    { text: '低：造数据压测，但要花时间', textStyle: { color: '#4A5568' } },
+                ],
+                [
+                    { text: '④ 无工单闭环', textStyle: { color: '#4A5568' } },
+                    { text: '答不出的问题无处可去，运营链条断开' },
+                    { text: '高：不做全套 ITSM，先做“一键生成待办”', textStyle: { color: '#4A5568' } },
+                ],
+                [
+                    { text: '⑤ 无 rerank 模型', textStyle: { color: '#4A5568' } },
+                    { text: '混合检索的融合权重靠手调，精度仍有空间' },
+                    { text: '低：接 bge-reranker，1 天跑分验证', textStyle: { color: '#4A5568' } },
+                ],
+                [
+                    { text: '⑥ 无移动端 / 企微侧边栏', textStyle: { color: '#4A5568' } },
+                    { text: '一线员工（跑现场、修设备）不会打开浏览器' },
+                    { text: '中：企微 H5 直接复用现有前端', textStyle: { color: '#4A5568' } },
+                ],
+                [
+                    { text: '⑦ 单机单点', textStyle: { color: '#4A5568' } },
+                    { text: '没有高可用，一台机器挂掉就全停' },
+                    { text: '高：归入 P3，当前场景不需要', textStyle: { color: '#4A5568' } },
+                ],
+            ]}
+        />
+    </Box>
+    <Box style={{ height: 50, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingTop: 8, paddingLeft: 60, paddingRight: 60 }}>
+        <Text style={{ fontSize: 14, color: '#8B97A8' }}>企业内部技术支持知识库 · 课程作业汇报</Text>
+        <Text style={{ fontSize: 14, color: '#8B97A8' }}>18 / 20</Text>
     </Box>
 </Slide>
