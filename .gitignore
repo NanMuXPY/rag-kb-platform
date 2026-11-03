@@ -10,6 +10,7 @@ db_md/
 db_md_rebuild/
 db_md_old/
 db_e2_*/
+db_*.pkl
 
 # 运行时数据（用户库、自传文件、回收站、版本备份）
 data/users.db
