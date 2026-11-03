@@ -12,7 +12,9 @@
 | 材料 | 位置 |
 |---|---|
 | 接口契约（32 个接口 / 请求响应示例 / 错误码） | [`docs/接口契约.md`](docs/接口契约.md) · 在线 Swagger `/api/docs` |
-| 汇报 PPT（18 页） | `docs/汇报PPT/汇报PPT.pptx` |
+| 汇报 PPT（20 页） | `docs/汇报PPT/汇报PPT.pptx` |
+| 测试与联调报告（接口层 11 项 + 界面断言 17 项 + 评测 E0–E13） | `docs/测试与联调报告.docx` |
+| XBUDDY 使用记录（AI 辅助开发过程材料） | `docs/XBUDDY使用记录.docx` |
 | 答辩备答页（判分器 / 术语 / 格式与多库） | `docs/汇报PPT/备答页-v2.4-定稿.pptx` |
 | 演示脚本（5.5 分钟分镜 + 3 分钟极简版） | [`docs/演示脚本.md`](docs/演示脚本.md) |
 | 实验记录（E0–E12，含失败轮次） | [`docs/experiment.md`](docs/experiment.md) |
