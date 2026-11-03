@@ -17,7 +17,7 @@
         <Box style={{ flex: 1 }} />
         <Box style={{ height: 1, background: '#D6DCE5', marginBottom: 18 }} />
         <Box style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text style={{ fontSize: 15, color: '#4A5568' }}>汇报人　卞琪翔　·　深圳职业技术大学</Text>
+            <Text style={{ fontSize: 15, color: '#4A5568' }}>汇报人　卞琪翔　24云计算2　·　深圳职业技术大学</Text>
             <Text style={{ fontSize: 15, color: '#8B97A8' }}>2026-11-10</Text>
         </Box>
     </Box>
